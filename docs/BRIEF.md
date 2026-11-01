@@ -75,7 +75,7 @@ The owner sees the result after C and F. **Rebooting kujira always asks the owne
 
 ### C — Bar and Terminal
 
-`kit/`, `plugins/bar`, `plugins/terminal`, `plugins/focus`. Start from `research/spikes/bar-host/` and `research/bar-host-contract.md`.
+`kit/`, `plugins/bar`, `plugins/terminal`. Start from `research/spikes/bar-host/` and `research/bar-host-contract.md`.
 Host hardening per the contract: overflow, complete hover, shell-hidden transitions, duplicate ids, keyboard review. Terminal's data
 commands first, then the QML.
 

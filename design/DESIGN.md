@@ -38,7 +38,6 @@ A preset is an Omarchy theme, so Omarchy's own theme switcher (Super+Shift+Ctrl+
 | Terminal | Section numbers in yellow text | Yellow header band with hazard strip, yellow number chips, 56 px clock, taller level cells |
 | Notifications | Hairline header | Raised header, yellow for important, three-line grip ornament |
 | OSD | 316 × 46 px | 380 × 56 px, accent border, large yellow number, device in the label |
-| Window focus | Yellow border | Yellow border + corner brackets + window tag (`wuling.focus`) |
 | Background | Starts on the survey line | Starts on the wide band |
 | Omarchy's panels | Hairline border | Accent hairline |
 | Motion | §5 everyday | §5 plus entry choreography |
@@ -125,7 +124,6 @@ veils. Staggers: rows 20, cards and tiles 45, sections 60 ms; at most 12 steps.
 | Value that changes (telemetry, clock) | Swaps within a frame | — |
 | Toast arrives | Slides 8 px and resolves, 200 ms | Strip slice |
 | OSD | Reveals in 160 ms, leaves in 120 ms | Scan line |
-| Focus moves (`hud`) | — | Brackets travel, 120–180 ms snap |
 | Error | Vermilion border and a 300 ms shake | Glitch |
 
 Input is never held hostage: a surface takes input from its first frame, and typing during the build applies at once.
@@ -264,11 +262,11 @@ and the 令 seal. Open `design/proto/dispatch.html` for everything below.
 Tab and Shift+Tab cycle modes; a prefix switches at once. ↑↓ select, Esc clears then closes, outside click closes.
 Exclusive keyboard focus; hold focus across the build. State in `~/.local/state/wuling/dispatch.json`.
 
-### 8.7 Focus overlay — `wuling.focus`
+### 8.7 Focus overlay — not built
 
-`hud` only: corner brackets in the gaps around the focused window and a tag (`FOCUS · FOOT · WS 01`). A click-through
-layer on each output, driven by Hyprland events, with no timer. Hidden for fullscreen and for no focus. With `field`
-active it creates no window at all. Switching it off leaves the yellow border alone.
+The mockups once showed `hud` with corner brackets and a tag following the focused window. Hyprland 0.56 reports no event when a window is
+resized from the keyboard, so the brackets would stay in the wrong place until focus next moved, and a timer just for a decoration breaks
+principle 5. The focused window has Omarchy's yellow border in both presets. Build it if Hyprland gains a geometry event.
 
 ### 8.8 Theme only
 

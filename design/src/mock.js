@@ -116,13 +116,6 @@ function windows() {
     <div class="tabs"><span class="on">Terminal.qml</span><span>Tile.qml</span><span>tokens.toml</span></div>
     <div class="code">${code.map((c, i) => L(i + 1, c, i === 21)).join('\n')}</div>
     <div class="st"><span class="mode">NORMAL</span><span>⎇ main</span><span style="margin-left:auto">qml</span><span>22:44</span></div></div></div>`);
-  // hud: corner brackets in the gaps around the focused window + a window tag (a WULING overlay that follows focus)
-  const x = 10, y = top, w = wl, b = 5;
-  S(`<i class="brk2" style="left:${x - b - 2}px;top:${y - b - 2}px;border-left-width:2px;border-top-width:2px"></i>
-     <i class="brk2" style="left:${x + w - 12 + b}px;top:${y - b - 2}px;border-right-width:2px;border-top-width:2px"></i>
-     <i class="brk2" style="left:${x - b - 2}px;top:${y + h - 12 + b}px;border-left-width:2px;border-bottom-width:2px"></i>
-     <i class="brk2" style="left:${x + w - 12 + b}px;top:${y + h - 12 + b}px;border-right-width:2px;border-bottom-width:2px"></i>
-     <span class="wtag" style="left:${x + 18}px;top:${y - 7}px">FOCUS · FOOT · WS 01</span>`);
 }
 
 // ------------------------------------------------------------------ the hud preset's HUD on the background image

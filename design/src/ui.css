@@ -235,10 +235,6 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 :root.hud .bar .trm .msym, :root.hud .bar .trm .val, :root.hud .bar .trm .lbl { color: var(--on-accent); }
 :root.hud .bar .pwr { background: var(--vermilion); border-left: none; } :root.hud .bar .pwr .msym { color: var(--paper-0); }
 :root.hud .win.focus { outline-width: 2px; }
-.brk2 { position: absolute; width: 14px; height: 14px; border: 0 solid var(--accent-ink); display: none; z-index: 5; }
-:root.hud .brk2 { display: block; }
-.wtag { position: absolute; display: none; height: 14px; padding: 0 6px; background: var(--yellow); color: var(--on-accent); font: 600 8px/14px var(--font-mono); letter-spacing: .14em; z-index: 6; }
-:root.hud .wtag { display: block; }
 :root.hud .trmp .sh { padding-top: 0; margin-top: 8px; }
 :root.hud .trmp .sh .no { background: var(--yellow); color: var(--on-accent); padding: 3px 5px; }
 :root.hud .trmp .hdband { display: flex; }
