@@ -1,0 +1,12 @@
+# Never committed: canon art and music (personal use only), evidence, build output
+canon/
+music/
+evidence/
+out/
+*.iso
+*.qcow2
+*.img
+*.tar
+*.tar.zst
+__pycache__/
+.DS_Store
