@@ -146,12 +146,13 @@ unselected-border-alpha = 0.28
 
 DARK = dict(ink0='#050707', ink1='#0A0D0C', ink2='#0E1211', ink3='#141A18', line='#2B3734', fg='#E6EBE5', fg_dim='#6F827D', crit='#E3432F', crit_txt='#FF6B57', mark='#FEF700')
 THEMES = {
-  # as before: white selected row with a yellow edge, hairline cards
-  'wuling-as': (MIST, shell(MIST, **DARK, sel_bg='#F4F5EF', sel_alpha=1.0, sel_txt='#0E1211', sel_border='#FEF700', sel_w='0 0 0 2', pop_border='#2B3734', pop_w=1, lock_border='#2B3734'), 'bg-original-mist.png'),
+  # as before: raised row with a yellow edge, hairline cards. Omarchy keeps a row's detail text in the menu's text colour at .52,
+  # so a white or yellow selected fill would hide it (search results rely on it); only WULING's own surfaces use the white plate.
+  'wuling-as': (MIST, shell(MIST, **DARK, sel_bg='#24302D', sel_alpha=1.0, sel_txt='#F4F5EF', sel_border='#FEF700', sel_w='0 0 0 2', pop_border='#2B3734', pop_w=1, lock_border='#2B3734'), 'bg-original-mist.png'),
   # calm: selection is a quiet raised row, yellow only marks the focused window's neighbours; neutral active border
   'wuling-calm': (dict(MIST, hyprland_active_border='#C9D3CE'), shell(dict(MIST, hyprland_active_border='#C9D3CE'), **dict(DARK, mark='#C9D3CE'), bar_h=28, sel_bg='#E6EBE5', sel_alpha=.1, sel_txt='#F4F5EF', sel_border='#2B3734', sel_w='0', pop_border='#2B3734', pop_w=1, lock_border='#2B3734', scrim_a=.5), 'land-mist-1920x1080.png'),
-  # bold: yellow selection fill, yellow card borders
-  'wuling-bold': (MIST, shell(MIST, **DARK, bar_h=32, sel_bg='#FEF700', sel_alpha=1.0, sel_txt='#0E1211', sel_border='#0E1211', sel_w='0 0 0 2', pop_border='#FEF700', pop_w=1, lock_border='#FEF700', scrim_a=.8), 'bg-original-mist.png'),
+  # bold: yellow outlined selection with yellow text, yellow card borders (a yellow fill would hide the detail text too)
+  'wuling-bold': (MIST, shell(MIST, **DARK, bar_h=32, sel_bg='#141A18', sel_alpha=1.0, sel_txt='#FEF700', sel_border='#FEF700', sel_w='1', pop_border='#FEF700', pop_w=1, lock_border='#FEF700', scrim_a=.8), 'bg-original-mist.png'),
   # paper: canon yellow only as a fill with ink on top
   'wuling-paper': (PAPER, shell(PAPER, ink0='#D9DDD5', ink1='#E4E7E0', ink2='#ECEEE7', ink3='#F6F7F2', line='#C3CBC3', fg='#121614', fg_dim='#7A8783', crit='#C8361F', crit_txt='#A82A1C', mark='#121614', sel_bg='#FEF700', sel_alpha=1.0, sel_txt='#121614', sel_border='#121614', sel_w='0 0 0 2', pop_border='#C3CBC3', pop_w=1, lock_border='#C3CBC3', scrim_a=.74), 'bg-original-paper.png'),
 }

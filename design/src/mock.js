@@ -5,6 +5,8 @@
 //   center[omarchy.indicators, omarchy.clock (anchor), omarchy.keyboard-layout, omarchy.weather, omarchy.system-update]
 //   right [omarchy.tray, omarchy.agents, omarchy.bluetooth, omarchy.network, omarchy.audio, omarchy.monitor, omarchy.power]
 // plus WULING's own bar widgets: wuling.window (as, bold), wuling.terminal (all), wuling.power (as, bold).
+// WULING draws the menu cell, workspaces, window title, clock face, Terminal and power cells. Everything else is Omarchy's own widget,
+// so it looks like one: a 27 px icon slot, no labels. Keyboard layout and update only show when they have something to say.
 // Demo data is neutral: no real names, addresses or hosts.
 const Q = new URLSearchParams(location.search);
 const DIR = Q.get('dir') || 'as', THEME = Q.get('theme') || 'mist', SCREEN = Q.get('screen') || 'desk';
@@ -29,32 +31,31 @@ function bar(o = {}) {
   const menu = calm ? `<div class="menu">${GLYPH(ink, 22)}</div>`
              : bold ? `<div class="menu">${GLYPH('#0E1211', 30)}<b>EF</b></div>`
              : `<div class="menu">${GLYPH('#0E1211', 30)}</div>`;
-  const ws = (o.ws || ['active', 'occ', 'occ', '']).map((s, i) =>
+  const ws = (o.ws || ['active', 'occ', 'occ', '', '']).map((s, i) =>
     `<span class="cell ${s}">${calm ? i + 1 : String(i + 1).padStart(2, '0')}</span>`).join('');
   const left = `${menu}${stack('Wuling · 武陵', 'KJR-01', 'ident')}<i class="sep opt"></i><div class="ws">${ws}</div>
     ${o.title === false ? '' : `<i class="sep opt"></i>${stack(o.app || 'Terminal · 終端', o.title || '~/projects/field-notes', 'focus')}`}`;
   // center: indicators | clock (anchor) | keyboard · weather · update
-  const ind = o.ind === false ? '' : `<div class="ind">${ms('bedtime')}<span>${calm ? '' : 'NIGHT'}</span></div>`;
-  const clock = calm ? `<span class="clock">Sun 14:03</span>`
+  const ind = o.ind === false ? '' : `<div class="w native">${ms('bedtime')}</div>`;
+  // the clock: calm shows Omarchy's own label; the others draw a larger face over Omarchy's widget (its clicks and calendar still work)
+  const clock = calm ? `<span class="clock native">Sunday 14:03</span>`
               : `<span class="clock">14:03</span>${stack('Sun 週日', '11.01', 'date')}`;
-  const kb = stack('Kbd', 'EN', 'kb w');
-  const wx = calm ? `<div class="w">${ms('partly_cloudy_day')}12°</div>` : `<div class="w">${ms('partly_cloudy_day')}${stack('Wx · 天氣', '12°')}</div>`;
-  const upd = o.upd === false ? '' : (calm ? `<div class="w upd"><i></i></div>` : `<div class="w upd"><i></i>${stack('Upd', '3')}</div>`);
-  // right
-  const tray = `<div class="w">${ms('chevron_left', 'font-size:15px;color:var(--mist-5)')}</div>`;
-  const agent = calm ? `<div class="w agent">${ms('smart_toy')}37%</div>`
-              : `<div class="w agent">${ms('smart_toy')}<div class="stack"><span class="lbl">Agent</span><span class="val">37%</span><div class="meter"><i style="width:37%"></i></div></div></div>`;
-  const bt = `<div class="w">${ms('bluetooth')}</div>`;
-  const net = `<div class="w">${ms('wifi')}</div>`;
-  const aud = `<div class="w">${ms('volume_up')}40</div>`;
-  const mon = `<div class="w">${ms('brightness_6')}</div>`;
-  const pw = `<div class="w bat"><span class="cell"><i></i><i></i><i></i><i></i><i class="off"></i></span>87</div>`;
+  const wx = `<div class="w native">${ms('partly_cloudy_day')}</div>`;
+  const upd = o.upd === false ? '' : `<div class="w native">${ms('sync')}</div>`;
+  // right: Omarchy's widgets in Omarchy's order
+  const tray = `<div class="w native">${ms('chevron_left', 'font-size:15px;color:var(--mist-5)')}</div>`;
+  const agent = `<div class="w native">${ms('smart_toy')}</div>`;
+  const bt = `<div class="w native">${ms('bluetooth')}</div>`;
+  const net = `<div class="w native">${ms('wifi')}</div>`;
+  const aud = `<div class="w native">${ms('volume_up')}</div>`;
+  const mon = `<div class="w native">${ms('desktop_windows')}</div>`;
+  const pw = `<div class="w native"><span class="bat"><span class="cell"><i></i><i></i><i></i><i></i><i class="off"></i></span></span></div>`;
   const trm = calm ? `<div class="trm ${o.trmOn ? 'on' : ''}">${ms('side_navigation')}</div>`
             : `<div class="trm ${o.trmOn ? 'on' : ''}">${ms('side_navigation')}${stack('Terminal', '終端')}</div>`;
   const pwr = `<div class="pwr">${ms('power_settings_new')}</div>`;
   S(`<div class="bar">
     <div class="sec left">${left}</div>
-    <div class="sec center"><div class="flank-l">${ind}</div><div class="anchor">${clock}</div><div class="flank-r">${kb}${wx}${upd}</div></div>
+    <div class="sec center"><div class="flank-l">${ind}</div><div class="anchor">${clock}</div><div class="flank-r">${wx}${upd}</div></div>
     <div class="sec right">${tray}${agent}${bt}${net}${aud}${mon}${pw}${trm}${pwr}</div></div>`);
 }
 
@@ -76,7 +77,7 @@ function windows() {
 <span class="kk">KRN</span>  <span class="m">核心</span>  Linux 7.2.8-omarchy
 <span class="kk">WM </span>  <span class="m">視窗</span>  Hyprland 0.56 · wayland
 <span class="kk">SHL</span>  <span class="m">殼層</span>  omarchy-shell · WULING
-<span class="kk">TRM</span>  <span class="m">終端</span>  Alacritty
+<span class="kk">TRM</span>  <span class="m">終端</span>  Foot
 <span class="kk">CPU</span>  <span class="m">處理</span>  4 threads @ 3.0 GHz
 <span class="kk">MEM</span>  <span class="m">記憶</span>  3.1 / 7.0 GiB  <span class="k">■■■■</span><span class="f">■■■■■■</span> <span class="m">44%</span>
 <span class="kk">DSK</span>  <span class="m">儲存</span>  32 / 237 GiB   <span class="k">■</span><span class="f">■■■■■■■■■</span> <span class="m">14%</span>
@@ -126,7 +127,7 @@ function windows() {
      <i class="brk2" style="left:${x + w - 12 + b}px;top:${y - b - 2}px;border-right-width:2px;border-top-width:2px"></i>
      <i class="brk2" style="left:${x - b - 2}px;top:${y + h - 12 + b}px;border-left-width:2px;border-bottom-width:2px"></i>
      <i class="brk2" style="left:${x + w - 12 + b}px;top:${y + h - 12 + b}px;border-right-width:2px;border-bottom-width:2px"></i>
-     <span class="wtag" style="left:${x + 18}px;top:${y - 7}px">FOCUS · ALACRITTY · WS 01</span>`);
+     <span class="wtag" style="left:${x + 18}px;top:${y - 7}px">FOCUS · FOOT · WS 01</span>`);
 }
 
 // ------------------------------------------------------------------ bold-only HUD on the background image
@@ -158,7 +159,7 @@ function terminal(o = {}) {
       ${[['Claude', 'Max', 37, 58, '1h 12m'], ['Codex', 'Pro', 12, 31, '3h 40m']].map(([n, t, a, b, r]) => `<div class="agt"><span class="nm">${n}<small>${t}</small></span><div class="bars">
         <div class="row"><span class="micro">Session</span><span class="m"><i style="width:${a}%"></i></span><span class="p">${a}%</span></div>
         <div class="row"><span class="micro">Week</span><span class="m"><i style="width:${b}%"></i></span><span class="p">${b}%</span></div></div><span class="rs">${r}</span></div>`).join('')}
-      <div class="ask">${ms('smart_toy', 'font-size:14px;color:var(--mist-4)')}<span>Ask the default agent…</span><b>Claude</b></div></section>` : `<section>${sh('05', 'Signal', '訊號', calm ? '' : '● Playing')}
+      <div class="ask">${ms('smart_toy', 'font-size:14px;color:var(--paper-2)')}<span>Open default agent</span><b>Claude</b></div></section>` : `<section>${sh('05', 'Signal', '訊號', calm ? '' : '● Playing')}
       <div class="sig"><div class="art">MSR</div><div style="flex:1"><div class="tt">Quiet Survey</div><div class="ar">Field Recordings · Vol. 2</div><div class="pg"><i style="width:34%"></i></div></div></div></section>`}
     ${calm && !agents ? '' : `<section>${sh('06', 'Telemetry', '遙測')}
       <div class="tel"><div><div class="micro">CPU 處理</div><div class="v">12%</div>${spark('var(--yellow)', '0,12 10,11 20,13 30,9 40,10 50,7 60,9 70,8 80,10 96,6')}</div>
@@ -227,8 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
   hud();
   if (SCREEN === 'desk' || SCREEN === 'comms') { bar(); windows(); }
   if (SCREEN === 'comms') comms();
-  if (SCREEN === 'terminal') { bar({ title: false, ws: ['active', 'occ', '', ''], trmOn: true }); terminal(); }
-  if (SCREEN === 'agents') { bar({ title: false, ws: ['active', 'occ', '', ''], trmOn: true }); terminal({ agents: true }); crash(392); }
+  if (SCREEN === 'terminal') { bar({ title: false, ws: ['active', 'occ', '', '', ''], trmOn: true }); terminal(); }
+  if (SCREEN === 'agents') { bar({ title: false, ws: ['active', 'occ', '', '', ''], trmOn: true }); terminal({ agents: true }); crash(392); }
   if (SCREEN === 'power') { bar({ title: false, ind: false, upd: false }); power(); }
   if (SCREEN === 'proto') bar({ title: false, ind: false, upd: false });
   // Omarchy's centerAnchor: the clock sits at the exact centre and the rest of the centre section flanks it

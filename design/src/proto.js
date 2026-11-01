@@ -11,7 +11,7 @@ document.documentElement.classList.add('proto');
 const ICON = (n) => (window.ICONS && window.ICONS[n]) || n;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const DEMO_APPS = [
-  ['Alacritty', '終端機', 'SYS', 'terminal'], ['Chromium', '網頁瀏覽器', 'WEB', 'public'], ['Neovim', '文字編輯器', 'DEV', 'code'],
+  ['Foot', '終端機', 'SYS', 'terminal'], ['Chromium', '網頁瀏覽器', 'WEB', 'public'], ['Neovim', '文字編輯器', 'DEV', 'code'],
   ['Files', '檔案管理', 'SYS', 'folder'], ['Obsidian', '筆記', 'OFFICE', 'edit_note'], ['Signal', '通訊', 'NET', 'chat'],
   ['Spotify', '音樂', 'MEDIA', 'music_note'], ['LocalSend', '傳送檔案', 'NET', 'send'], ['btop', '系統監看', 'SYS', 'monitoring'],
   ['Calculator', '計算機', 'UTIL', 'calculate'], ['Docker', '容器', 'DEV', 'deployed_code'], ['Typora', 'Markdown 編輯', 'OFFICE', 'description'],
