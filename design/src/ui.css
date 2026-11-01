@@ -34,23 +34,13 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 .reg::before { left: 5px; top: 0; width: 1px; height: 11px; } .reg::after { top: 5px; left: 0; height: 1px; width: 11px; }
 
 /* ---------- desktop: an Omarchy theme background (static image; WULING draws no desktop widgets) ---------- */
-.screen { position: absolute; inset: 0; background: url("../assets/bg-field-mist.jpg") center/cover; }
-:root.paper .screen { background-image: url("../assets/bg-field-paper.jpg"); }
+.screen { position: absolute; inset: 0; background: url("../assets/bg-line-mist.jpg") center/cover; }
+:root.paper .screen { background-image: url("../assets/bg-line-paper.jpg"); }
+:root.hud .screen { background-image: url("../assets/bg-band-mist.jpg"); }
+:root.hud.paper .screen { background-image: url("../assets/bg-band-paper.jpg"); }
 .screen.dim::after { content: ""; position: absolute; inset: 0; background: rgba(5, 7, 7, .86); }
 :root.paper .screen.dim::after { background: rgba(217, 221, 213, .88); }
 /* hud: the same background image carries more survey HUD (baked into the image, not live) */
-.hud-extra { position: absolute; inset: 0; pointer-events: none; display: none; }
-:root.hud .hud-extra { display: block; }
-.hud-extra .scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(98, 217, 166, .035) 0 1px, transparent 1px 3px); }
-.hud-extra .rule-l, .hud-extra .rule-b { position: absolute; background-repeat: repeat; opacity: .7; }
-.hud-extra .rule-l { left: 0; top: 0; bottom: 0; width: 10px;
-  background-image: linear-gradient(var(--mist-5) 1px, transparent 1px), linear-gradient(var(--mist-6) 1px, transparent 1px);
-  background-size: 10px 48px, 5px 8px; background-position: 0 0, 0 0; background-repeat: repeat-y; }
-.hud-extra .rule-b { left: 0; right: 0; bottom: 0; height: 10px;
-  background-image: linear-gradient(90deg, var(--mist-5) 1px, transparent 1px), linear-gradient(90deg, var(--mist-6) 1px, transparent 1px);
-  background-size: 48px 10px, 8px 5px; background-repeat: repeat-x; background-position: 0 100%, 0 100%; }
-.hud-extra .read { position: absolute; font: 500 8px/1.6 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mist-5); white-space: pre; }
-.hud-extra .read b { color: var(--accent-ink); font-weight: 500; }
 
 /* ---------- BAR 指揮條 — Omarchy's widgets, Omarchy's order, WULING's drawing ---------- */
 .bar { position: absolute; left: 0; top: 0; right: 0; height: var(--bar-h); display: flex; align-items: center;

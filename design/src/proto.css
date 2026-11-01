@@ -64,7 +64,7 @@ html.proto, html.proto body { width: auto; height: auto; min-height: 100vh; over
   .chrome { position: static; height: auto; flex-wrap: wrap; padding: 8px 10px; gap: 8px 14px; }
   .chrome .hint { display: none; }
   .stage { position: static; transform: none !important; width: auto; height: auto; overflow: visible; padding: 10px 0 40px; }
-  .stage .screen, .stage .bar, .stage .hud-extra { display: none; }
+  .stage .screen, .stage .bar { display: none; }
   .dsp { position: relative; left: auto; top: auto; transform: none; margin: 0 auto; width: calc(100vw - 16px) !important; height: 70vh !important; }
   .dsp .rail { display: none; }
   .toastline { position: fixed; bottom: 16px; }

@@ -151,11 +151,11 @@ MENU_MIST = dict(sel_bg='#24302D', sel_alpha=1.0, sel_txt='#F4F5EF', sel_border=
 MENU_PAPER = dict(sel_bg='#FEF700', sel_alpha=1.0, sel_txt='#121614', sel_border='#121614', sel_w='0 0 0 2', menu_border='#C3CBC3')
 LIGHT = dict(ink0='#D9DDD5', ink1='#E4E7E0', ink2='#ECEEE7', ink3='#F6F7F2', line='#C3CBC3', fg='#121614', fg_dim='#7A8783', crit='#C8361F', crit_txt='#A82A1C', mark='#121614')
 THEMES = {
-  'wuling': (MIST, shell(MIST, **DARK, **MENU_MIST, pop_border='#2B3734', pop_w=1, lock_border='#2B3734'), 'bg-field-mist.jpg'),
-  'wuling-paper': (PAPER, shell(PAPER, **LIGHT, **MENU_PAPER, pop_border='#C3CBC3', pop_w=1, lock_border='#C3CBC3', scrim_a=.74), 'bg-field-paper.jpg'),
+  'wuling': (MIST, shell(MIST, **DARK, **MENU_MIST, pop_border='#2B3734', pop_w=1, lock_border='#2B3734'), 'bg-line-mist.jpg'),
+  'wuling-paper': (PAPER, shell(PAPER, **LIGHT, **MENU_PAPER, pop_border='#C3CBC3', pop_w=1, lock_border='#C3CBC3', scrim_a=.74), 'bg-line-paper.jpg'),
   # hud: a taller bar, accent card borders, a heavier scrim; the HUD on the background is baked into the image (render.sh)
-  'wuling-hud': (MIST, shell(MIST, **DARK, **MENU_MIST, bar_h=32, pop_border='#FEF700', pop_w=1, lock_border='#FEF700', scrim_a=.8), 'bg-hud-mist.jpg'),
-  'wuling-hud-paper': (PAPER, shell(PAPER, **LIGHT, **MENU_PAPER, bar_h=32, pop_border='#121614', pop_w=1, lock_border='#121614', scrim_a=.8), 'bg-hud-paper.jpg'),
+  'wuling-hud': (MIST, shell(MIST, **DARK, **MENU_MIST, bar_h=32, pop_border='#FEF700', pop_w=1, lock_border='#FEF700', scrim_a=.8), 'bg-band-mist.jpg'),
+  'wuling-hud-paper': (PAPER, shell(PAPER, **LIGHT, **MENU_PAPER, bar_h=32, pop_border='#121614', pop_w=1, lock_border='#121614', scrim_a=.8), 'bg-band-paper.jpg'),
 }
 for name, (pal, sh, bg) in THEMES.items():
     d = OUT / name

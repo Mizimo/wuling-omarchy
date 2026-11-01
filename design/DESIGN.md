@@ -39,9 +39,18 @@ A preset is an Omarchy theme, so Omarchy's own theme switcher (Super+Shift+Ctrl+
 | Notifications | Hairline header | Raised header, yellow for important, three-line grip ornament |
 | OSD | 316 × 46 px | 380 × 56 px, accent border, large yellow number, device in the label |
 | Window focus | Yellow border | Yellow border + corner brackets + window tag (`wuling.focus`) |
-| Background | Landscape and survey HUD, baked | The same plus scan lines, rulers and a readout, baked |
+| Background | Starts on the survey line | Starts on the wide band |
 | Omarchy's panels | Hairline border | Accent hairline |
 | Motion | §5 everyday | §5 plus entry choreography |
+
+**Backgrounds.** Three images, each in both palettes, all built from the Endfield Industries identity: its mark, its yellow band and
+contour lines. No painted landscapes. Every theme carries all three, so Omarchy's background switcher moves between them.
+
+| Image | What it is | First in |
+|---|---|---|
+| `bg-line-*` 測線 | A contour map with one survey line, the mark top right. Stays out of the way of windows | `field` |
+| `bg-thin-*` 細色帶 | The mark in the middle on a thin yellow band, contours all round | |
+| `bg-band-*` 寬色帶 | The mark in the middle on the full band, contours below: the official banner's composition | `hud` |
 
 **Customising.** Values resolve in this order: defaults → the theme's preset → `~/.config/wuling/overrides.toml`.
 `wuling theme resolve` prints every value with its origin. An update never writes to `~/.config/wuling/`. `wuling config set
@@ -97,6 +106,8 @@ white or yellow fill on MIST would hide it.
 - **Selection in WULING's own surfaces.** The plate inverts: `paper-0` ground, `ink-2` ink, 2 px yellow on the leading
   edge or foot.
 - **Danger.** Logout, Reboot and Shutdown carry a hazard strip and need a long press.
+- **Marks.** `assets/ef-mark.svg` is the Endfield Industries mark, redrawn as vector shapes in `currentColor`: use it wherever it is
+  shown large. `assets/emblem.svg` is the simplified 30 px plate for the bar's menu cell.
 
 ## 5. Motion
 
@@ -262,7 +273,9 @@ active it creates no window at all. Switching it off leaves the yellow border al
 
 Omarchy's menu, panels, clipboard, emoji, pickers, lock screen, polkit dialog and apps change through the theme alone;
 their code and layout stay Omarchy's. The system font stays the user's (`omarchy font set`). **Boot unlock:** Omarchy's `omarchy-plymouth-set-by-theme` reads the theme's `unlock.png` and
-colours. It needs sudo, so it is a separate, optional step.
+colours. It needs sudo, so it is a separate, optional step. The image is the **Endfield Industries mark alone**
+(`assets/unlock-{mist,paper}.png`): no WULING name, no band. Omarchy centres the image and hangs the password box 40 px below it, so the
+pair always sits low. The mark is 300 px tall, and 40 px of empty space below it in the image lifts it to just above the centre.
 
 **fastfetch.** The vertical 武陵 mark (`design/assets/fastfetch-logo.png`) is in the user's own config, not the theme: the
 installer asks.
@@ -284,7 +297,7 @@ Both new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to overwrit
 
 - **Resolutions:** 1366×768 to 4K, fractional scale; sizes scale with Omarchy's `[font] base-size`.
 - **Screen shapes:** Omarchy's background only fills by cropping. Backgrounds are 3840×2160 and keep their text inside the area that
-  16:9, 16:10, 3:2 and 21:9 all show (`design/src/wall.html`). `design/render.sh bg` rebuilds them.
+  16:9, 16:10, 3:2 and 21:9 all show (`design/src/wallpaper.py`). `design/render.sh bg` rebuilds them.
 - **Monitors:** a bar per output. Terminal, power menu, Dispatch and OSD on the focused output. Handle hotplug.
 - **Languages:** zh-Hant, zh-Hans, en. English documentation.
 - **Versions:** Omarchy 4.0.6 (stable) now. Keep the 4.5 differences behind one small boundary (the table in

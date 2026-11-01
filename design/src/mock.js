@@ -1,5 +1,5 @@
 // WULING for Omarchy — mockup builder. One page, every screen:
-//   mock.html?screen=desk|terminal|comms|power|agents|bg&dir=field|hud&theme=mist|paper   (terminal also takes &media=1)
+//   mock.html?screen=empty|desk|terminal|comms|power|agents&dir=field|hud&theme=mist|paper   (terminal also takes &media=1)
 // The bar always draws Omarchy's default layout (config/omarchy/shell.json, 4.0.6):
 //   left  [omarchy.menu, omarchy.workspaces]
 //   center[omarchy.indicators, omarchy.clock (anchor), omarchy.keyboard-layout, omarchy.weather, omarchy.system-update]
@@ -126,11 +126,6 @@ function windows() {
 }
 
 // ------------------------------------------------------------------ the hud preset's HUD on the background image
-function hud() {
-  S(`<div class="hud-extra"><div class="scan"></div><div class="rule-l"></div><div class="rule-b"></div>
-    <div class="read" style="left:114px;top:510px">SECTOR 07 · QINGBO STOCKADE\nAIC PLAN · <b>ACTIVE</b> · XIRANITE FLOW 0.62\nWIND 2.1 M/S · VIS 3.4 KM</div></div>`);
-}
-
 // ------------------------------------------------------------------ TERMINAL panel
 function terminal(o = {}) {
   const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
@@ -211,10 +206,9 @@ function power() {
 
 // ------------------------------------------------------------------ compose
 document.addEventListener('DOMContentLoaded', () => {
-  // screen=bg renders a theme's background on its own: render.sh bakes the hud preset's overlay into bg-hud-*.jpg
   const dimmed = SCREEN === 'power' || SCREEN === 'proto';
   S(`<div class="screen ${dimmed ? 'dim' : ''}"></div>`);
-  hud();
+  if (SCREEN === 'empty') bar({ title: false, ws: ['active', '', '', '', ''] });
   if (SCREEN === 'desk' || SCREEN === 'comms') { bar(); windows(); }
   if (SCREEN === 'comms') comms();
   if (SCREEN === 'terminal' || SCREEN === 'agents') { bar({ title: false, ws: ['active', 'occ', '', '', ''], trmOn: true }); terminal({ media: Q.get('media') === '1' }); }

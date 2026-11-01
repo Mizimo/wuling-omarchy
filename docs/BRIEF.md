@@ -50,7 +50,8 @@ The owner sees the result after C and F. **Rebooting kujira always asks the owne
   images through a manifest of hashes. Contrast is checked at generation: text at least 4.5:1, a row's detail text as Omarchy
   actually draws it.
 - `theme/` with the four themes of DESIGN §2: `colors.toml`, `shell.toml`, `icons.theme`, `light.mode` for PAPER,
-  `backgrounds/` (`design/assets/bg-*.jpg`), `unlock.png`, `preview.png` and `preview-unlock.png` from real captures, and the
+  `backgrounds/` with all three images of DESIGN §2 (`design/assets/bg-*.jpg`, named so Omarchy's sort puts that preset's first
+  image first), `unlock.png` (`design/assets/unlock-*.png`), `preview.png` and `preview-unlock.png` from real captures, and the
   preset's values for plugins. Confirm that file survives Omarchy's git-install filter.
 - `wuling` command: `commands --json`, `theme resolve`, `config get|set`, `status --json` (stub), `doctor`. Stable JSON with a
   schema version.
@@ -65,8 +66,10 @@ The owner sees the result after C and F. **Rebooting kujira always asks the owne
   `CLAUDE.md`, `agents/skills/`.
 - `tools/check`: tokens, generation, command metadata, shell syntax, privacy scan of staged files.
 - **Acceptance:** fresh VM install and removal leaves a `~/.config` inventory diff of nothing. All four themes apply, on 4.0.6
-  and 4.5. `wuling config set menu.selected fill` changes the real menu and survives re-applying the theme. Backgrounds checked at
-  1920×1080, 16:10, 3:2 and 21:9 on a real output. Then on kujira: theme applied; `omarchy-plymouth-set-by-theme wuling` run there, seen at the next owner-approved
+  and 4.5. `wuling config set menu.selected fill` changes the real menu, survives re-applying the theme, and leaves the user's
+  current background alone (Omarchy moves to the next image when a theme is set again). First apply shows the preset's first image, and
+  Omarchy's switcher reaches all three. Backgrounds checked at 1920×1080, 16:10, 3:2 and 21:9 on a real output. The boot unlock screen seen
+  for real in a VM (`plymouthd`, `plymouth show-splash`, `plymouth ask-for-password`). Then on kujira: theme applied; `omarchy-plymouth-set-by-theme wuling` run there, seen at the next owner-approved
   reboot.
 
 ### C — Bar and Terminal

@@ -2,6 +2,16 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-02 — boot unlock and backgrounds
+
+Looking at the report's screens, the owner: "開機解鎖畫面改成終末地工業的，默認壁紙換一個，這個太醜了".
+
+- **Boot unlock: the Endfield Industries mark alone.** "只有標誌，排版上目前重心有點靠下了." So no WULING name and no band, and the mark
+  sits higher than Omarchy's centring would put it.
+- **Backgrounds: no painted landscape.** Three images built from the Endfield Industries identity (its mark, yellow band, contour lines).
+  **The survey line is the default, and the others stay available**: "測線，但其他幾張也保留". The wide band is the first image in the `hud`
+  preset, which is the design lead's call: it is the strongest of the three.
+
 ## 2026-11-01 — the design report's three choices
 
 The owner reviewed the design report (real screens from a fresh Omarchy VM, mockups, the Dispatch prototype) and chose:
