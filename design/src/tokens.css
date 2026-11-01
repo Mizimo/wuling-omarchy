@@ -1,8 +1,6 @@
 /* ============================================================
-   WULING // FIELD TERMINAL — design tokens (source of truth)
-   終末地工業 × 武陵   ·   KJR-01
-   All px values are at output scale 1 (eDP-1 1366×768).
-   QML port: shell/Theme.qml must mirror these names 1:1.
+   WULING for Omarchy — design tokens, in the mockups' form.
+   All px values are at output scale 1 on a 1366×768 screen.
    ============================================================ */
 
 :root {
@@ -49,6 +47,7 @@
   --fg-label: var(--mist-5);
   --fg-dim: var(--mist-6);
   --accent: var(--yellow);
+  --accent-ink: var(--yellow);   /* the accent as text or a thin line; PAPER: ink, because yellow is only a fill there */
   --on-accent: var(--ink-2);
   --ok: var(--jade);
   --warn: var(--yellow);
@@ -83,18 +82,19 @@
   --chamfer-m: 10px;    /* cards, toasts                                */
   --chamfer-l: 16px;    /* panels                                       */
   --bar-h: 30px;
-  --gap: 8px;           /* niri gaps, panel margin                      */
+  --gap: 8px;           /* inside panels; Omarchy's window gaps stay 10/5 */
 
   /* ---------- motion ---------- */
   --ease-snap: cubic-bezier(.2, .8, .2, 1);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --t-fast: 120ms;
-  --t-base: 220ms;
-  --t-slow: 420ms;
-  --t-scan: 360ms;
+  --ease-exit: cubic-bezier(.6, 0, .9, .4);
+  --t-micro: 90ms;
+  --t-short: 160ms;
+  --t-base: 240ms;
+  --t-long: 420ms;
 }
 
-/* ---------- PAPER 宣紙 (light variant, phase 3) ---------- */
+/* ---------- PAPER 宣紙 (light) ---------- */
 :root.paper {
   --ink-0: #D9DDD5;
   --ink-1: #E4E7E0;
@@ -117,4 +117,5 @@
   --vermilion: #C8361F;
   --azurite: #2F6F9E;
   --on-accent: #121614;
+  --accent-ink: #121614;
 }

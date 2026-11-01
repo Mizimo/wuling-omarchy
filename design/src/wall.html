@@ -1,0 +1,96 @@
+<!doctype html><html><head><meta charset="utf-8"><title>WULING for Omarchy — background</title>
+<!-- A theme's background: wall.html?theme=mist|paper. render.sh draws the landscape (wallpaper.py) to ../.build/ and bakes this page.
+     Omarchy only fills by cropping, so everything that must stay readable keeps inside the area every common screen shows:
+     x 107–1259 (3:2 crops the sides), y 112–670 (21:9 crops top and bottom, and the bar covers some). Rulers, grid and the top-right readout may go. -->
+<link rel="stylesheet" href="ui.css"><script src="../.build/anchors.js"></script>
+<style>
+  #bg { position: absolute; inset: 0; background: center/cover no-repeat; }
+  .scrim-l { position: absolute; left: 0; top: 0; bottom: 0; width: 620px; }
+  .scrim-b { position: absolute; left: 0; right: 0; bottom: 0; height: 190px; }
+  svg#ov { position: absolute; left: 0; top: 0; }
+  .tb { position: absolute; left: 112px; top: 116px; }
+  .tb .big { font: 900 112px/1.02 var(--font-cjk-serif); width: 120px; }
+  .tb .cut, .tb .cut::after { background: var(--accent-ink); }
+  .tb .cut { position: absolute; left: -24px; top: 162px; width: 146px; height: 1px; }
+  .tb .cut::after { content: ""; position: absolute; right: -3px; top: -2px; width: 5px; height: 5px; }
+  .tb .cutl { position: absolute; left: 118px; top: 176px; white-space: nowrap; font: 500 8px/1 var(--font-mono); letter-spacing: .16em; color: var(--yellow); writing-mode: vertical-rl; }
+  :root.paper .tb .cutl { background: var(--yellow); color: var(--on-accent); padding: 4px 1px; }
+  /* one vertical-rl block, the main line first: it reads right to left */
+  .vl { position: absolute; left: 244px; top: 120px; font-family: var(--font-cjk-serif); writing-mode: vertical-rl; letter-spacing: .18em; }
+  .vl span { display: block; } .vl span:first-child { margin-left: 9px; } .vl .a { font-size: 15px; font-weight: 700; } .vl .b { font-size: 10.5px; font-weight: 500; }
+  .vrule { position: absolute; left: 234px; top: 116px; width: 1px; height: 170px; }
+  .has { position: absolute; left: 112px; top: 372px; display: flex; gap: 12px; align-items: center; }
+  .has img { width: 46px; height: 46px; }
+  .has .stack .val { font: 700 12px/1 var(--font-sans); letter-spacing: .12em; }
+  .word { position: absolute; left: 112px; top: 436px; font: 600 30px/1 var(--font-display); letter-spacing: .34em; }
+  .sub { position: absolute; left: 114px; top: 472px; font: 500 8px/1 var(--font-mono); letter-spacing: .16em; }
+  .hz { position: absolute; left: 112px; bottom: 118px; display: flex; align-items: stretch; height: 16px; }
+  .hz .s { width: 24px; background: repeating-linear-gradient(-45deg, #FEF700 0 4px, #121614 4px 8px); } .hz .t { background: rgba(14,18,17,.88); padding: 0 10px; display: flex; align-items: center; font: 500 8.5px/1 var(--font-mono); letter-spacing: .12em; color: #FEF700; }
+  .hzc { position: absolute; left: 112px; bottom: 104px; font: 500 7.5px/1 var(--font-mono); letter-spacing: .14em; }
+  .br { position: absolute; right: 112px; bottom: 104px; display: flex; gap: 10px; align-items: center; }
+  .br img.ef { width: 26px; height: 26px; }
+  .tr { position: absolute; right: 112px; top: 44px; text-align: right; font: 500 8px/12px var(--font-mono); letter-spacing: .14em; }
+  .lk text { font-family: "Geist Mono"; letter-spacing: .12em; }
+</style></head><body>
+<div id="bg"></div><div class="scrim-l" id="sl"></div><div class="scrim-b" id="sb"></div>
+<svg id="ov" width="1366" height="768"></svg>
+<div class="tb"><div class="big" id="big">武<br>陵</div><div class="cut"></div><div class="cutl">TALOS-II</div></div>
+<div class="vrule" id="vr"></div>
+<div class="vl"><span class="a" id="pa">先行者，後來者</span><span class="b" id="pb">無數人前赴後繼，都與你同在。</span></div>
+<div class="has"><img id="crest" src="../assets/has-crest.png"><div class="stack"><span class="lbl" id="h1">Hongshan Academy of Sciences</span><span class="val" id="h2">宏山科學院</span><span class="lbl" id="h3">Wuling · Talos-II</span></div></div>
+<div class="word" id="word">WULING</div>
+<div class="sub" id="sub">ENDFIELD INDUSTRIES — FIELD TERMINAL KJR-01</div>
+<div class="tr" id="tr">SURVEY GRID 48 · DATUM TALOS-II<br>MIST INDEX 0.62 · VIS 3.4 KM</div>
+<div class="hz"><div class="s"></div><div class="t">WULING · AIC PLAN · 息壤流動區</div></div>
+<div class="hzc" id="hzc">CAUTION — XIRANITE FLOW. KEEP CLEAR OF THE TIANSHI PILLAR ARRAY.</div>
+<div class="br"><img class="ef" src="../assets/emblem.svg"><div class="stack"><span class="lbl">Endfield Industries</span><span class="val" style="font-weight:600;letter-spacing:.12em">KJR-01 · 鯨</span></div><svg width="70" height="18" id="bc"></svg></div>
+<script>
+const theme = new URLSearchParams(location.search).get('theme') === 'paper' ? 'paper' : 'mist', dark = theme === 'mist', W = 1366, H = 768;
+document.documentElement.classList.toggle('paper', !dark);
+document.getElementById('bg').style.backgroundImage = `url(../.build/land-${theme}.png)`;
+if (!dark) document.getElementById('crest').style.filter = 'invert(1)';
+const ink = dark ? '#E6EBE5' : '#121614', muted = dark ? '#93A49F' : '#3E4A46', label = dark ? '#8FA39D' : '#4E5C58', dim = dark ? '#5D6E69' : '#7D8A85';
+const accent = dark ? '#FEF700' : '#121614', jade = dark ? '#62D9A6' : '#0F8A68', halo = dark ? 'rgba(5,7,7,.85)' : 'rgba(243,244,238,.9)', hs = `0 0 3px ${halo}, 0 0 1px ${halo}`;
+document.getElementById('sl').style.background = dark ? 'linear-gradient(90deg, rgba(5,8,8,.72), rgba(5,8,8,.42) 62%, transparent)' : 'linear-gradient(90deg, rgba(243,244,238,.6), rgba(243,244,238,.28) 66%, transparent)';
+document.getElementById('sb').style.background = dark ? 'linear-gradient(0deg, rgba(5,8,8,.7), transparent)' : 'linear-gradient(0deg, rgba(243,244,238,.6), transparent)';
+for (const [i, c] of [['big', ink], ['pa', ink], ['pb', muted], ['word', ink], ['sub', muted], ['tr', label], ['hzc', label], ['h1', label], ['h2', ink], ['h3', label]]) {
+  const e = document.getElementById(i); e.style.color = c; e.style.textShadow = hs; }
+document.getElementById('vr').style.background = dim;
+document.querySelectorAll('.br .lbl').forEach(e => e.style.color = label);
+document.querySelectorAll('.br .val').forEach(e => { e.style.color = ink; e.style.textShadow = hs; });
+let x = 0, bc = ''; const rnd = (n => () => (n = (n * 9301 + 49297) % 233280) / 233280)(7);
+while (x < 66) { const w = [1, 1, 2, 3][Math.floor(rnd() * 4)]; bc += `<rect x="${x}" y="0" width="${w}" height="18" fill="${ink}" fill-opacity=".6"/>`; x += w + [1, 2, 2, 3][Math.floor(rnd() * 4)]; }
+document.getElementById('bc').innerHTML = bc;
+// grid, rulers, registration marks
+const stroke = `style="paint-order:stroke;stroke:${halo};stroke-width:3px"`;
+let o = `<g stroke="${ink}" stroke-opacity="${dark ? .05 : .07}" shape-rendering="crispEdges">`;
+for (let gx = 48; gx < W; gx += 48) o += `<line x1="${gx + .5}" y1="0" x2="${gx + .5}" y2="${H}"/>`;
+for (let gy = 48; gy < H; gy += 48) o += `<line x1="0" y1="${gy + .5}" x2="${W}" y2="${gy + .5}"/>`;
+o += `</g><g stroke="${dim}" shape-rendering="crispEdges">`;
+for (let ty = 40; ty < H - 20; ty += 8) o += `<line x1="0" y1="${ty + .5}" x2="${(ty - 40) % 64 === 0 ? 9 : 4}" y2="${ty + .5}"/>`;
+for (let tx = 16; tx < W - 16; tx += 8) o += `<line x1="${tx + .5}" y1="${H}" x2="${tx + .5}" y2="${H - ((tx - 16) % 64 === 0 ? 9 : 4)}"/>`;
+o += `</g>`;
+const reg = (cx, cy) => `<g stroke="${muted}" shape-rendering="crispEdges"><line x1="${cx - 6}" y1="${cy + .5}" x2="${cx + 7}" y2="${cy + .5}"/><line x1="${cx + .5}" y1="${cy - 6}" x2="${cx + .5}" y2="${cy + 7}"/></g>`;
+o += reg(26, 52) + reg(W - 27, 52) + reg(26, H - 30) + reg(W - 27, H - 30);
+// reticle on the landmark, peak markers
+const lock = Object.entries(ANCHORS.markers).find(([, v]) => v.lock), [cx, cy] = lock[1].at, R = ANCHORS.reticle.r, r2 = ANCHORS.reticle.rInner;
+o += `<g class="lk"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${ink}" stroke-opacity=".28"/><circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="${ink}" stroke-opacity=".16" stroke-dasharray="2 5"/>`;
+for (let d = 0; d < 360; d += 5) { const a = (d - 90) * Math.PI / 180, L = d % 30 ? 5 : 12;
+  o += `<line x1="${cx + R * Math.cos(a)}" y1="${cy + R * Math.sin(a)}" x2="${cx + (R - L) * Math.cos(a)}" y2="${cy + (R - L) * Math.sin(a)}" stroke="${ink}" stroke-opacity="${d % 30 ? .25 : .5}"/>`;
+  if (d % 30 === 0) o += `<text x="${cx + (R + 24) * Math.cos(a)}" y="${cy + (R + 24) * Math.sin(a) + 3}" text-anchor="middle" font-size="8" fill="${label}" ${stroke}>${String(d).padStart(3, '0')}</text>`; }
+const arc = (rad, a0, a1, col, w) => { const p = a => [cx + rad * Math.cos((a - 90) * Math.PI / 180), cy + rad * Math.sin((a - 90) * Math.PI / 180)], [x0, y0] = p(a0), [x1, y1] = p(a1);
+  return `<path d="M${x0},${y0} A${rad},${rad} 0 0 1 ${x1},${y1}" fill="none" stroke="${col}" stroke-width="${w}"/>`; };
+o += ANCHORS.reticle.yellowArcs.map(([a, b]) => arc(R + 4, a, b, accent, 2)).join('') + arc(r2, ...ANCHORS.reticle.jadeArc, jade, 1.5);
+for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) o += `<line x1="${cx + dx * 18}" y1="${cy + dy * 18}" x2="${cx + dx * (r2 - 10)}" y2="${cy + dy * (r2 - 10)}" stroke="${ink}" stroke-opacity=".22"/>`;
+o += `<rect x="${cx - 6}" y="${cy - 6}" width="12" height="12" fill="none" stroke="${accent}" stroke-width="1.2"/><rect x="${cx - 1.5}" y="${cy - 1.5}" width="3" height="3" fill="${accent}"/>`;
+const rx = cx + R * .74 + 18, ry = cy - R * .74 - 6, ltext = 'LOCK · ' + lock[0];
+o += `<line x1="${cx + R * .71}" y1="${cy - R * .71}" x2="${rx - 4}" y2="${ry + 8}" stroke="${accent}"/><line x1="${rx - 4}" y1="${ry + 8}" x2="${rx + 110}" y2="${ry + 8}" stroke="${accent}"/>
+  ${dark ? `<text x="${rx}" y="${ry + 2}" font-size="9" font-weight="600" fill="#FEF700" ${stroke}>${ltext}</text>`
+         : `<rect x="${rx - 4}" y="${ry - 9}" width="${ltext.length * 7.4 + 8}" height="14" fill="#FEF700"/><text x="${rx}" y="${ry + 2}" font-size="9" font-weight="600" fill="#121614">${ltext}</text>`}
+  <text x="${rx}" y="${ry + 22}" font-size="8" fill="${ink}" ${stroke}>${lock[1].alt}</text><text x="${rx}" y="${ry + 33}" font-size="8" fill="${label}" ${stroke}>SURVEY · 測繪</text></g>`;
+for (const [code, m] of Object.entries(ANCHORS.markers)) { if (m.lock) continue; const [mx, my] = m.at;
+  o += `<g class="lk"><path d="M${mx - 4},${my - 9} L${mx + 4},${my - 9} L${mx},${my - 3} Z" fill="#FEF700" ${dark ? '' : 'stroke="#121614" stroke-width=".7"'}/>
+    <line x1="${mx + .5}" y1="${my - 11}" x2="${mx + .5}" y2="${my - 44}" stroke="${ink}" stroke-opacity=".45" stroke-dasharray="2 2"/>
+    <text x="${mx + 6}" y="${my - 40}" font-size="8" fill="${ink}" ${stroke}>${code}</text><text x="${mx + 6}" y="${my - 30}" font-size="8" fill="${label}" ${stroke}>${m.alt}</text></g>`; }
+document.getElementById('ov').innerHTML = o;
+</script></body></html>

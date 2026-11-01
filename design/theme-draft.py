@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Design draft of the four themes used for VM screenshots (not the product; the product generates these from one token file).
+"""The four themes as designed: two presets (field, hud) in two palettes (MIST, PAPER). Input for tokens/; the product generates its themes from one token file.
 
     python3 design/theme-draft.py   → design/theme-draft/<theme>/ (not tracked; unlock.png needs Chromium and design/fonts)
 """
@@ -24,8 +24,8 @@ def colors(p):
     return ''.join(f'{k} = "{v}"\n' for k, v in p.items())
 
 def shell(p, *, ink0, ink1, ink2, ink3, line, fg, fg_dim, crit, crit_txt,
-          bar_h=30, sel_bg, sel_alpha, sel_txt, sel_border, sel_w, pop_border, pop_w, mark, lock_border, scrim_a=.72):
-    return f'''# WULING design draft for VM screenshots: not the product.
+          bar_h=30, sel_bg, sel_alpha, sel_txt, sel_border, sel_w, menu_border, pop_border, pop_w, mark, lock_border, scrim_a=.72):
+    return f'''# WULING design draft: not the product.
 [bar]
 background       = "{ink2}"
 background-alpha = 1.0
@@ -98,7 +98,7 @@ countdown        = "{mark}"
 background                = "{ink2}"
 background-alpha          = 1.0
 text                      = "{fg}"
-border                    = "{pop_border}"
+border                    = "{menu_border}"
 border-alpha              = 1.0
 scrim                     = "{ink0}"
 scrim-alpha               = {scrim_a}
@@ -145,16 +145,17 @@ unselected-border-alpha = 0.28
 '''
 
 DARK = dict(ink0='#050707', ink1='#0A0D0C', ink2='#0E1211', ink3='#141A18', line='#2B3734', fg='#E6EBE5', fg_dim='#6F827D', crit='#E3432F', crit_txt='#FF6B57', mark='#FEF700')
+# Menus look the same in both presets (owner, 2026-11-01). A raised row with a yellow edge: Omarchy keeps a row's detail text in the
+# menu's text colour at .52, so a white or yellow fill would hide it on MIST (search results rely on it); PAPER's yellow fill keeps 3.6:1.
+MENU_MIST = dict(sel_bg='#24302D', sel_alpha=1.0, sel_txt='#F4F5EF', sel_border='#FEF700', sel_w='0 0 0 2', menu_border='#2B3734')
+MENU_PAPER = dict(sel_bg='#FEF700', sel_alpha=1.0, sel_txt='#121614', sel_border='#121614', sel_w='0 0 0 2', menu_border='#C3CBC3')
+LIGHT = dict(ink0='#D9DDD5', ink1='#E4E7E0', ink2='#ECEEE7', ink3='#F6F7F2', line='#C3CBC3', fg='#121614', fg_dim='#7A8783', crit='#C8361F', crit_txt='#A82A1C', mark='#121614')
 THEMES = {
-  # as before: raised row with a yellow edge, hairline cards. Omarchy keeps a row's detail text in the menu's text colour at .52,
-  # so a white or yellow selected fill would hide it (search results rely on it); only WULING's own surfaces use the white plate.
-  'wuling-as': (MIST, shell(MIST, **DARK, sel_bg='#24302D', sel_alpha=1.0, sel_txt='#F4F5EF', sel_border='#FEF700', sel_w='0 0 0 2', pop_border='#2B3734', pop_w=1, lock_border='#2B3734'), 'bg-original-mist.png'),
-  # calm: selection is a quiet raised row, yellow only marks the focused window's neighbours; neutral active border
-  'wuling-calm': (dict(MIST, hyprland_active_border='#C9D3CE'), shell(dict(MIST, hyprland_active_border='#C9D3CE'), **dict(DARK, mark='#C9D3CE'), bar_h=28, sel_bg='#E6EBE5', sel_alpha=.1, sel_txt='#F4F5EF', sel_border='#2B3734', sel_w='0', pop_border='#2B3734', pop_w=1, lock_border='#2B3734', scrim_a=.5), 'land-mist-1920x1080.png'),
-  # bold: yellow outlined selection with yellow text, yellow card borders (a yellow fill would hide the detail text too)
-  'wuling-bold': (MIST, shell(MIST, **DARK, bar_h=32, sel_bg='#141A18', sel_alpha=1.0, sel_txt='#FEF700', sel_border='#FEF700', sel_w='1', pop_border='#FEF700', pop_w=1, lock_border='#FEF700', scrim_a=.8), 'bg-original-mist.png'),
-  # paper: canon yellow only as a fill with ink on top
-  'wuling-paper': (PAPER, shell(PAPER, ink0='#D9DDD5', ink1='#E4E7E0', ink2='#ECEEE7', ink3='#F6F7F2', line='#C3CBC3', fg='#121614', fg_dim='#7A8783', crit='#C8361F', crit_txt='#A82A1C', mark='#121614', sel_bg='#FEF700', sel_alpha=1.0, sel_txt='#121614', sel_border='#121614', sel_w='0 0 0 2', pop_border='#C3CBC3', pop_w=1, lock_border='#C3CBC3', scrim_a=.74), 'bg-original-paper.png'),
+  'wuling': (MIST, shell(MIST, **DARK, **MENU_MIST, pop_border='#2B3734', pop_w=1, lock_border='#2B3734'), 'bg-field-mist.jpg'),
+  'wuling-paper': (PAPER, shell(PAPER, **LIGHT, **MENU_PAPER, pop_border='#C3CBC3', pop_w=1, lock_border='#C3CBC3', scrim_a=.74), 'bg-field-paper.jpg'),
+  # hud: a taller bar, accent card borders, a heavier scrim; the HUD on the background is baked into the image (render.sh)
+  'wuling-hud': (MIST, shell(MIST, **DARK, **MENU_MIST, bar_h=32, pop_border='#FEF700', pop_w=1, lock_border='#FEF700', scrim_a=.8), 'bg-hud-mist.jpg'),
+  'wuling-hud-paper': (PAPER, shell(PAPER, **LIGHT, **MENU_PAPER, bar_h=32, pop_border='#121614', pop_w=1, lock_border='#121614', scrim_a=.8), 'bg-hud-paper.jpg'),
 }
 for name, (pal, sh, bg) in THEMES.items():
     d = OUT / name

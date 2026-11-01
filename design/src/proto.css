@@ -1,28 +1,24 @@
-/* Dispatch 調度 — prototype styles (both variants share the frame; only the logic differs).
-   甲 A · UI only: Omarchy's menu tree, levels and behaviour, drawn by WULING.
-   乙 B · beside Omarchy: WULING's own launcher (modes), opened from its own key; Super+Space stays Omarchy's. */
+/* Dispatch 調度 — WULING's own launcher (modes), opened with Super+D; Super+Space stays Omarchy's menu.
+   The same in both presets: menus stay as in field. */
 .dsp { position: absolute; left: 50%; top: calc(50% + 15px); transform: translate(-50%, -50%); width: 680px; height: 456px; display: flex; z-index: 60;
   background: color-mix(in srgb, var(--ink-2) 98%, transparent); border: 1px solid var(--line);
   --c: 16px; clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
 .dsp .rail { width: 72px; flex: none; border-right: 1px solid var(--line); position: relative; display: flex; flex-direction: column; align-items: center; padding: 16px 0 14px; }
-.dsp .rail .no { font: 600 9px/1 var(--font-mono); color: var(--yellow); letter-spacing: .1em; align-self: flex-start; margin-left: 14px; }
+.dsp .rail .no { font: 600 9px/1 var(--font-mono); color: var(--accent-ink); letter-spacing: .1em; align-self: flex-start; margin-left: 14px; }
 .dsp .rail .zh { writing-mode: vertical-rl; font: 900 32px/1 var(--font-cjk-serif); color: var(--paper-1); margin-top: 18px; letter-spacing: .08em; position: relative; }
-.dsp .rail .zh::after { content: ""; position: absolute; left: -8px; right: -8px; top: 50%; height: 1px; background: var(--yellow); }
+.dsp .rail .zh::after { content: ""; position: absolute; left: -8px; right: -8px; top: 50%; height: 1px; background: var(--accent-ink); }
 .dsp .rail .mode { writing-mode: vertical-rl; font: 500 8px/1 var(--font-mono); letter-spacing: .2em; text-transform: uppercase; color: var(--mist-5); margin-top: 16px; }
 .dsp .rail .seal { margin-top: auto; width: 32px; height: 32px; background: var(--vermilion); display: grid; place-items: center; font: 900 19px/1 var(--font-cjk-serif); color: var(--paper-0); }
 :root.paper .dsp .rail .seal { color: #F4F5EF; }
 .dsp .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .dsp .q { height: 52px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 18px; border-bottom: 1px solid var(--line); }
-.dsp .q input { flex: 1; min-width: 0; background: none; border: none; outline: none; font: 400 17px/1 var(--font-mono); color: var(--paper-1); caret-color: var(--yellow); }
+.dsp .q input { flex: 1; min-width: 0; background: none; border: none; outline: none; font: 400 17px/1 var(--font-mono); color: var(--paper-1); caret-color: var(--accent-ink); }
 .dsp .q input::placeholder { color: var(--mist-6); }
 .dsp .tabs { display: flex; gap: 2px; }
 .dsp .tabs span { font: 500 8.5px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mist-5); padding: 6px 8px; cursor: pointer; white-space: nowrap; }
 .dsp .tabs span.on { background: var(--paper-0); color: var(--ink-2); }
 .dsp .meta { height: 26px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 18px; border-bottom: 1px solid var(--line-soft); }
-.dsp .meta .crumb { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; }
-.dsp .meta .crumb b { font-weight: 500; color: var(--paper-2); cursor: pointer; } .dsp .meta .crumb b:last-child { color: var(--yellow); }
 .dsp .meta .rt { margin-left: auto; white-space: nowrap; }
-.dsp .back { display: none; }
 .dsp .list { flex: 1; overflow-y: auto; scrollbar-width: none; }
 .dsp .list::-webkit-scrollbar { display: none; }
 .dsp .row { height: 34px; display: flex; align-items: center; gap: 12px; padding: 0 18px 0 16px; border-left: 2px solid transparent; cursor: pointer; position: relative; }
@@ -34,7 +30,6 @@
 .dsp .row .dt { font: 400 11px/1 var(--font-sans); color: var(--mist-5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .dsp .row .chip { margin-left: auto; flex: none; font: 500 7.5px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mist-5); box-shadow: inset 0 0 0 1px var(--line); padding: 4px 5px; }
 .dsp .row .go { display: none; margin-left: 10px; font: 500 8.5px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
-.dsp .row .ck { color: var(--jade); font: 600 11px/1 var(--font-mono); }
 .dsp .row.sel { background: var(--paper-0); border-left-color: var(--yellow); }
 .dsp .row.sel .nm, .dsp .row.sel .msym { color: var(--ink-2); } .dsp .row.sel .dt, .dsp .row.sel .ix { color: var(--ink-5); }
 .dsp .row.sel .nm em { color: var(--ink-2); box-shadow: inset 0 -2px 0 var(--yellow); }
@@ -42,7 +37,6 @@
 .dsp .row.sel .go { display: block; }
 .dsp .row.flash { animation: flash 260ms steps(2) 1; }
 @keyframes flash { 50% { background: var(--yellow); } }
-.dsp .row.sect { height: 24px; cursor: default; } .dsp .row.sect .micro { color: var(--mist-5); }
 .dsp .empty { padding: 30px 18px; font: 400 12px/1.5 var(--font-sans); color: var(--mist-5); }
 .dsp .calc { padding: 18px; }
 .dsp .calc .res { font: 600 30px/1.1 var(--font-mono); color: var(--paper-1); letter-spacing: .02em; }
@@ -52,8 +46,7 @@
 .dsp .foot .rt { margin-left: auto; }
 .toastline { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 70; display: none; align-items: center; gap: 10px;
   background: var(--ink-3); border: 1px solid var(--line); padding: 9px 14px; font: 500 11px/1 var(--font-mono); color: var(--paper-2); white-space: nowrap; }
-.toastline.on { display: flex; } .toastline b { color: var(--yellow); font-weight: 600; }
-:root.paper .toastline b { color: var(--paper-1); }
+.toastline.on { display: flex; } .toastline b { color: var(--accent-ink); font-weight: 600; }
 
 /* the prototype page: the 1366×768 canvas scaled into the window under a switch bar (prototype chrome, not part of the design) */
 html.proto, html.proto body { width: auto; height: auto; min-height: 100vh; overflow: auto; background: #050707; }
@@ -66,30 +59,6 @@ html.proto, html.proto body { width: auto; height: auto; min-height: 100vh; over
 .chrome .hint { margin-left: auto; text-transform: none; letter-spacing: .02em; color: #6F827D; }
 .stage { position: fixed; left: 0; top: 44px; transform-origin: 0 0; width: 1366px; height: 768px; overflow: hidden; }
 
-/* ---------- calm: the list is the whole surface; no rail, no seal, quiet tabs ---------- */
-:root.calm .dsp { width: 600px; --c: 0px; }
-:root.calm .dsp .rail { display: none; }
-:root.calm .dsp .q input { font: 400 15px/1 var(--font-sans); }
-:root.calm .dsp .tabs span.on { background: none; color: var(--paper-1); box-shadow: inset 0 -2px 0 var(--yellow); }
-:root.calm .dsp .row .ix, :root.calm .dsp .row .chip { display: none; }
-:root.calm .dsp .row.sel { background: var(--ink-4); }
-:root.calm .dsp .row.sel .nm, :root.calm .dsp .row.sel .msym { color: var(--paper-1); } :root.calm .dsp .row.sel .dt { color: var(--mist-4); }
-:root.calm .dsp .row.sel .go { color: var(--mist-4); }
-:root.calm .dsp .row.sel .nm em { color: var(--paper-1); }
-:root.calm .dsp .foot .rt { display: none; }
-
-/* ---------- bold: yellow header band, wider rail, codes on every row ---------- */
-:root.bold .dsp { width: 720px; height: 480px; border-color: var(--yellow); }
-:root.bold .dsp .rail { width: 84px; background: var(--yellow); border-right: none; }
-:root.bold .dsp .rail .no, :root.bold .dsp .rail .mode { color: var(--on-accent); }
-:root.bold .dsp .rail .zh { color: var(--on-accent); font-size: 36px; } :root.bold .dsp .rail .zh::after { background: var(--on-accent); }
-:root.bold .dsp .q { height: 58px; } :root.bold .dsp .q input { font-size: 19px; }
-:root.bold .dsp .meta { background: var(--ink-3); }
-:root.bold .dsp .row .ix { color: var(--yellow); }
-:root.bold .dsp .row.sel { background: var(--yellow); border-left-color: var(--on-accent); }
-:root.bold .dsp .row.sel .nm, :root.bold .dsp .row.sel .msym, :root.bold .dsp .row.sel .go, :root.bold .dsp .row.sel .ix { color: var(--on-accent); }
-:root.bold .dsp .row.sel .dt { color: rgba(14, 18, 17, .65); }
-
 /* ---------- phones: only the Dispatch surface, scaled to the width; tap to select, tap again to open ---------- */
 @media (max-width: 760px) {
   .chrome { position: static; height: auto; flex-wrap: wrap; padding: 8px 10px; gap: 8px 14px; }
@@ -98,6 +67,5 @@ html.proto, html.proto body { width: auto; height: auto; min-height: 100vh; over
   .stage .screen, .stage .bar, .stage .hud-extra { display: none; }
   .dsp { position: relative; left: auto; top: auto; transform: none; margin: 0 auto; width: calc(100vw - 16px) !important; height: 70vh !important; }
   .dsp .rail { display: none; }
-  .dsp .back { display: inline-block; }
   .toastline { position: fixed; bottom: 16px; }
 }

@@ -5,7 +5,7 @@
 
 Fonts come from design/fonts (run design/fetch-fonts.sh first). Needs fontTools, brotli and Pillow.
 """
-import base64, io, json, logging, pathlib, re, sys
+import base64, io, json, logging, pathlib, re
 from fontTools import subset as fts
 from fontTools.ttLib import TTFont
 from PIL import Image
@@ -16,10 +16,8 @@ SRC, FONTS, OUT = D / 'src', D / 'fonts', D / 'proto' / 'dispatch.html'
 
 def read(p): return (SRC / p).read_text(encoding='utf-8')
 
-menu = json.loads(read('data/omarchy-menu-4.0.6.json'))
 sources = read('mock.js') + read('proto.js') + read('proto.css') + read('ui.css')
-text = sources + ''.join(it['label'] + ' '.join(it.get('aliases', [])) for it in menu['items'])
-chars = {c for c in text if ord(c) >= 32} | set('0123456789 ,.:;·—–-+%°×÷=()[]{}<>/\\\'"!?#@&*_~|') | {' ', '›', '‹', '⏎', '↑', '↓', '←', '→', '●', '■', '▌'}
+chars = {c for c in sources if ord(c) >= 32} | set('0123456789 ,.:;·—–-+%°×÷=()[]{}<>/\\\'"!?#@&*_~|') | {' ', '›', '‹', '⏎', '↑', '↓', '←', '→', '●', '■', '▌'}
 
 def ligatures(font):
     cmap = font.getBestCmap()
@@ -66,11 +64,11 @@ def img(name, w=1366):
     b = io.BytesIO(); im.save(b, 'JPEG', quality=78, optimize=True); return 'data:image/jpeg;base64,' + base64.b64encode(b.getvalue()).decode()
 
 ui = re.sub(r'@import url\("[^"]+"\);\n', '', read('ui.css'))
-ui = re.sub(r'url\("\.\./assets/([^"]+\.png)"\)', lambda m: f'url("{img(m.group(1))}")', ui)
+ui = re.sub(r'url\("\.\./assets/([^"]+\.(?:png|jpg))"\)', lambda m: f'url("{img(m.group(1))}")', ui)
 html = f'''<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WULING · Dispatch 調度 — prototype</title>
 <style>{fonts_css}\n{read('tokens.css')}\n{ui}\n{read('proto.css')}</style>
-<script>window.MENU={json.dumps(menu, ensure_ascii=False)};window.ICONS={json.dumps(icons, ensure_ascii=False)};</script>
+<script>window.ICONS={json.dumps(icons, ensure_ascii=False)};</script>
 <script>{read('mock.js').replace("SCREEN = Q.get('screen') || 'desk'", "SCREEN = 'proto'")}</script>
 <script>{read('proto.js')}</script>
 </head><body><div class="stage"></div></body></html>'''

@@ -1,15 +1,15 @@
 // WULING for Omarchy — mockup builder. One page, every screen:
-//   mock.html?screen=desk|terminal|comms|power|agents&dir=as|calm|bold&theme=mist|paper
+//   mock.html?screen=desk|terminal|comms|power|agents|bg&dir=field|hud&theme=mist|paper   (terminal also takes &media=1)
 // The bar always draws Omarchy's default layout (config/omarchy/shell.json, 4.0.6):
 //   left  [omarchy.menu, omarchy.workspaces]
 //   center[omarchy.indicators, omarchy.clock (anchor), omarchy.keyboard-layout, omarchy.weather, omarchy.system-update]
 //   right [omarchy.tray, omarchy.agents, omarchy.bluetooth, omarchy.network, omarchy.audio, omarchy.monitor, omarchy.power]
-// plus WULING's own bar widgets: wuling.window (as, bold), wuling.terminal (all), wuling.power (as, bold).
+// plus WULING's own bar widgets: wuling.window, wuling.terminal, wuling.power.
 // WULING draws the menu cell, workspaces, window title, clock face, Terminal and power cells. Everything else is Omarchy's own widget,
 // so it looks like one: a 27 px icon slot, no labels. Keyboard layout and update only show when they have something to say.
 // Demo data is neutral: no real names, addresses or hosts.
 const Q = new URLSearchParams(location.search);
-const DIR = Q.get('dir') || 'as', THEME = Q.get('theme') || 'mist', SCREEN = Q.get('screen') || 'desk';
+const DIR = Q.get('dir') || 'field', THEME = Q.get('theme') || 'mist', SCREEN = Q.get('screen') || 'desk';
 document.documentElement.classList.add(DIR);
 if (THEME === 'paper') document.documentElement.classList.add('paper');
 
@@ -26,20 +26,16 @@ const S = (h) => (document.querySelector('.stage') || document.body).insertAdjac
 
 // ------------------------------------------------------------------ bar
 function bar(o = {}) {
-  const calm = DIR === 'calm', bold = DIR === 'bold';
-  const ink = THEME === 'paper' ? '#121614' : '#E6EBE5';
-  const menu = calm ? `<div class="menu">${GLYPH(ink, 22)}</div>`
-             : bold ? `<div class="menu">${GLYPH('#0E1211', 30)}<b>EF</b></div>`
-             : `<div class="menu">${GLYPH('#0E1211', 30)}</div>`;
+  const hudp = DIR === 'hud';
+  const menu = hudp ? `<div class="menu">${GLYPH('#0E1211', 30)}<b>EF</b></div>` : `<div class="menu">${GLYPH('#0E1211', 30)}</div>`;
   const ws = (o.ws || ['active', 'occ', 'occ', '', '']).map((s, i) =>
-    `<span class="cell ${s}">${calm ? i + 1 : String(i + 1).padStart(2, '0')}</span>`).join('');
+    `<span class="cell ${s}">${String(i + 1).padStart(2, '0')}</span>`).join('');
   const left = `${menu}${stack('Wuling · 武陵', 'KJR-01', 'ident')}<i class="sep opt"></i><div class="ws">${ws}</div>
     ${o.title === false ? '' : `<i class="sep opt"></i>${stack(o.app || 'Terminal · 終端', o.title || '~/projects/field-notes', 'focus')}`}`;
   // center: indicators | clock (anchor) | keyboard · weather · update
   const ind = o.ind === false ? '' : `<div class="w native">${ms('bedtime')}</div>`;
-  // the clock: calm shows Omarchy's own label; the others draw a larger face over Omarchy's widget (its clicks and calendar still work)
-  const clock = calm ? `<span class="clock native">Sunday 14:03</span>`
-              : `<span class="clock">14:03</span>${stack('Sun 週日', '11.01', 'date')}`;
+  // the clock: a larger face drawn over Omarchy's own widget (its clicks and calendar still work)
+  const clock = `<span class="clock">14:03</span>${stack('Sun 週日', '11.01', 'date')}`;
   const wx = `<div class="w native">${ms('partly_cloudy_day')}</div>`;
   const upd = o.upd === false ? '' : `<div class="w native">${ms('sync')}</div>`;
   // right: Omarchy's widgets in Omarchy's order
@@ -50,8 +46,7 @@ function bar(o = {}) {
   const aud = `<div class="w native">${ms('volume_up')}</div>`;
   const mon = `<div class="w native">${ms('desktop_windows')}</div>`;
   const pw = `<div class="w native"><span class="bat"><span class="cell"><i></i><i></i><i></i><i></i><i class="off"></i></span></span></div>`;
-  const trm = calm ? `<div class="trm ${o.trmOn ? 'on' : ''}">${ms('side_navigation')}</div>`
-            : `<div class="trm ${o.trmOn ? 'on' : ''}">${ms('side_navigation')}${stack('Terminal', '終端')}</div>`;
+  const trm = `<div class="trm ${o.trmOn ? 'on' : ''}">${ms('side_navigation')}${stack('Terminal', '終端')}</div>`;
   const pwr = `<div class="pwr">${ms('power_settings_new')}</div>`;
   S(`<div class="bar">
     <div class="sec left">${left}</div>
@@ -121,7 +116,7 @@ function windows() {
     <div class="tabs"><span class="on">Terminal.qml</span><span>Tile.qml</span><span>tokens.toml</span></div>
     <div class="code">${code.map((c, i) => L(i + 1, c, i === 21)).join('\n')}</div>
     <div class="st"><span class="mode">NORMAL</span><span>⎇ main</span><span style="margin-left:auto">qml</span><span>22:44</span></div></div></div>`);
-  // bold: corner brackets in the gaps around the focused window + a window tag (a WULING overlay that follows focus)
+  // hud: corner brackets in the gaps around the focused window + a window tag (a WULING overlay that follows focus)
   const x = 10, y = top, w = wl, b = 5;
   S(`<i class="brk2" style="left:${x - b - 2}px;top:${y - b - 2}px;border-left-width:2px;border-top-width:2px"></i>
      <i class="brk2" style="left:${x + w - 12 + b}px;top:${y - b - 2}px;border-right-width:2px;border-top-width:2px"></i>
@@ -130,23 +125,23 @@ function windows() {
      <span class="wtag" style="left:${x + 18}px;top:${y - 7}px">FOCUS · FOOT · WS 01</span>`);
 }
 
-// ------------------------------------------------------------------ bold-only HUD on the background image
+// ------------------------------------------------------------------ the hud preset's HUD on the background image
 function hud() {
   S(`<div class="hud-extra"><div class="scan"></div><div class="rule-l"></div><div class="rule-b"></div>
-    <div class="read" style="left:56px;top:478px">SECTOR 07 · QINGBO STOCKADE\nAIC PLAN · <b>ACTIVE</b> · XIRANITE FLOW 0.62\nWIND 2.1 M/S · VIS 3.4 KM</div></div>`);
+    <div class="read" style="left:114px;top:510px">SECTOR 07 · QINGBO STOCKADE\nAIC PLAN · <b>ACTIVE</b> · XIRANITE FLOW 0.62\nWIND 2.1 M/S · VIS 3.4 KM</div></div>`);
 }
 
 // ------------------------------------------------------------------ TERMINAL panel
 function terminal(o = {}) {
-  const calm = DIR === 'calm', bold = DIR === 'bold', agents = !!o.agents;
   const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
   const sh = (no, en, zh, rt = '') => `<div class="sh"><span class="no">${no}</span><span class="t">${en}<em>${zh}</em></span><span class="rl"></span><span class="rt">${rt}</span></div>`;
   const tile = (ic, lbl, v, on) => `<div class="tile ${on ? 'on' : ''}"><div class="tp">${ms(ic)}<span class="micro">${lbl}</span></div><div class="v">${v}</div></div>`;
   const segs = (n, on, cls = '') => `<div class="segs ${cls}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div>`;
   const spark = (c, pts) => `<svg width="96" height="16" viewBox="0 0 96 16"><polyline fill="none" stroke="${c}" stroke-width="1" points="${pts}"/></svg>`;
+  let sec = o.media ? 5 : 4; const n = () => String(++sec).padStart(2, '0');
   S(`<div class="trmp" style="top:${top}px;bottom:10px">
     <div class="hdband">Field Terminal<span class="sp"></span>KJR-01</div>
-    <section>${sh('02', 'Terminal', '終端', calm ? '' : 'Operator')}
+    <section>${sh('02', 'Terminal', '終端', 'Operator')}
       <div class="clk"><span class="big">14:03</span><span class="sec">:07</span>
         <div class="dt"><div class="micro">2026 · Sun 週日</div><div class="d">11.01 · JST</div><div class="micro" style="margin-top:4px">Uptime 2H 18M</div></div></div></section>
     <section>${sh('03', 'Link', '連線')}
@@ -155,23 +150,20 @@ function terminal(o = {}) {
     <section>${sh('04', 'Levels', '調節')}
       <div class="lv">${ms('volume_up')}${segs(24, 10)}<span class="n">40</span></div>
       <div class="lv">${ms('brightness_6')}${segs(24, 17, 'paper')}<span class="n">72</span></div></section>
-    ${agents ? `<section>${sh('05', 'Agent', '代理', 'Super+Shift+Ctrl+A')}
-      ${[['Claude', 'Max', 37, 58, '1h 12m'], ['Codex', 'Pro', 12, 31, '3h 40m']].map(([n, t, a, b, r]) => `<div class="agt"><span class="nm">${n}<small>${t}</small></span><div class="bars">
+    ${o.media ? `<section>${sh('05', 'Signal', '訊號', '● Playing')}
+      <div class="sig"><div class="art">MSR</div><div style="flex:1"><div class="tt">Quiet Survey</div><div class="ar">Field Recordings · Vol. 2</div><div class="pg"><i style="width:34%"></i></div></div></div></section>` : ''}
+    <section>${sh(n(), 'Agent', '代理', 'Super+Shift+Ctrl+A')}
+      ${[['Claude', 'Max', 37, 58, '1h 12m'], ['Codex', 'Pro', 12, 31, '3h 40m']].map(([nm, t, a, b, r]) => `<div class="agt"><span class="nm">${nm}<small>${t}</small></span><div class="bars">
         <div class="row"><span class="micro">Session</span><span class="m"><i style="width:${a}%"></i></span><span class="p">${a}%</span></div>
         <div class="row"><span class="micro">Week</span><span class="m"><i style="width:${b}%"></i></span><span class="p">${b}%</span></div></div><span class="rs">${r}</span></div>`).join('')}
-      <div class="ask">${ms('smart_toy', 'font-size:14px;color:var(--paper-2)')}<span>Open default agent</span><b>Claude</b></div></section>` : `<section>${sh('05', 'Signal', '訊號', calm ? '' : '● Playing')}
-      <div class="sig"><div class="art">MSR</div><div style="flex:1"><div class="tt">Quiet Survey</div><div class="ar">Field Recordings · Vol. 2</div><div class="pg"><i style="width:34%"></i></div></div></div></section>`}
-    ${calm && !agents ? '' : `<section>${sh('06', 'Telemetry', '遙測')}
-      <div class="tel"><div><div class="micro">CPU 處理</div><div class="v">12%</div>${spark('var(--yellow)', '0,12 10,11 20,13 30,9 40,10 50,7 60,9 70,8 80,10 96,6')}</div>
+      <div class="ask">${ms('smart_toy', 'font-size:14px;color:var(--paper-2)')}<span>Open default agent</span><b>Claude</b></div></section>
+    <section>${sh(n(), 'Telemetry', '遙測')}
+      <div class="tel"><div><div class="micro">CPU 處理</div><div class="v">12%</div>${spark('var(--accent-ink)', '0,12 10,11 20,13 30,9 40,10 50,7 60,9 70,8 80,10 96,6')}</div>
         <div><div class="micro">MEM 記憶</div><div class="v">3.1<small> / 7.0G</small></div>${spark('var(--paper-2)', '0,9 20,9 40,8 60,8 80,8 96,7')}</div>
-        <div><div class="micro">Temp 溫度</div><div class="v">48°</div>${spark('var(--jade)', '0,10 16,10 32,9 48,11 64,10 80,9 96,9')}</div></div>
-      ${agents ? '' : `<div class="agt"><span class="nm">Claude</span><div class="bars">
-        <div class="row"><span class="micro">Session</span><span class="m"><i style="width:37%"></i></span><span class="p">37%</span></div>
-        <div class="row"><span class="micro">Week</span><span class="m"><i style="width:58%"></i></span><span class="p">58%</span></div></div></div>`}</section>`}
-    <section style="border-bottom:none">${sh(calm ? '06' : '07', 'Comms log', '通訊紀錄', '3 則')}
-      <div class="log">${agents ? `<div class="it"><span class="a">System</span>Process crashed: firefox<span class="tm">14:01</span></div>` : ''}<div class="it"><span class="a">Update</span>3 packages ready<span class="tm">13:58</span></div>
-        <div class="it"><span class="a">Calendar</span>Review at 15:00<span class="tm">13:40</span></div>
-        ${agents ? '' : `<div class="it"><span class="a">Agent</span>Task finished<span class="tm">13:12</span></div>`}</div></section>
+        <div><div class="micro">Temp 溫度</div><div class="v">48°</div>${spark('var(--jade)', '0,10 16,10 32,9 48,11 64,10 80,9 96,9')}</div></div></section>
+    <section style="border-bottom:none">${sh(n(), 'Comms log', '通訊紀錄', '3 則')}
+      <div class="log"><div class="it"><span class="a">System</span>Process crashed: firefox<span class="tm">14:01</span></div><div class="it"><span class="a">Update</span>3 packages ready<span class="tm">13:58</span></div>
+        <div class="it"><span class="a">Calendar</span>Review at 15:00<span class="tm">13:40</span></div></div></section>
     <div class="foot">${[['lock', 'Lock'], ['bedtime', 'Sleep'], ['logout', 'Exit', 1], ['restart_alt', 'Reboot', 1], ['power_settings_new', 'Off', 1]]
       .map(([i, l, d]) => `<div class="pb ${d ? 'd' : ''}">${ms(i)}<span class="micro">${l}</span></div>`).join('')}</div>
   </div>`);
@@ -179,20 +171,20 @@ function terminal(o = {}) {
 
 // ------------------------------------------------------------------ COMMS + OSD
 function comms() {
-  const calm = DIR === 'calm';
+  const hudp = DIR === 'hud';
   const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
   const toast = (cls, app, time, ic, icc, sum, body, acts, life) => `<div class="toast ${cls}" style="right:10px;top:${top + toast.y}px">
     <div class="hd"><span class="micro">Comms · 通訊</span><span class="micro app">${app}</span><span class="micro" style="margin-left:auto">${time}</span>${ms('close', 'font-size:14px;margin-left:6px;color:var(--mist-5)')}</div>
     <div class="bd"><div class="art">${ms(ic, `font-size:20px;color:${icc}`)}</div><div><div class="sum">${sum}</div><div class="body">${body}</div></div></div>
     ${acts ? `<div class="acts">${acts}</div>` : ''}${life ? `<i class="life" style="width:${life}%"></i>` : ''}</div>`;
   toast.y = 0;
-  S(toast('imp', 'System update', '14:02', 'system_update_alt', 'var(--yellow)', '有 3 個更新 · 3 updates ready', 'omarchy 4.0.7 · hyprland · mesa', `<span class="btn pri">Update 更新</span><span class="btn">Later</span>`, 62));
-  toast.y = calm ? 118 : 128;
+  S(toast('imp', 'System update', '14:02', 'system_update_alt', 'var(--accent-ink)', '有 3 個更新 · 3 updates ready', 'omarchy 4.0.7 · hyprland · mesa', `<span class="btn pri">Update 更新</span><span class="btn">Later</span>`, 62));
+  toast.y = 128;
   S(toast('', 'Agent', '13:58', 'smart_toy', 'var(--jade)', '任務完成 · Task finished', 'Refactor of the status reader is ready for review.', '', 0));
-  const w = calm ? 260 : DIR === 'bold' ? 380 : 316;
+  const w = hudp ? 380 : 316;
   const segs = (n, on) => `<div class="segs">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div>`;
   S(`<div class="osd" style="left:${683 - w / 2}px;bottom:32px">${ms('volume_up', 'font-size:18px;color:var(--paper-1)')}
-    <div class="stack" style="gap:5px"><span class="micro" style="font-size:8px">${DIR === 'bold' ? 'Audio out · Speakers' : 'Vol · 音量'}</span>${segs(DIR === 'bold' ? 22 : 20, DIR === 'bold' ? 9 : 8)}</div>
+    <div class="stack" style="gap:5px"><span class="micro" style="font-size:8px">${hudp ? 'Audio out · Speakers' : 'Vol · 音量'}</span>${segs(hudp ? 22 : 20, hudp ? 9 : 8)}</div>
     <span class="num">40</span></div>`);
 }
 
@@ -201,35 +193,32 @@ function crash(right) {
   const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
   S(`<div class="toast crit" style="right:${right}px;top:${top}px">
     <div class="hd"><span class="micro">Comms · 通訊</span><span class="micro app">System</span><span class="micro" style="margin-left:auto">14:01</span>${ms('close', 'font-size:14px;margin-left:6px;color:var(--mist-5)')}</div>
-    <div class="bd"><div class="art">${ms('bug_report', 'font-size:20px;color:var(--vermilion)')}</div><div><div class="sum">Process crashed: firefox</div><div class="body">SIGSEGV · click to diagnose with the default agent</div></div></div>
-    <div class="acts"><span class="btn pri">Diagnose 診斷</span><span class="btn">Dismiss</span></div></div>`);
+    <div class="bd"><div class="art">${ms('bug_report', 'font-size:20px;color:var(--vermilion)')}</div><div><div class="sum">Process crashed: firefox</div><div class="body">Click to diagnose with AI</div></div></div></div>`);
 }
 
 // ------------------------------------------------------------------ TERMINATION (Omarchy's System menu entries)
 function power() {
-  const bold = DIR === 'bold';
   const items = [['01', 'S', 'monitor', 'Screensaver', '螢幕保護'], ['02', 'L', 'lock', 'Lock', '鎖定'], ['03', 'U', 'bedtime', 'Suspend', '睡眠'],
     ['04', 'H', 'downloading', 'Hibernate', '休眠'], ['05', 'E', 'logout', 'Logout', '登出', 1], ['06', 'R', 'restart_alt', 'Reboot', '重新啟動 · 長按確認', 1, 1],
     ['07', 'P', 'power_settings_new', 'Shutdown', '關機', 1]];
-  const ring = `<svg class="ring" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="rgba(14,18,17,.25)" stroke-width="3"/>
-    <circle cx="20" cy="20" r="16" fill="none" stroke="#0E1211" stroke-width="3" stroke-dasharray="100.5" stroke-dashoffset="40" transform="rotate(-90 20 20)"/></svg>`;
-  S(`<div class="term-p"><div class="kick"><span class="no">${DIR === 'calm' ? '' : '04'}</span><span class="micro">${DIR === 'calm' ? 'System · 系統' : 'Termination protocol'}</span></div>
-    <div class="ttl">${DIR === 'calm' ? '系統' : '終止協議'}</div>
+  S(`<div class="term-p"><div class="kick"><span class="no">04</span><span class="micro">Termination protocol</span></div>
+    <div class="ttl">終止協議</div>
     <div class="cards">${items.map(([n, k, ic, en, zh, d, sel]) => `<div class="card ${d ? 'd' : ''} ${sel ? 'sel' : ''}">
-      <span class="n">${n}</span><span class="key">${k}</span><span class="ic">${ms(ic, 'font-size:24px;color:inherit')}</span><span class="en">${DIR === 'calm' ? en : en.toUpperCase()}</span><span class="zh">${zh}</span>
-      ${sel ? `<i class="hold" style="width:58%"></i>${ring}` : ''}</div>`).join('')}</div>
-    <div class="hints micro"><span>${DIR === 'calm' ? '↑↓' : '←→'} Select</span><span><b>Hold ↵</b> Confirm 0.8s</span><span><b>Esc</b> Abort</span><span class="rt">Same entries as Omarchy · System</span></div></div>`);
+      <span class="n">${n}</span><span class="key">${k}</span><span class="ic">${ms(ic, 'font-size:24px;color:inherit')}</span><span class="en">${en.toUpperCase()}</span><span class="zh">${zh}</span>
+      ${sel ? `<i class="hold" style="width:58%"></i>` : ''}</div>`).join('')}</div>
+    <div class="hints micro"><span>←→ Select</span><span><b>Hold ↵</b> Confirm 0.8s</span><span><b>Esc</b> Abort</span><span class="rt">Same entries as Omarchy · System</span></div></div>`);
 }
 
 // ------------------------------------------------------------------ compose
 document.addEventListener('DOMContentLoaded', () => {
+  // screen=bg renders a theme's background on its own: render.sh bakes the hud preset's overlay into bg-hud-*.jpg
   const dimmed = SCREEN === 'power' || SCREEN === 'proto';
   S(`<div class="screen ${dimmed ? 'dim' : ''}"></div>`);
   hud();
   if (SCREEN === 'desk' || SCREEN === 'comms') { bar(); windows(); }
   if (SCREEN === 'comms') comms();
-  if (SCREEN === 'terminal') { bar({ title: false, ws: ['active', 'occ', '', '', ''], trmOn: true }); terminal(); }
-  if (SCREEN === 'agents') { bar({ title: false, ws: ['active', 'occ', '', '', ''], trmOn: true }); terminal({ agents: true }); crash(392); }
+  if (SCREEN === 'terminal' || SCREEN === 'agents') { bar({ title: false, ws: ['active', 'occ', '', '', ''], trmOn: true }); terminal({ media: Q.get('media') === '1' }); }
+  if (SCREEN === 'agents') crash(392);
   if (SCREEN === 'power') { bar({ title: false, ind: false, upd: false }); power(); }
   if (SCREEN === 'proto') bar({ title: false, ind: false, upd: false });
   // Omarchy's centerAnchor: the clock sits at the exact centre and the rest of the centre section flanks it

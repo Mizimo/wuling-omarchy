@@ -2,6 +2,27 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-01 — the design report's three choices
+
+The owner reviewed the design report (real screens from a fresh Omarchy VM, mockups, the Dispatch prototype) and chose:
+
+- **Dispatch: variant B (乙).** Super+Space stays Omarchy's menu, themed. Dispatch is WULING's own launcher on **Super+D**,
+  with modes for apps, clipboard, commands, calculator and asking the agent. Variant A (taking over Omarchy's menu) is
+  not built: it would mean following Omarchy's menu logic forever.
+- **Agents: level 3.** Omarchy's own entry points in WULING's look, a Terminal **Agent** section (usage, reset time, open
+  the default agent) and Dispatch's **ASK** mode.
+- **Look: swappable, two presets.** "混搭，選單的部分照舊。我覺得甚至可以做一個可以替換的theme，或者自定義設置這樣，給兩個預設."
+  - **`field` (照舊) is the default; `hud` (更強烈) is the second preset.** The calmer direction is dropped.
+  - **Menus stay as in `field` in both presets**: Omarchy's menu, Dispatch and the power menu.
+  - Presets are Omarchy themes, switched with Omarchy's own theme switcher. Each has MIST and PAPER: `wuling`, `wuling-paper`,
+    `wuling-hud`, `wuling-hud-paper`.
+  - Anything can be customised in `~/.config/wuling/` and survives updates. Any other Omarchy theme works too: WULING's
+    surfaces then use that theme's palette.
+
+The same review settled what the research changed: no Omarchy key is rebound (the System entry goes through Omarchy's
+menu extension file), the bar hosts Omarchy's own widgets, windows keep Omarchy's geometry, and bar drag-to-reorder is
+not rebuilt (`omarchy bar move` does it).
+
 ## 2026-11-01 — agent-ready and long-lived
 
 The owner: WULING follows Omarchy's way of working with agents, and has to stay easy to maintain and to keep
@@ -16,8 +37,8 @@ reshaping for years. Concretely, after Omarchy 4.0.6 (`AGENTS.md`, `agents/skill
   and test entry points.
 - **Self-describing commands.** Every WULING command carries Omarchy-style metadata (summary, args, examples) and can
   be listed in machine-readable form.
-- **One source for the look.** Design tokens live in one place. The theme files (`colors.toml`, `shell.toml`,
-  `hyprland.lua`, app templates) and the plugins' styling are generated from it or read it; changing the look means
+- **One source for the look.** Design tokens live in one place. The theme files (`colors.toml`, `shell.toml`, app
+  templates) and the plugins' styling are generated from it or read it; changing the look means
   changing tokens, not hunting through QML.
 - **Small, separable parts.** Each component is its own plugin with a manifest and a README that says what each file
   owns; shared visuals come from one WULING UI kit. Any part can be switched off and Omarchy's own takes over.
