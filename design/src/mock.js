@@ -1,5 +1,5 @@
 // WULING for Omarchy — mockup builder. One page, every screen:
-//   mock.html?screen=desk|terminal|comms|power&dir=as|calm|bold&theme=mist|paper
+//   mock.html?screen=desk|terminal|comms|power|agents&dir=as|calm|bold&theme=mist|paper
 // The bar always draws Omarchy's default layout (config/omarchy/shell.json, 4.0.6):
 //   left  [omarchy.menu, omarchy.workspaces]
 //   center[omarchy.indicators, omarchy.clock (anchor), omarchy.keyboard-layout, omarchy.weather, omarchy.system-update]
@@ -60,10 +60,11 @@ function bar(o = {}) {
 
 // ------------------------------------------------------------------ Hyprland: two tiled windows
 function windows() {
-  const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 8;
-  const h = 768 - top - 8, wl = 671, xr = 687;
+  // Omarchy's default Hyprland geometry: gaps_out 10, gaps_in 5, border 2, no rounding
+  const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
+  const h = 768 - top - 10, wl = 668, xr = 688;
   const prompt = (p, t = '') => `<span class="k">▌</span><span class="w">${p}</span> <span class="f">${'─'.repeat(52)}</span> <span class="m">${t}</span>`;
-  S(`<div class="win focus" style="left:8px;top:${top}px;width:${wl}px;height:${h}px">
+  S(`<div class="win focus" style="left:10px;top:${top}px;width:${wl}px;height:${h}px">
 <div class="term">${prompt('~', '14:02:51')}
 <span class="k">❯</span> <span class="w">fastfetch</span>
 </div><div style="display:flex;gap:18px;padding:0 12px 4px">
@@ -120,7 +121,7 @@ function windows() {
     <div class="code">${code.map((c, i) => L(i + 1, c, i === 21)).join('\n')}</div>
     <div class="st"><span class="mode">NORMAL</span><span>⎇ main</span><span style="margin-left:auto">qml</span><span>22:44</span></div></div></div>`);
   // bold: corner brackets in the gaps around the focused window + a window tag (a WULING overlay that follows focus)
-  const x = 8, y = top, w = wl, b = 4;
+  const x = 10, y = top, w = wl, b = 5;
   S(`<i class="brk2" style="left:${x - b - 2}px;top:${y - b - 2}px;border-left-width:2px;border-top-width:2px"></i>
      <i class="brk2" style="left:${x + w - 12 + b}px;top:${y - b - 2}px;border-right-width:2px;border-top-width:2px"></i>
      <i class="brk2" style="left:${x - b - 2}px;top:${y + h - 12 + b}px;border-left-width:2px;border-bottom-width:2px"></i>
@@ -135,15 +136,15 @@ function hud() {
 }
 
 // ------------------------------------------------------------------ TERMINAL panel
-function terminal() {
-  const calm = DIR === 'calm', bold = DIR === 'bold';
-  const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 8;
+function terminal(o = {}) {
+  const calm = DIR === 'calm', bold = DIR === 'bold', agents = !!o.agents;
+  const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
   const sh = (no, en, zh, rt = '') => `<div class="sh"><span class="no">${no}</span><span class="t">${en}<em>${zh}</em></span><span class="rl"></span><span class="rt">${rt}</span></div>`;
   const tile = (ic, lbl, v, on) => `<div class="tile ${on ? 'on' : ''}"><div class="tp">${ms(ic)}<span class="micro">${lbl}</span></div><div class="v">${v}</div></div>`;
   const segs = (n, on, cls = '') => `<div class="segs ${cls}">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div>`;
   const spark = (c, pts) => `<svg width="96" height="16" viewBox="0 0 96 16"><polyline fill="none" stroke="${c}" stroke-width="1" points="${pts}"/></svg>`;
-  S(`<div class="trmp" style="top:${top}px;bottom:8px">
-    <div class="hdband">Endfield Industries · Field Terminal<span class="sp"></span>KJR-01</div>
+  S(`<div class="trmp" style="top:${top}px;bottom:10px">
+    <div class="hdband">Field Terminal<span class="sp"></span>KJR-01</div>
     <section>${sh('02', 'Terminal', '終端', calm ? '' : 'Operator')}
       <div class="clk"><span class="big">14:03</span><span class="sec">:07</span>
         <div class="dt"><div class="micro">2026 · Sun 週日</div><div class="d">11.01 · JST</div><div class="micro" style="margin-top:4px">Uptime 2H 18M</div></div></div></section>
@@ -153,19 +154,23 @@ function terminal() {
     <section>${sh('04', 'Levels', '調節')}
       <div class="lv">${ms('volume_up')}${segs(24, 10)}<span class="n">40</span></div>
       <div class="lv">${ms('brightness_6')}${segs(24, 17, 'paper')}<span class="n">72</span></div></section>
-    <section>${sh('05', 'Signal', '訊號', calm ? '' : '● Playing')}
-      <div class="sig"><div class="art">MSR</div><div style="flex:1"><div class="tt">Quiet Survey</div><div class="ar">Field Recordings · Vol. 2</div><div class="pg"><i style="width:34%"></i></div></div></div></section>
-    ${calm ? '' : `<section>${sh('06', 'Telemetry', '遙測')}
+    ${agents ? `<section>${sh('05', 'Agent', '代理', 'Super+Shift+Ctrl+A')}
+      ${[['Claude', 'Max', 37, 58, '1h 12m'], ['Codex', 'Pro', 12, 31, '3h 40m']].map(([n, t, a, b, r]) => `<div class="agt"><span class="nm">${n}<small>${t}</small></span><div class="bars">
+        <div class="row"><span class="micro">Session</span><span class="m"><i style="width:${a}%"></i></span><span class="p">${a}%</span></div>
+        <div class="row"><span class="micro">Week</span><span class="m"><i style="width:${b}%"></i></span><span class="p">${b}%</span></div></div><span class="rs">${r}</span></div>`).join('')}
+      <div class="ask">${ms('smart_toy', 'font-size:14px;color:var(--mist-4)')}<span>Ask the default agent…</span><b>Claude</b></div></section>` : `<section>${sh('05', 'Signal', '訊號', calm ? '' : '● Playing')}
+      <div class="sig"><div class="art">MSR</div><div style="flex:1"><div class="tt">Quiet Survey</div><div class="ar">Field Recordings · Vol. 2</div><div class="pg"><i style="width:34%"></i></div></div></div></section>`}
+    ${calm && !agents ? '' : `<section>${sh('06', 'Telemetry', '遙測')}
       <div class="tel"><div><div class="micro">CPU 處理</div><div class="v">12%</div>${spark('var(--yellow)', '0,12 10,11 20,13 30,9 40,10 50,7 60,9 70,8 80,10 96,6')}</div>
         <div><div class="micro">MEM 記憶</div><div class="v">3.1<small> / 7.0G</small></div>${spark('var(--paper-2)', '0,9 20,9 40,8 60,8 80,8 96,7')}</div>
         <div><div class="micro">Temp 溫度</div><div class="v">48°</div>${spark('var(--jade)', '0,10 16,10 32,9 48,11 64,10 80,9 96,9')}</div></div>
-      <div class="agt"><span class="nm">Claude</span><div class="bars">
+      ${agents ? '' : `<div class="agt"><span class="nm">Claude</span><div class="bars">
         <div class="row"><span class="micro">Session</span><span class="m"><i style="width:37%"></i></span><span class="p">37%</span></div>
-        <div class="row"><span class="micro">Week</span><span class="m"><i style="width:58%"></i></span><span class="p">58%</span></div></div></div></section>`}
+        <div class="row"><span class="micro">Week</span><span class="m"><i style="width:58%"></i></span><span class="p">58%</span></div></div></div>`}</section>`}
     <section style="border-bottom:none">${sh(calm ? '06' : '07', 'Comms log', '通訊紀錄', '3 則')}
-      <div class="log"><div class="it"><span class="a">Update</span>3 packages ready<span class="tm">13:58</span></div>
+      <div class="log">${agents ? `<div class="it"><span class="a">System</span>Process crashed: firefox<span class="tm">14:01</span></div>` : ''}<div class="it"><span class="a">Update</span>3 packages ready<span class="tm">13:58</span></div>
         <div class="it"><span class="a">Calendar</span>Review at 15:00<span class="tm">13:40</span></div>
-        <div class="it"><span class="a">Agent</span>Task finished<span class="tm">13:12</span></div></div></section>
+        ${agents ? '' : `<div class="it"><span class="a">Agent</span>Task finished<span class="tm">13:12</span></div>`}</div></section>
     <div class="foot">${[['lock', 'Lock'], ['bedtime', 'Sleep'], ['logout', 'Exit', 1], ['restart_alt', 'Reboot', 1], ['power_settings_new', 'Off', 1]]
       .map(([i, l, d]) => `<div class="pb ${d ? 'd' : ''}">${ms(i)}<span class="micro">${l}</span></div>`).join('')}</div>
   </div>`);
@@ -174,8 +179,8 @@ function terminal() {
 // ------------------------------------------------------------------ COMMS + OSD
 function comms() {
   const calm = DIR === 'calm';
-  const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 8;
-  const toast = (cls, app, time, ic, icc, sum, body, acts, life) => `<div class="toast ${cls}" style="right:8px;top:${top + toast.y}px">
+  const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
+  const toast = (cls, app, time, ic, icc, sum, body, acts, life) => `<div class="toast ${cls}" style="right:10px;top:${top + toast.y}px">
     <div class="hd"><span class="micro">Comms · 通訊</span><span class="micro app">${app}</span><span class="micro" style="margin-left:auto">${time}</span>${ms('close', 'font-size:14px;margin-left:6px;color:var(--mist-5)')}</div>
     <div class="bd"><div class="art">${ms(ic, `font-size:20px;color:${icc}`)}</div><div><div class="sum">${sum}</div><div class="body">${body}</div></div></div>
     ${acts ? `<div class="acts">${acts}</div>` : ''}${life ? `<i class="life" style="width:${life}%"></i>` : ''}</div>`;
@@ -188,6 +193,15 @@ function comms() {
   S(`<div class="osd" style="left:${683 - w / 2}px;bottom:32px">${ms('volume_up', 'font-size:18px;color:var(--paper-1)')}
     <div class="stack" style="gap:5px"><span class="micro" style="font-size:8px">${DIR === 'bold' ? 'Audio out · Speakers' : 'Vol · 音量'}</span>${segs(DIR === 'bold' ? 22 : 20, DIR === 'bold' ? 9 : 8)}</div>
     <span class="num">40</span></div>`);
+}
+
+// ------------------------------------------------------------------ agents: Omarchy's own crash notification, drawn as a WULING toast
+function crash(right) {
+  const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h')) + 10;
+  S(`<div class="toast crit" style="right:${right}px;top:${top}px">
+    <div class="hd"><span class="micro">Comms · 通訊</span><span class="micro app">System</span><span class="micro" style="margin-left:auto">14:01</span>${ms('close', 'font-size:14px;margin-left:6px;color:var(--mist-5)')}</div>
+    <div class="bd"><div class="art">${ms('bug_report', 'font-size:20px;color:var(--vermilion)')}</div><div><div class="sum">Process crashed: firefox</div><div class="body">SIGSEGV · click to diagnose with the default agent</div></div></div>
+    <div class="acts"><span class="btn pri">Diagnose 診斷</span><span class="btn">Dismiss</span></div></div>`);
 }
 
 // ------------------------------------------------------------------ TERMINATION (Omarchy's System menu entries)
@@ -214,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (SCREEN === 'desk' || SCREEN === 'comms') { bar(); windows(); }
   if (SCREEN === 'comms') comms();
   if (SCREEN === 'terminal') { bar({ title: false, ws: ['active', 'occ', '', ''], trmOn: true }); terminal(); }
+  if (SCREEN === 'agents') { bar({ title: false, ws: ['active', 'occ', '', ''], trmOn: true }); terminal({ agents: true }); crash(392); }
   if (SCREEN === 'power') { bar({ title: false, ind: false, upd: false }); power(); }
   if (SCREEN === 'proto') bar({ title: false, ind: false, upd: false });
   // Omarchy's centerAnchor: the clock sits at the exact centre and the rest of the centre section flanks it

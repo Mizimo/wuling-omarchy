@@ -14,8 +14,8 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
   font-family: var(--font-sans); color: var(--fg); -webkit-font-smoothing: antialiased; }
 
 /* ---------- direction knobs ---------- */
-:root { --bar-h: 30px; --gap-out: 8px; --gap-in: 4px; --border: 2px; --label: block; }
-:root.calm { --bar-h: 28px; --border: 1px; --label: none; }
+:root { --bar-h: 30px; --border: 2px; --label: block; }  /* windows use Omarchy's default Hyprland geometry: gaps 10/5, border 2, no rounding */
+:root.calm { --bar-h: 28px; --label: none; }
 :root.bold { --bar-h: 32px; }
 
 /* ---------- primitives ---------- */
@@ -40,8 +40,8 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 :root.paper .screen { background-image: url("../assets/bg-original-paper.png"); }
 :root.calm .screen { background-image: url("../assets/land-mist-1920x1080.png"); }
 :root.calm.paper .screen { background-image: url("../assets/land-paper-1920x1080.png"); }
-.screen.dim::after { content: ""; position: absolute; inset: 0; background: rgba(5, 7, 7, .72); }
-:root.paper .screen.dim::after { background: rgba(217, 221, 213, .74); }
+.screen.dim::after { content: ""; position: absolute; inset: 0; background: rgba(5, 7, 7, .86); }
+:root.paper .screen.dim::after { background: rgba(217, 221, 213, .88); }
 /* bold: the same background image carries more survey HUD (baked into the image, not live) */
 .hud-extra { position: absolute; inset: 0; pointer-events: none; display: none; }
 :root.bold .hud-extra { display: block; }
@@ -113,7 +113,7 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 .bar .pwr { width: var(--bar-h); height: 100%; display: grid; place-items: center; border-left: 1px solid var(--line); }
 .bar .pwr .msym { font-size: 16px; color: var(--mist-4); }
 
-/* ---------- Hyprland windows (border and gaps come from the theme's hyprland.lua) ---------- */
+/* ---------- Hyprland windows (geometry is Omarchy's default; border colours come from colors.toml through Omarchy's template) ---------- */
 /* app palette = the theme's colors.toml (Omarchy templates it into the terminal, editor, btop …) */
 :root { --t-bg: #0B0F0E; --t-bar: #0E1211; --t-cur: #141A18; --t-fg: #C9D2CD; --t-hi: #E6EBE5; --t-dim: #6F827D; --t-faint: #24302D; --t-ln: #4A5856;
   --a0: #151B1A; --a1: #E3432F; --a2: #62D9A6; --a3: #FEF700; --a4: #4C93C6; --a5: #C65D7B; --a6: #49B9C2; --a7: #C9D2CD; --a11: #FFFA8A; --a12: #79B4E0;
@@ -142,7 +142,7 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 .kw { color: var(--a5); } .ty { color: var(--a6); } .str { color: var(--a2); } .num { color: var(--a11); } .cm { color: var(--t-ln); font-style: italic; } .id { color: var(--t-hi); } .pr { color: var(--a12); }
 
 /* ---------- TERMINAL 終端 — WULING's control panel (coexists with Omarchy's per-widget panels) ---------- */
-.trmp { position: absolute; right: 8px; width: 372px; background: color-mix(in srgb, var(--ink-2) 98%, transparent); border: 1px solid var(--line);
+.trmp { position: absolute; right: 10px; width: 372px; background: color-mix(in srgb, var(--ink-2) 98%, transparent); border: 1px solid var(--line);
   --c: 16px; clip-path: polygon(0 0, 100% 0, 100% 100%, var(--c) 100%, 0 calc(100% - var(--c))); display: flex; flex-direction: column; }
 .trmp .sh { display: flex; align-items: center; gap: 8px; padding: 10px 14px 0; }
 .trmp .sh .no { font: 600 9px/1 var(--font-mono); color: var(--yellow); letter-spacing: .1em; }
@@ -185,6 +185,10 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 .trmp .agt .row { display: flex; align-items: center; gap: 6px; } .trmp .agt .row .micro { width: 44px; font-size: 7.5px; }
 .trmp .agt .row .m { flex: 1; height: 4px; background: var(--ink-5); position: relative; } .trmp .agt .row .m i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--jade); }
 .trmp .agt .row .p { width: 30px; text-align: right; font: 500 10px/1 var(--font-mono); color: var(--paper-2); }
+.trmp .agt .nm small { display: block; font: 500 8px/1 var(--font-mono); letter-spacing: .1em; color: var(--mist-5); text-transform: uppercase; margin-top: 4px; }
+.trmp .agt .rs { width: 40px; text-align: right; font: 500 8.5px/1 var(--font-mono); color: var(--mist-5); }
+.trmp .ask { display: flex; align-items: center; gap: 8px; height: 26px; margin: 9px 14px 0; padding: 0 8px; border: 1px solid var(--line); font: 400 11px/1 var(--font-sans); color: var(--mist-5); }
+.trmp .ask b { margin-left: auto; font: 500 8px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mist-4); }
 .trmp .log { padding: 6px 14px 0; display: flex; flex-direction: column; gap: 5px; }
 .trmp .log .it { display: flex; gap: 8px; align-items: baseline; font: 400 11px/1.3 var(--font-sans); color: var(--paper-2); }
 .trmp .log .it .a { font: 500 8px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mist-5); width: 54px; flex: none; }
@@ -311,7 +315,8 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 :root.bold .trmp .sh { padding-top: 0; margin-top: 10px; }
 :root.bold .trmp .sh .no { background: var(--yellow); color: var(--on-accent); padding: 3px 5px; }
 :root.bold .trmp .hdband { display: flex; }
-.trmp .hdband { display: none; height: 26px; align-items: center; gap: 10px; padding: 0 14px; background: var(--yellow); color: var(--on-accent);
+:root.bold .trmp .log .it:nth-child(3) { display: none; }
+.trmp .hdband { display: none; flex: none; height: 26px; align-items: center; gap: 10px; padding: 0 14px; background: var(--yellow); color: var(--on-accent);
   font: 700 10px/1 var(--font-mono); letter-spacing: .16em; }
 .trmp .hdband .sp { flex: 1; height: 6px; background: repeating-linear-gradient(-45deg, var(--ink-2) 0 3px, transparent 3px 6px); }
 :root.bold .trmp .clk .big { font-size: 62px; }
@@ -326,7 +331,7 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 :root.bold .term-p .card .n { font-size: 40px; }
 :root.bold .term-p .card.d::before { height: 8px; }
 :root.bold .term-p .ring { display: block; }
-.term-p .ring { display: none; position: absolute; right: 14px; bottom: 14px; }
+.term-p .ring { display: none; position: absolute; right: 14px; bottom: 58px; }
 
 /* the fastfetch logo is drawn light-on-ink; PAPER's terminal shows its inverse (a PAPER logo file ships with the theme) */
 :root.paper .fflogo { filter: invert(1) hue-rotate(180deg) saturate(1.4); }

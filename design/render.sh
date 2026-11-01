@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 CHROME=${CHROME:-$(ls -d ~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome 2>/dev/null | tail -1)}
 [[ -x $CHROME ]] || { echo "no Chromium found; set CHROME" >&2; exit 1; }
-screens=("$@"); (( ${#screens[@]} )) || screens=(desk terminal comms power)
+screens=("$@"); (( ${#screens[@]} )) || screens=(desk terminal comms power agents)
 mkdir -p mockups
 shot() { # screen dir theme
   local out="mockups/$1-$2$([[ $3 == paper ]] && echo -paper).png"
