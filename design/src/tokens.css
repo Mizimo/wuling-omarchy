@@ -1,0 +1,120 @@
+/* ============================================================
+   WULING // FIELD TERMINAL — design tokens (source of truth)
+   終末地工業 × 武陵   ·   KJR-01
+   All px values are at output scale 1 (eDP-1 1366×768).
+   QML port: shell/Theme.qml must mirror these names 1:1.
+   ============================================================ */
+
+:root {
+  /* ---------- MIST 青霧 (dark, default) ---------- */
+  --ink-0: #050707;      /* void: overview backdrop, boot screen        */
+  --ink-1: #0A0D0C;      /* lock screen base, deepest panels            */
+  --ink-2: #0E1211;      /* bar / panel base                            */
+  --ink-3: #141A18;      /* raised card                                  */
+  --ink-4: #1B2321;      /* hover                                        */
+  --ink-5: #24302D;      /* pressed, strong divider                      */
+  --line:  #2B3734;      /* 1px hairline                                 */
+  --line-soft: #1C2523;  /* faint hairline / grid                        */
+
+  --mist-6: #4D5D59;     /* disabled                                     */
+  --mist-5: #6F827D;     /* micro labels, inactive icons                 */
+  --mist-4: #93A49F;     /* secondary text                               */
+  --paper-2: #C9D3CE;    /* body text                                    */
+  --paper-1: #E6EBE5;    /* primary text                                 */
+  --paper-0: #F4F5EF;    /* inverted tag background (宣紙白)             */
+
+  --yellow:   #FEF700;   /* 終末地工業黃 — canon (sampled from the Endfield Industries banner) */
+  --yellow-2: #DCD400;   /* pressed yellow                               */
+  --yellow-a: rgba(254, 247, 0, .16);
+  --jade:     #62D9A6;   /* 息壤翠 — canon Xiranite green (sampled, UI-saturated) */
+  --jade-2:   #1E8A6C;
+  --jade-a:   rgba(98, 217, 166, .14);
+  --has-0:    #020602;   /* 宏山科學院 banner gradient (dark → light) */
+  --has-1:    #0C1C0D;
+  --has-2:    #173718;
+  --has-3:    #1C3D1C;
+  --vermilion:   #E3432F; /* 朱砂 — critical, seal, destructive         */
+  --vermilion-2: #A82A1C;
+  --azurite:  #4C93C6;   /* 石青 — info, links                           */
+  --gold:     #C9A55C;   /* 鎏金 — ornament only, never for state        */
+
+  /* ---------- semantic ---------- */
+  --bg-void: var(--ink-0);
+  --bg-base: var(--ink-2);
+  --bg-raised: var(--ink-3);
+  --bg-hover: var(--ink-4);
+  --fg: var(--paper-1);
+  --fg-body: var(--paper-2);
+  --fg-muted: var(--mist-4);
+  --fg-label: var(--mist-5);
+  --fg-dim: var(--mist-6);
+  --accent: var(--yellow);
+  --on-accent: var(--ink-2);
+  --ok: var(--jade);
+  --warn: var(--yellow);
+  --crit: var(--vermilion);
+  --info: var(--azurite);
+
+  /* ---------- type ---------- */
+  --font-mono: "Geist Mono", "Noto Sans TC", monospace;     /* micro labels, readouts */
+  --font-sans: "Geist", "Noto Sans TC", sans-serif;          /* body text              */
+  --font-display: "Barlow Condensed", "Noto Sans TC", sans-serif; /* clock, big numerals */
+  --font-cjk-serif: "Noto Serif TC", "Noto Serif SC", "Noto Serif CJK TC", serif;  /* 武陵 display titles */
+  --font-icon: "Material Symbols Sharp";
+
+  --fs-micro: 9px;    /* UPPERCASE, tracking .14em, mono                */
+  --fs-caption: 10px; /* mono, tracking .08em                           */
+  --fs-small: 11px;
+  --fs-body: 12px;
+  --fs-title: 14px;
+  --fs-h2: 18px;
+  --fs-h1: 24px;
+  --fs-display: 40px;
+  --fs-hero: 96px;
+
+  --track-micro: .14em;
+  --track-caption: .08em;
+  --track-display: .04em;
+
+  /* ---------- geometry ---------- */
+  --hair: 1px;
+  --radius: 0;          /* never round. industrial = square            */
+  --chamfer-s: 6px;     /* chips, tags                                  */
+  --chamfer-m: 10px;    /* cards, toasts                                */
+  --chamfer-l: 16px;    /* panels                                       */
+  --bar-h: 30px;
+  --gap: 8px;           /* niri gaps, panel margin                      */
+
+  /* ---------- motion ---------- */
+  --ease-snap: cubic-bezier(.2, .8, .2, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --t-fast: 120ms;
+  --t-base: 220ms;
+  --t-slow: 420ms;
+  --t-scan: 360ms;
+}
+
+/* ---------- PAPER 宣紙 (light variant, phase 3) ---------- */
+:root.paper {
+  --ink-0: #D9DDD5;
+  --ink-1: #E4E7E0;
+  --ink-2: #ECEEE7;
+  --ink-3: #F6F7F2;
+  --ink-4: #E1E5DE;
+  --ink-5: #D3D9D1;
+  --line:  #C3CBC3;
+  --line-soft: #D8DDD6;
+  --mist-6: #A3ADA8;
+  --mist-5: #7A8783;
+  --mist-4: #5C6A66;
+  --paper-2: #2A3330;
+  --paper-1: #121614;
+  --paper-0: #121614;    /* inverted tag becomes ink on paper theme */
+  --yellow:  #FEF700;   /* canon yellow is used as a FILL on paper (ink text on top), never as text */
+  --yellow-2: #DCD400;
+  --jade:    #0F8A68;
+  --jade-2:  #0B6B51;
+  --vermilion: #C8361F;
+  --azurite: #2F6F9E;
+  --on-accent: #121614;
+}

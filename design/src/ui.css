@@ -1,0 +1,332 @@
+/* WULING for Omarchy — mockup styles (the visual spec for the design report).
+   Three directions share one structure; <html> carries the direction and theme:
+     .as   照舊      the earlier WULING look, re-laid onto Omarchy's structure (default)
+     .calm 更克制    closer to Omarchy's restraint: fewer labels, ornaments and motion
+     .bold 更強烈    stronger Endfield HUD: more yellow, readouts and choreography
+     .paper          PAPER 宣紙 (light); MIST 青霧 (dark) is the default
+   Canvas 1366×768 at scale 1 (kujira). Every widget in the bar is an Omarchy bar widget in Omarchy's
+   default order (config/omarchy/shell.json); WULING only draws them. */
+@import url("tokens.css");
+@import url("fonts.css");
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--ink-0);
+  font-family: var(--font-sans); color: var(--fg); -webkit-font-smoothing: antialiased; }
+
+/* ---------- direction knobs ---------- */
+:root { --bar-h: 30px; --gap-out: 8px; --gap-in: 4px; --border: 2px; --label: block; }
+:root.calm { --bar-h: 28px; --border: 1px; --label: none; }
+:root.bold { --bar-h: 32px; }
+
+/* ---------- primitives ---------- */
+.micro { font: 500 var(--fs-micro)/1 var(--font-mono); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--fg-label); }
+.mono { font-family: var(--font-mono); }
+.msym { font-size: 16px; color: var(--fg-muted); }
+.stack { display: flex; flex-direction: column; justify-content: center; gap: 3px; white-space: nowrap; }
+.stack .lbl { display: var(--label); font: 500 8px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--fg-label); }
+.stack .val { font: 500 11px/1 var(--font-mono); letter-spacing: .04em; color: var(--fg); }
+.y { color: var(--yellow) !important; } .j { color: var(--jade) !important; } .r { color: var(--vermilion) !important; }
+.hazard { background: repeating-linear-gradient(-45deg, var(--yellow) 0 4px, var(--ink-2) 4px 8px); }
+.hazard-r { background: repeating-linear-gradient(-45deg, var(--vermilion) 0 4px, var(--ink-2) 4px 8px); }
+.cham-br { clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--c, 10px)), calc(100% - var(--c, 10px)) 100%, 0 100%); }
+.cham-bl { clip-path: polygon(0 0, 100% 0, 100% 100%, var(--c, 10px) 100%, 0 calc(100% - var(--c, 10px))); }
+.cham-tr { clip-path: polygon(0 0, calc(100% - var(--c, 10px)) 0, 100% var(--c, 10px), 100% 100%, 0 100%); }
+.reg { position: absolute; width: 11px; height: 11px; }
+.reg::before, .reg::after { content: ""; position: absolute; background: var(--mist-5); }
+.reg::before { left: 5px; top: 0; width: 1px; height: 11px; } .reg::after { top: 5px; left: 0; height: 1px; width: 11px; }
+
+/* ---------- desktop: an Omarchy theme background (static image; WULING draws no desktop widgets) ---------- */
+.screen { position: absolute; inset: 0; background: url("../assets/bg-original-mist.png") center/cover; }
+:root.paper .screen { background-image: url("../assets/bg-original-paper.png"); }
+:root.calm .screen { background-image: url("../assets/land-mist-1920x1080.png"); }
+:root.calm.paper .screen { background-image: url("../assets/land-paper-1920x1080.png"); }
+.screen.dim::after { content: ""; position: absolute; inset: 0; background: rgba(5, 7, 7, .72); }
+:root.paper .screen.dim::after { background: rgba(217, 221, 213, .74); }
+/* bold: the same background image carries more survey HUD (baked into the image, not live) */
+.hud-extra { position: absolute; inset: 0; pointer-events: none; display: none; }
+:root.bold .hud-extra { display: block; }
+.hud-extra .scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(98, 217, 166, .035) 0 1px, transparent 1px 3px); }
+.hud-extra .rule-l, .hud-extra .rule-b { position: absolute; background-repeat: repeat; opacity: .7; }
+.hud-extra .rule-l { left: 0; top: 0; bottom: 0; width: 10px;
+  background-image: linear-gradient(var(--mist-5) 1px, transparent 1px), linear-gradient(var(--mist-6) 1px, transparent 1px);
+  background-size: 10px 48px, 5px 8px; background-position: 0 0, 0 0; background-repeat: repeat-y; }
+.hud-extra .rule-b { left: 0; right: 0; bottom: 0; height: 10px;
+  background-image: linear-gradient(90deg, var(--mist-5) 1px, transparent 1px), linear-gradient(90deg, var(--mist-6) 1px, transparent 1px);
+  background-size: 48px 10px, 8px 5px; background-repeat: repeat-x; background-position: 0 100%, 0 100%; }
+.hud-extra .read { position: absolute; font: 500 8px/1.6 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mist-5); white-space: pre; }
+.hud-extra .read b { color: var(--yellow); font-weight: 500; }
+
+/* ---------- BAR 指揮條 — Omarchy's widgets, Omarchy's order, WULING's drawing ---------- */
+.bar { position: absolute; left: 0; top: 0; right: 0; height: var(--bar-h); display: flex; align-items: center;
+  background: color-mix(in srgb, var(--ink-2) 97%, transparent); border-bottom: 1px solid var(--line); z-index: 50; }
+.bar .sec { display: flex; align-items: center; height: 100%; }
+.bar .left { flex: 1; } .bar .right { flex: 1; justify-content: flex-end; }
+.bar .center { position: absolute; left: 0; right: 0; top: 0; height: 100%; justify-content: center; pointer-events: none; }
+.bar .center .anchor { position: absolute; left: 50%; transform: translateX(-50%); height: 100%; display: flex; align-items: center; }
+.bar .center .flank-l { position: absolute; right: calc(50% + var(--anchor-half, 58px)); height: 100%; display: flex; align-items: center; gap: 12px; }
+.bar .center .flank-r { position: absolute; left: calc(50% + var(--anchor-half, 58px)); height: 100%; display: flex; align-items: center; gap: 12px; }
+.bar .sep { display: inline-block; width: 1px; height: 14px; background: var(--line); margin: 0 12px; flex: none; }
+.bar .w { display: flex; align-items: center; gap: 5px; height: 100%; font: 500 11px/1 var(--font-mono); color: var(--paper-2); white-space: nowrap; }
+.bar .w .msym { font-size: 16px; color: var(--paper-2); }
+.bar .right .w { margin-left: 12px; }
+
+/* omarchy.menu — the emblem cell (left = menu · right = terminal, as in Omarchy) */
+.bar .menu { width: var(--bar-h); height: var(--bar-h); flex: none; background: var(--yellow); display: grid; place-items: center;
+  --c: 7px; clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
+.bar .menu img { width: var(--bar-h); height: var(--bar-h); display: block; }
+.bar .ident { margin-left: 10px; }
+.bar .ident .val { font-weight: 600; letter-spacing: .1em; }
+/* omarchy.workspaces */
+.ws { display: flex; gap: 2px; }
+.ws .cell { width: 26px; height: 18px; display: grid; place-items: center; position: relative;
+  font: 500 10px/1 var(--font-mono); letter-spacing: .04em; color: var(--mist-6); }
+.ws .cell.occ { color: var(--paper-2); }
+.ws .cell.occ::after { content: ""; position: absolute; left: 7px; right: 7px; bottom: 1px; height: 1px; background: var(--mist-5); }
+.ws .cell.active { background: var(--yellow); color: var(--on-accent); font-weight: 700; }
+/* wuling.window — the focused window (a WULING bar widget; not in Omarchy's default layout) */
+.bar .focus { max-width: 330px; }
+.bar .focus .lbl::before { content: ""; display: inline-block; width: 4px; height: 4px; background: var(--yellow); margin-right: 6px; vertical-align: 1px; }
+.bar .focus .val { font-family: var(--font-sans); font-size: 11.5px; font-weight: 500; letter-spacing: .01em; overflow: hidden; text-overflow: ellipsis; }
+/* omarchy.clock (center anchor) */
+.bar .clock { font: 600 21px/1 var(--font-display); letter-spacing: .04em; color: var(--paper-1); font-variant-numeric: tabular-nums; }
+.bar .date { margin-left: 8px; } .bar .date .val { letter-spacing: .08em; }
+/* omarchy.indicators — only active ones show */
+.bar .ind { display: flex; align-items: center; gap: 4px; height: 16px; padding: 0 6px; box-shadow: inset 0 0 0 1px var(--line); font: 500 8px/1 var(--font-mono); letter-spacing: .12em; color: var(--paper-2); }
+.bar .ind .msym { font-size: 12px; color: var(--paper-2); }
+/* omarchy.keyboard-layout, omarchy.weather, omarchy.system-update */
+.bar .kb .val { font-weight: 600; }
+.bar .upd { display: flex; align-items: center; gap: 4px; }
+.bar .upd i { width: 5px; height: 5px; background: var(--yellow); display: block; }
+/* omarchy.agents — AI subscription limits, self-hiding when unused */
+.bar .agent .meter { width: 26px; height: 3px; background: var(--ink-5); position: relative; margin-top: 1px; }
+.bar .agent .meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--jade); }
+/* omarchy.power — battery */
+.bat { display: flex; align-items: center; gap: 6px; font: 500 11px/1 var(--font-mono); color: var(--paper-1); }
+.bat .cell { width: 22px; height: 10px; border: 1px solid var(--paper-2); padding: 1px; display: flex; gap: 1px; position: relative; }
+.bat .cell::after { content: ""; position: absolute; right: -4px; top: 2px; width: 2px; height: 4px; background: var(--paper-2); }
+.bat .cell i { flex: 1; background: var(--paper-1); }
+.bat .cell i.off { background: var(--ink-5); }
+/* wuling.terminal — opens the Terminal panel; wuling.power — opens the power menu */
+.bar .trm { height: 100%; display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-left: 12px; border-left: 1px solid var(--line); }
+.bar .trm .msym { font-size: 16px; color: var(--paper-2); }
+.bar .trm.on { background: var(--paper-0); } .bar .trm.on .msym, .bar .trm.on .val { color: var(--ink-2); } .bar .trm.on .lbl { color: var(--ink-5); }
+.bar .pwr { width: var(--bar-h); height: 100%; display: grid; place-items: center; border-left: 1px solid var(--line); }
+.bar .pwr .msym { font-size: 16px; color: var(--mist-4); }
+
+/* ---------- Hyprland windows (border and gaps come from the theme's hyprland.lua) ---------- */
+/* app palette = the theme's colors.toml (Omarchy templates it into the terminal, editor, btop …) */
+:root { --t-bg: #0B0F0E; --t-bar: #0E1211; --t-cur: #141A18; --t-fg: #C9D2CD; --t-hi: #E6EBE5; --t-dim: #6F827D; --t-faint: #24302D; --t-ln: #4A5856;
+  --a0: #151B1A; --a1: #E3432F; --a2: #62D9A6; --a3: #FEF700; --a4: #4C93C6; --a5: #C65D7B; --a6: #49B9C2; --a7: #C9D2CD; --a11: #FFFA8A; --a12: #79B4E0;
+  --t-mark: #FEF700; --t-tag-bg: #FEF700; --t-tag-fg: #0E1211; }
+/* PAPER: apps go light like every Omarchy light theme; yellow stays a fill (cursor, tags), never text */
+:root.paper { --t-bg: #F2F3EC; --t-bar: #E4E7E0; --t-cur: #E9ECE4; --t-fg: #2A3330; --t-hi: #121614; --t-dim: #7A8783; --t-faint: #D3D9D1; --t-ln: #A3ADA8;
+  --a0: #121614; --a1: #C8361F; --a2: #0F8A68; --a3: #7A6F00; --a4: #2F6F9E; --a5: #A33F62; --a6: #1D7F88; --a7: #5C6A66; --a11: #6B5F00; --a12: #2F6F9E;
+  --t-mark: #121614; }
+.win { position: absolute; background: var(--t-bg); outline: var(--border) solid var(--ink-5); overflow: hidden; }
+.win.focus { outline-color: var(--yellow); }
+:root.paper .win { outline-color: var(--line); } :root.paper .win.focus { outline-color: var(--paper-1); }
+.term { padding: 10px 12px; font: 400 12.5px/17px var(--font-mono); color: var(--t-fg); white-space: pre; }
+.term .k { color: var(--t-mark); } .term .m { color: var(--t-dim); } .term .w { color: var(--t-hi); } .term .g { color: var(--a2); }
+.term .b { color: var(--a4); } .term .rr { color: var(--a1); } .term .p { color: var(--a5); } .term .c { color: var(--a6); }
+.term .f { color: var(--t-faint); } .term .kk { color: var(--t-hi); font-weight: 600; }
+.term .cursor { background: #FEF700; color: #0E1211; }
+.nv { display: flex; flex-direction: column; height: 100%; font: 400 12.5px/17px var(--font-mono); color: var(--t-fg); }
+.nv .tabs { height: 20px; display: flex; background: var(--t-bar); font-size: 11px; }
+.nv .tabs span { padding: 3px 10px; color: var(--t-dim); } .nv .tabs span.on { background: var(--t-tag-bg); color: var(--t-tag-fg); font-weight: 600; }
+.nv .code { flex: 1; padding: 6px 0; white-space: pre; position: relative; }
+.nv .ln { display: inline-block; width: 38px; padding-right: 10px; text-align: right; color: var(--t-ln); }
+.nv .cur { background: var(--t-cur); display: inline-block; width: 100%; } .nv .cur .ln { color: var(--t-mark); }
+.nv .st { height: 20px; display: flex; align-items: center; gap: 0; background: var(--t-bar); font-size: 11px; }
+.nv .st .mode { background: var(--t-tag-bg); color: var(--t-tag-fg); font-weight: 700; padding: 3px 9px; letter-spacing: .06em; }
+.nv .st span { padding: 0 10px; color: var(--t-dim); }
+.kw { color: var(--a5); } .ty { color: var(--a6); } .str { color: var(--a2); } .num { color: var(--a11); } .cm { color: var(--t-ln); font-style: italic; } .id { color: var(--t-hi); } .pr { color: var(--a12); }
+
+/* ---------- TERMINAL 終端 — WULING's control panel (coexists with Omarchy's per-widget panels) ---------- */
+.trmp { position: absolute; right: 8px; width: 372px; background: color-mix(in srgb, var(--ink-2) 98%, transparent); border: 1px solid var(--line);
+  --c: 16px; clip-path: polygon(0 0, 100% 0, 100% 100%, var(--c) 100%, 0 calc(100% - var(--c))); display: flex; flex-direction: column; }
+.trmp .sh { display: flex; align-items: center; gap: 8px; padding: 10px 14px 0; }
+.trmp .sh .no { font: 600 9px/1 var(--font-mono); color: var(--yellow); letter-spacing: .1em; }
+.trmp .sh .t { font: 500 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--paper-2); }
+.trmp .sh .t em { font-style: normal; color: var(--mist-5); margin-left: 4px; }
+.trmp .sh .rl { flex: 1; height: 1px; background: var(--line-soft); }
+.trmp .sh .rt { font: 500 8px/1 var(--font-mono); letter-spacing: .14em; color: var(--mist-5); text-transform: uppercase; }
+.trmp section { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.trmp .clk { display: flex; align-items: flex-end; gap: 10px; padding: 8px 14px 2px; }
+.trmp .clk .big { font: 600 54px/.9 var(--font-display); letter-spacing: .02em; color: var(--paper-1); font-variant-numeric: tabular-nums; }
+.trmp .clk .sec { font: 600 18px/1 var(--font-display); color: var(--yellow); margin-bottom: 4px; }
+.trmp .clk .dt { margin-left: auto; text-align: right; }
+.trmp .clk .dt .d { font: 600 12px/1.2 var(--font-mono); color: var(--paper-1); letter-spacing: .06em; }
+.trmp .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 14px 0; }
+.trmp .tile { height: 52px; border: 1px solid var(--line); padding: 7px 8px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+.trmp .tile .tp { display: flex; justify-content: space-between; align-items: center; }
+.trmp .tile .tp .msym { font-size: 15px; color: var(--paper-2); }
+.trmp .tile .tp .micro { font-size: 7.5px; }
+.trmp .tile .v { font: 500 11px/1 var(--font-sans); color: var(--paper-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trmp .tile.on { background: var(--paper-0); border-color: var(--paper-0); }
+.trmp .tile.on::after { content: ""; position: absolute; left: -1px; right: -1px; bottom: -1px; height: 2px; background: var(--yellow); }
+.trmp .tile.on .msym, .trmp .tile.on .v { color: var(--ink-2); } .trmp .tile.on .micro { color: var(--ink-5); }
+.trmp .lv { display: flex; align-items: center; gap: 10px; padding: 8px 14px 0; }
+.trmp .lv .msym { font-size: 15px; }
+.trmp .lv .segs { flex: 1; display: flex; gap: 2px; } .trmp .lv .segs i { flex: 1; height: 9px; background: var(--ink-5); }
+.trmp .lv .segs i.on { background: var(--yellow); } .trmp .lv .segs.paper i.on { background: var(--paper-2); }
+.trmp .lv .n { width: 26px; text-align: right; font: 600 15px/1 var(--font-display); color: var(--paper-1); }
+.trmp .sig { display: flex; gap: 10px; padding: 8px 14px 0; align-items: center; }
+.trmp .sig .art { width: 46px; height: 46px; background: linear-gradient(135deg, #24302D, #0E1211); border: 1px solid var(--line); display: grid; place-items: center;
+  font: 700 11px/1 var(--font-display); color: var(--mist-4); letter-spacing: .06em; }
+.trmp .sig .tt { font: 600 12px/1.3 var(--font-sans); color: var(--paper-1); }
+.trmp .sig .ar { font: 400 10.5px/1.3 var(--font-sans); color: var(--mist-4); }
+.trmp .sig .pg { height: 1px; background: var(--ink-5); margin-top: 6px; position: relative; } .trmp .sig .pg i { position: absolute; left: 0; top: 0; height: 1px; background: var(--yellow); }
+.trmp .tel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 8px 14px 0; }
+.trmp .tel .v { font: 600 16px/1 var(--font-display); color: var(--paper-1); margin-top: 4px; } .trmp .tel .v small { font: 500 9px var(--font-mono); color: var(--mist-4); }
+.trmp .tel svg { display: block; margin-top: 4px; }
+.trmp .agt { display: flex; align-items: center; gap: 10px; padding: 8px 14px 0; }
+.trmp .agt .nm { font: 600 11px/1 var(--font-sans); color: var(--paper-1); width: 62px; }
+.trmp .agt .bars { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.trmp .agt .row { display: flex; align-items: center; gap: 6px; } .trmp .agt .row .micro { width: 44px; font-size: 7.5px; }
+.trmp .agt .row .m { flex: 1; height: 4px; background: var(--ink-5); position: relative; } .trmp .agt .row .m i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--jade); }
+.trmp .agt .row .p { width: 30px; text-align: right; font: 500 10px/1 var(--font-mono); color: var(--paper-2); }
+.trmp .log { padding: 6px 14px 0; display: flex; flex-direction: column; gap: 5px; }
+.trmp .log .it { display: flex; gap: 8px; align-items: baseline; font: 400 11px/1.3 var(--font-sans); color: var(--paper-2); }
+.trmp .log .it .a { font: 500 8px/1 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mist-5); width: 54px; flex: none; }
+.trmp .log .it .tm { margin-left: auto; font: 500 9px/1 var(--font-mono); color: var(--mist-5); }
+.trmp .foot { margin-top: auto; display: flex; gap: 6px; padding: 10px 14px 12px 22px; }
+.trmp .foot .pb { flex: 1; height: 40px; border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; position: relative; }
+.trmp .foot .pb .msym { font-size: 15px; color: var(--paper-2); } .trmp .foot .pb .micro { font-size: 7.5px; color: var(--paper-2); }
+.trmp .foot .pb.d::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; }
+.trmp .foot .pb.d::before { background: repeating-linear-gradient(-45deg, var(--vermilion) 0 3px, transparent 3px 6px); }
+
+/* ---------- COMMS 通訊 (notifications) and the OSD 調節 ---------- */
+.toast { position: absolute; width: 340px; background: color-mix(in srgb, var(--ink-3) 97%, transparent); border: 1px solid var(--line);
+  --c: 10px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%); }
+.toast::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--jade); }
+.toast.imp::before { background: var(--yellow); } .toast.crit::before { background: var(--vermilion); }
+.toast .hd { height: 22px; display: flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; border-bottom: 1px solid var(--line-soft); }
+.toast .hd .micro { font-size: 8px; } .toast .hd .app { color: var(--paper-2); }
+.toast .hd .x { margin-left: 6px; font-size: 14px; color: var(--mist-5); }
+.toast .bd { display: flex; gap: 10px; padding: 10px 12px 11px 12px; }
+.toast .art { width: 38px; height: 38px; flex: none; border: 1px solid var(--line); background: var(--ink-1); display: grid; place-items: center; }
+.toast .sum { font: 600 12.5px/1.25 var(--font-sans); color: var(--paper-1); }
+.toast .body { font: 400 11.5px/1.4 var(--font-sans); color: var(--mist-4); margin-top: 3px; }
+.toast .acts { display: flex; gap: 6px; padding: 0 12px 11px 60px; }
+.btn { font: 500 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--paper-2); border: 1px solid var(--line); padding: 5px 8px; }
+.btn.pri { background: var(--yellow); color: var(--on-accent); border-color: var(--yellow); }
+.toast .life { position: absolute; left: 2px; bottom: 0; height: 1px; background: var(--yellow); }
+.osd { position: absolute; width: 316px; height: 46px; background: color-mix(in srgb, var(--ink-2) 97%, transparent); border: 1px solid var(--line);
+  display: flex; align-items: center; gap: 12px; padding: 0 14px; }
+.osd .segs { display: flex; gap: 2px; } .osd .segs i { width: 9px; height: 8px; background: var(--ink-5); display: block; } .osd .segs i.on { background: var(--yellow); }
+.osd .num { font: 600 24px/1 var(--font-display); color: var(--paper-1); width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- 終止協議 TERMINATION — the power menu (Omarchy's System entries, long-press for the destructive ones) ---------- */
+.term-p { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1086px; }
+.term-p .kick { display: flex; align-items: center; gap: 10px; }
+.term-p .kick .no { font: 600 9px/1 var(--font-mono); color: var(--yellow); letter-spacing: .14em; }
+.term-p .ttl { font: 900 34px/1.1 var(--font-cjk-serif); color: var(--paper-1); letter-spacing: .06em; margin: 12px 0 26px; }
+.term-p .cards { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.term-p .card { height: 214px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink-2) 88%, transparent); position: relative; padding: 14px; display: flex; flex-direction: column; }
+.term-p .card .n { font: 600 28px/1 var(--font-display); color: var(--mist-6); }
+.term-p .card .key { position: absolute; right: 12px; top: 14px; width: 16px; height: 16px; box-shadow: inset 0 0 0 1px var(--mist-5); display: grid; place-items: center; font: 500 8px/1 var(--font-mono); color: var(--mist-4); }
+.term-p .card .ic { margin-top: auto; font-size: 24px; line-height: 1; color: var(--paper-1); }
+.term-p .card .ic .msym { display: block; }
+.term-p .card .en { font: 600 13px/1 var(--font-display); letter-spacing: .16em; color: var(--paper-1); margin-top: 12px; }
+.term-p .card .zh { font: 400 11.5px/1.3 var(--font-sans); color: var(--mist-4); margin-top: 6px; }
+.term-p .card.d::before { content: ""; position: absolute; left: -1px; right: -1px; top: -1px; height: 5px; background: repeating-linear-gradient(-45deg, var(--yellow) 0 5px, var(--ink-2) 5px 10px); }
+.term-p .card.sel { background: var(--yellow); border-color: var(--yellow); }
+.term-p .card.sel .n, .term-p .card.sel .ic, .term-p .card.sel .en { color: var(--on-accent); } .term-p .card.sel .zh { color: var(--ink-4); }
+.term-p .card.sel .key { box-shadow: inset 0 0 0 1px var(--on-accent); color: var(--on-accent); }
+.term-p .card .hold { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--on-accent); }
+.term-p .hints { display: flex; gap: 20px; margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--line); }
+.term-p .hints b { color: var(--paper-1); font-weight: 600; }
+.term-p .hints .rt { margin-left: auto; }
+
+/* =================================================================================================
+   .calm 更克制 — Omarchy's restraint: single-line widgets, icons over labels, one accent per surface
+   ================================================================================================= */
+:root.calm .bar { background: var(--ink-2); }
+:root.calm .bar .menu { background: none; clip-path: none; width: 36px; }
+:root.calm .bar .menu img { width: 22px; height: 22px; filter: none; }
+:root.calm .bar .ident, :root.calm .bar .focus, :root.calm .bar .sep.opt { display: none; }
+:root.calm .ws .cell { width: 20px; font: 500 11px/1 var(--font-mono); }
+:root.calm .ws .cell.active { background: none; color: var(--paper-1); }
+:root.calm .ws .cell.active::after { content: ""; position: absolute; left: 5px; right: 5px; bottom: 0; height: 2px; background: var(--yellow); }
+:root.calm .ws .cell.occ::after { left: 9px; right: 9px; height: 2px; width: 2px; background: var(--mist-5); }
+:root.calm .bar .clock { font: 500 13px/1 var(--font-mono); letter-spacing: .06em; }
+:root.calm .bar .date .val { font-size: 11px; color: var(--mist-4); }
+:root.calm .bar .ind { box-shadow: none; padding: 0; } :root.calm .bar .ind span:not(.msym) { display: none; }
+:root.calm .bar .trm, :root.calm .bar .pwr { border-left: none; padding: 0 10px; margin-left: 4px; }
+:root.calm .bar .pwr { display: none; }
+:root.calm .bat .cell { width: 20px; }
+:root.calm .win.focus { outline-color: var(--paper-2); }
+:root.calm.paper .win.focus { outline-color: var(--paper-1); }
+:root.calm .trmp { --c: 0px; width: 348px; }
+:root.calm .trmp .sh .no, :root.calm .trmp .sh .rl, :root.calm .trmp .sh .t em { display: none; }
+:root.calm .trmp section { border-bottom-color: var(--line-soft); }
+:root.calm .trmp .clk .big { font-size: 40px; } :root.calm .trmp .clk .sec { display: none; }
+:root.calm .trmp .tile { height: 44px; border-color: var(--line-soft); background: var(--ink-3); }
+:root.calm .trmp .tile .tp .micro { display: none; }
+:root.calm .trmp .tile.on { background: var(--ink-5); border-color: var(--ink-5); } :root.calm .trmp .tile.on::after { left: 0; right: auto; top: 0; bottom: 0; width: 2px; height: auto; }
+:root.calm .trmp .tile.on .msym, :root.calm .trmp .tile.on .v { color: var(--paper-1); }
+:root.calm .trmp .lv .segs { gap: 0; } :root.calm .trmp .lv .segs i { height: 3px; } :root.calm .trmp .lv .segs i.on { background: var(--paper-1); }
+:root.calm .trmp .foot .pb.d::before { display: none; }
+:root.calm .toast { --c: 0px; } :root.calm .toast .hd { border-bottom: none; height: 20px; padding-top: 4px; }
+:root.calm .toast .hd .micro:first-child { display: none; }
+:root.calm .osd { width: 260px; height: 38px; } :root.calm .osd .micro { display: none; }
+:root.calm .osd .segs { gap: 0; } :root.calm .osd .segs i { width: 7px; height: 3px; } :root.calm .osd .segs i.on { background: var(--paper-1); }
+:root.calm .osd .num { font: 500 13px/1 var(--font-mono); }
+:root.calm .term-p { width: 420px; }
+:root.calm .term-p .ttl { font: 600 20px/1 var(--font-sans); letter-spacing: .02em; margin: 8px 0 16px; }
+:root.calm .term-p .cards { grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--line); }
+:root.calm .term-p .card { height: 38px; flex-direction: row; align-items: center; gap: 12px; padding: 0 12px; border: none; border-bottom: 1px solid var(--line-soft); background: color-mix(in srgb, var(--ink-2) 92%, transparent); }
+:root.calm .term-p .card .n { display: none; } :root.calm .term-p .card .ic { margin: 0; font-size: 17px; order: -1; }
+:root.calm .term-p .card .en { margin: 0; font: 500 12.5px/1 var(--font-sans); letter-spacing: 0; text-transform: none; width: 92px; }
+:root.calm .term-p .card .zh { margin: 0; font-size: 11px; }
+:root.calm .term-p .card .key { position: static; margin-left: auto; order: 9; }
+:root.calm .term-p .hints { gap: 14px; } :root.calm .term-p .hints .rt { display: none; }
+:root.calm .term-p .card.d::before { display: none; }
+:root.calm .term-p .card.sel { background: var(--ink-4); border-color: var(--line-soft); }
+:root.calm .term-p .card.sel .ic, :root.calm .term-p .card.sel .en { color: var(--paper-1); } :root.calm .term-p .card.sel .zh { color: var(--mist-4); }
+:root.calm .term-p .card.sel .key { box-shadow: inset 0 0 0 1px var(--mist-5); color: var(--mist-4); }
+:root.calm .term-p .card .hold { height: 2px; background: var(--yellow); }
+:root.calm .term-p .hints { margin-top: 12px; border-top: none; padding-top: 0; }
+
+/* =================================================================================================
+   .bold 更強烈 — the in-game HUD grade: yellow heads, codes, segmented readouts, heavier framing
+   ================================================================================================= */
+:root.bold .bar { border-bottom: 2px solid var(--line); }
+:root.bold .bar .menu { width: 64px; justify-content: start; display: flex; align-items: center; gap: 4px; padding-left: 2px; --c: 9px; }
+:root.bold .bar .menu b { font: 700 11px/1 var(--font-display); letter-spacing: .1em; color: var(--on-accent); }
+:root.bold .ws .cell { width: 30px; height: 22px; font-size: 11px; }
+:root.bold .ws .cell.active { --c: 5px; clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, 0 100%); }
+:root.bold .ws::before { content: "WS"; font: 600 8px/1 var(--font-mono); letter-spacing: .14em; color: var(--yellow); margin-right: 6px; align-self: center; }
+:root.bold .bar .clock { font-size: 25px; }
+:root.bold .bar .ind { box-shadow: inset 0 0 0 1px var(--yellow); color: var(--yellow); } :root.bold .bar .ind .msym { color: var(--yellow); }
+:root.bold .bar .agent .meter { width: 40px; height: 4px; }
+:root.bold .bar .trm { background: var(--yellow); border-left: none; padding: 0 12px; --c: 8px; clip-path: polygon(var(--c) 0, 100% 0, 100% 100%, 0 100%, 0 var(--c)); }
+:root.bold .bar .trm .msym, :root.bold .bar .trm .val { color: var(--on-accent); } :root.bold .bar .trm .lbl { color: var(--ink-5); }
+:root.bold .bar .pwr { background: var(--vermilion); border-left: none; } :root.bold .bar .pwr .msym { color: var(--paper-0); }
+:root.bold .win.focus { outline-width: 2px; }
+.brk2 { position: absolute; width: 14px; height: 14px; border: 0 solid var(--yellow); display: none; z-index: 5; }
+:root.bold .brk2 { display: block; }
+.wtag { position: absolute; display: none; height: 14px; padding: 0 6px; background: var(--yellow); color: var(--on-accent); font: 600 8px/14px var(--font-mono); letter-spacing: .14em; z-index: 6; }
+:root.bold .wtag { display: block; }
+:root.bold .trmp .sh { padding-top: 0; margin-top: 10px; }
+:root.bold .trmp .sh .no { background: var(--yellow); color: var(--on-accent); padding: 3px 5px; }
+:root.bold .trmp .hdband { display: flex; }
+.trmp .hdband { display: none; height: 26px; align-items: center; gap: 10px; padding: 0 14px; background: var(--yellow); color: var(--on-accent);
+  font: 700 10px/1 var(--font-mono); letter-spacing: .16em; }
+.trmp .hdband .sp { flex: 1; height: 6px; background: repeating-linear-gradient(-45deg, var(--ink-2) 0 3px, transparent 3px 6px); }
+:root.bold .trmp .clk .big { font-size: 62px; }
+:root.bold .trmp .lv .segs i { height: 11px; }
+:root.bold .toast .hd { background: var(--ink-4); } :root.bold .toast.imp .hd { background: var(--yellow); }
+:root.bold .toast.imp .hd .micro, :root.bold .toast.imp .hd .x { color: var(--on-accent); }
+:root.bold .toast::after { content: ""; position: absolute; right: 14px; top: 26px; width: 22px; height: 1px; background: var(--mist-6); box-shadow: 0 4px 0 var(--mist-6), 0 8px 0 var(--mist-6); }
+:root.bold .osd { width: 380px; height: 56px; border: 1px solid var(--yellow); }
+:root.bold .osd .segs i { width: 9px; height: 14px; } :root.bold .osd .num { font-size: 30px; color: var(--yellow); width: 40px; }
+:root.bold .term-p .ttl { font-size: 44px; }
+:root.bold .term-p .card { height: 250px; }
+:root.bold .term-p .card .n { font-size: 40px; }
+:root.bold .term-p .card.d::before { height: 8px; }
+:root.bold .term-p .ring { display: block; }
+.term-p .ring { display: none; position: absolute; right: 14px; bottom: 14px; }
+
+/* the fastfetch logo is drawn light-on-ink; PAPER's terminal shows its inverse (a PAPER logo file ships with the theme) */
+:root.paper .fflogo { filter: invert(1) hue-rotate(180deg) saturate(1.4); }

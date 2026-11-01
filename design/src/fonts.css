@@ -1,0 +1,21 @@
+/* mockup-only @font-face (Chromium render). On kujira the same families are installed system-wide. */
+@font-face { font-family: "Geist Mono"; font-weight: 300; src: url("../fonts/GeistMono-Light.ttf"); }
+@font-face { font-family: "Geist Mono"; font-weight: 400; src: url("../fonts/GeistMono-Regular.ttf"); }
+@font-face { font-family: "Geist Mono"; font-weight: 500; src: url("../fonts/GeistMono-Medium.ttf"); }
+@font-face { font-family: "Geist Mono"; font-weight: 600; src: url("../fonts/GeistMono-SemiBold.ttf"); }
+@font-face { font-family: "Geist Mono"; font-weight: 700; src: url("../fonts/GeistMono-Bold.ttf"); }
+@font-face { font-family: "Geist"; font-weight: 300; src: url("../fonts/Geist-Light.ttf"); }
+@font-face { font-family: "Geist"; font-weight: 400; src: url("../fonts/Geist-Regular.ttf"); }
+@font-face { font-family: "Geist"; font-weight: 500; src: url("../fonts/Geist-Medium.ttf"); }
+@font-face { font-family: "Geist"; font-weight: 600; src: url("../fonts/Geist-SemiBold.ttf"); }
+@font-face { font-family: "Geist"; font-weight: 700; src: url("../fonts/Geist-Bold.ttf"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 400; src: url("../fonts/BarlowCondensed-Regular.ttf"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 500; src: url("../fonts/BarlowCondensed-Medium.ttf"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 600; src: url("../fonts/BarlowCondensed-SemiBold.ttf"); }
+@font-face { font-family: "Barlow Condensed"; font-weight: 700; src: url("../fonts/BarlowCondensed-Bold.ttf"); }
+@font-face { font-family: "Noto Sans TC"; font-weight: 100 900; src: url("../fonts/NotoSansTC.ttf"); }
+@font-face { font-family: "Noto Serif TC"; font-weight: 200 900; src: url("../fonts/NotoSerifTC.ttf"); }
+@font-face { font-family: "Noto Serif SC"; font-weight: 200 900; src: url("../fonts/NotoSerifSC.ttf"); }
+@font-face { font-family: "Material Symbols Sharp"; font-weight: 100 700; src: url("../fonts/MaterialSymbolsSharp.ttf"); }
+.msym { font-family: "Material Symbols Sharp"; font-weight: 300; font-style: normal; line-height: 1;
+        font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 20; -webkit-font-smoothing: antialiased; }

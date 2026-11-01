@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" width="30" height="30">
+  <!-- Endfield Industries mark (glyph only, #0E1211) -->
+  <defs><clipPath id="tri"><path d="M6.2 9.6H23.8L15 25Z"/></clipPath></defs>
+  <g fill="none" stroke="#0E1211">
+    <path d="M6.2 9.6H23.8L15 25Z" stroke-width="1.6"/>
+    <g clip-path="url(#tri)" stroke-width=".9">
+      <path d="M5 13.2C9 11.8 11.5 14.6 15 13.4S21 11.6 25 13"/><path d="M5 16.4C8.6 15.2 11.8 17.8 15.4 16.6S21.4 15 25 16.2"/>
+      <path d="M5 19.6C9.4 18.4 12 20.8 15.6 19.8S21 18.6 25 19.6"/></g>
+    <path d="M6.2 6.6H12.6M17.4 6.6H23.8" stroke-width="1.2"/></g>
+  <rect x="13.2" y="5.4" width="3.6" height="2.4" fill="#0E1211"/>
+</svg>
