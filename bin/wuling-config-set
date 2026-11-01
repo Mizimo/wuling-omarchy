@@ -1,0 +1,6 @@
+#!/bin/bash
+# omarchy:summary=Validate and save one user override
+# omarchy:args=<key> <value>
+# omarchy:examples=wuling config set
+set -euo pipefail
+exec "$(dirname "$(readlink -f "$0")")/wuling" config set "$@"

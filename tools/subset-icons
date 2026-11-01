@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Build only the Material Symbols codepoints used by the approved design."""
+from pathlib import Path
+import json
+import re
+from fontTools import subset
+from fontTools.ttLib import TTFont
+
+ROOT = Path(__file__).resolve().parent.parent
+source = ROOT / "design/fonts/MaterialSymbolsSharp.ttf"
+font = TTFont(source, recalcTimestamp=False)
+cmap = font.getBestCmap()
+ascii_names = {glyph: cp for cp, glyph in cmap.items() if cp < 128}
+pua = {}
+for cp, glyph in sorted(cmap.items()):
+    if cp >= 0xE000:
+        pua.setdefault(glyph, cp)
+names = {}
+for lookup in font["GSUB"].table.LookupList.Lookup:
+    for table in lookup.SubTable:
+        table = getattr(table, "ExtSubTable", table)
+        if getattr(table, "LookupType", 0) == 4:
+            for first, ligatures in table.ligatures.items():
+                for ligature in ligatures:
+                    sequence = [first] + list(ligature.Component)
+                    if all(glyph in ascii_names for glyph in sequence) and ligature.LigGlyph in pua:
+                        names["".join(chr(ascii_names[glyph]) for glyph in sequence)] = pua[ligature.LigGlyph]
+text = "\n".join((ROOT / "design/src" / name).read_text() for name in ("mock.js", "proto.js", "ui.css", "proto.css"))
+used = sorted(set(re.findall(r"[a-z][a-z0-9_]{2,}", text)) & names.keys())
+mapping = {name: chr(names[name]) for name in used}
+options = subset.Options()
+options.name_IDs = ["*"]
+options.layout_features = []
+options.drop_tables += ["GSUB", "GPOS"]
+options.recalc_timestamp = False
+worker = subset.Subsetter(options)
+worker.populate(unicodes=sorted({names[name] for name in used}))
+worker.subset(font)
+font.save(ROOT / "fonts/MaterialSymbolsSharp.ttf")
+(ROOT / "tokens/icons.json").write_text(json.dumps({"schema_version": 1, "icons": mapping}, ensure_ascii=False, indent=2) + "\n")
+print(f"{len(mapping)} glyphs; {(ROOT / 'fonts/MaterialSymbolsSharp.ttf').stat().st_size} bytes")

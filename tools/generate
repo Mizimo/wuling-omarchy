@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Generate text and background assets; verify captured images by manifest."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import sys
+import tempfile
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "bin/lib"))
+from wuling import Error
+from wuling import settings, theme
+
+
+def generate(out):
+    source = settings.tokens()
+    diagnostics = []
+    for name, spec in source["themes"].items():
+        target = out / "theme" / name
+        target.mkdir(parents=True, exist_ok=True)
+        for filename, text in theme.generated_text(name, {}).items():
+            (target / filename).write_text(text)
+        backgrounds = target / "backgrounds"
+        backgrounds.mkdir(exist_ok=True)
+        order = ("line", "thin", "band") if spec["preset"] == "field" else ("band", "thin", "line")
+        expected = {f"{index}-{kind}-{name}.jpg" for index, kind in enumerate(order, 1)}
+        for old in backgrounds.glob("*.jpg"):
+            if old.name not in expected:
+                old.unlink()
+        for index, kind in enumerate(order, 1):
+            shutil.copyfile(ROOT / "design/assets" / f"bg-{kind}-{spec['palette']}.jpg",
+                            backgrounds / f"{index}-{kind}-{name}.jpg")
+        shutil.copyfile(ROOT / "design/assets" / f"unlock-{spec['palette']}.png", target / "unlock.png")
+        for mode in ("edge", "fill"):
+            surface = theme.shell_data(name, {"menu.selected": mode})["menu"]
+            base = surface["background"]
+            selected = surface["selected-background"]
+            checks = {
+                "menu.primary": theme.contrast(surface["text"], base),
+                "menu.selected": theme.contrast(surface["selected-text"], selected),
+                "menu.detail": theme.contrast(theme.mix(surface["text"], base, .52), base),
+                "menu.selected_detail": theme.contrast(theme.mix(surface["text"], selected, .52), selected),
+            }
+            if min(checks["menu.primary"], checks["menu.selected"]) < 4.5:
+                raise Error(f"Primary text contrast failed: {name}/{mode}: {checks}")
+            if min(checks["menu.detail"], checks["menu.selected_detail"]) < 3.0:
+                raise Error(f"Detail text contrast failed: {name}/{mode}: {checks}")
+            diagnostics.append({"theme": name, "selection": mode, "ratios": {k: round(v, 3) for k, v in checks.items()}})
+    style = out / "kit/generated"
+    style.mkdir(parents=True, exist_ok=True)
+    (style / "tokens.json").write_text(json.dumps(source, ensure_ascii=False, indent=2) + "\n")
+    shutil.copyfile(ROOT / "design/assets/fastfetch-logo.png", out / "theme/fastfetch-logo.png")
+    return diagnostics
+
+
+def image_manifest():
+    logo = ROOT / "theme/fastfetch-logo.png"
+    rows = {str(logo.relative_to(ROOT)): hashlib.sha256(logo.read_bytes()).hexdigest()}
+    for name, spec in settings.tokens()["themes"].items():
+        paths = [ROOT / "theme" / name / filename for filename in ("unlock.png", "preview.png", "preview-unlock.png")]
+        order = ("line", "thin", "band") if spec["preset"] == "field" else ("band", "thin", "line")
+        expected = {f"{index}-{kind}-{name}.jpg" for index, kind in enumerate(order, 1)}
+        backgrounds = sorted((ROOT / "theme" / name / "backgrounds").glob("*.jpg"))
+        if {path.name for path in backgrounds} != expected:
+            raise Error(f"Unexpected background set for {name}; regenerate from the approved assets")
+        paths += backgrounds
+        for path in paths:
+            if not path.is_file():
+                raise Error(f"Missing image: {path.relative_to(ROOT)}; capture real previews before updating the manifest")
+            rows[str(path.relative_to(ROOT))] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return {"schema_version": 1, "images": rows}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--refresh-images", action="store_true", help="Record inspected image hashes explicitly")
+    args = parser.parse_args()
+    if args.check and args.refresh_images:
+        parser.error("--check and --refresh-images are separate operations")
+    if args.check:
+        with tempfile.TemporaryDirectory(prefix="wuling-generate-") as directory:
+            out = Path(directory)
+            diagnostics = generate(out)
+            for path in out.rglob("*"):
+                if path.is_file():
+                    actual = ROOT / path.relative_to(out)
+                    if not actual.is_file() or actual.read_bytes() != path.read_bytes():
+                        raise Error(f"Generated file differs: {path.relative_to(out)}")
+        manifest = ROOT / "tokens/images.json"
+        if not manifest.exists() or json.loads(manifest.read_text()) != image_manifest():
+            raise Error("Image manifest differs; inspect changed images before refreshing it")
+    else:
+        diagnostics = generate(ROOT)
+        if args.refresh_images:
+            (ROOT / "tokens/images.json").write_text(json.dumps(image_manifest(), indent=2) + "\n")
+    print(json.dumps({"ok": True, "contrast": diagnostics}, indent=2))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (Error, OSError, ValueError) as exc:
+        raise SystemExit(str(exc))

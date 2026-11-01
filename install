@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""Install WULING for the current desktop user; no build or privileged step."""
+import argparse
+import sys
+from pathlib import Path
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent / "bin/lib"))
+from wuling import Error
+from wuling.lifecycle import install
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--yes", action="store_true", help="Accept the printed installation plan")
+parser.add_argument("--fastfetch", action="store_true", default=None, help="Opt in to the WULING fastfetch mark")
+args = parser.parse_args()
+try:
+    install(args.yes, args.fastfetch)
+except (Error, OSError, ValueError) as exc:
+    print(f"WULING: {exc}", file=sys.stderr)
+    raise SystemExit(1)

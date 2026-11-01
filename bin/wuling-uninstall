@@ -1,0 +1,6 @@
+#!/bin/bash
+# omarchy:summary=Remove unchanged resources owned by WULING
+# omarchy:args=[--yes]
+# omarchy:examples=wuling uninstall
+set -euo pipefail
+exec "$(dirname "$(readlink -f "$0")")/wuling" uninstall "$@"

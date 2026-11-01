@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "fonts": [
+    {
+      "file": "BarlowCondensed-Bold.ttf",
+      "sha256": "e476562ec9c1e16cf16475895b511f08c804f438cc9a9f80a44ea50a0eeb5b65",
+      "family": "Barlow Condensed",
+      "version": "Version 1.408"
+    },
+    {
+      "file": "BarlowCondensed-Medium.ttf",
+      "sha256": "262bd143292ce479ee0cd09a42b47ab173fca8e9c6eb5ed0b5c8a845bc371d17",
+      "family": "Barlow Condensed",
+      "version": "Version 1.408"
+    },
+    {
+      "file": "BarlowCondensed-Regular.ttf",
+      "sha256": "583cec5da3b84bc4dc7c9c72e2a565c94d34e431518b19d7e250b7830ad5f996",
+      "family": "Barlow Condensed",
+      "version": "Version 1.408"
+    },
+    {
+      "file": "BarlowCondensed-SemiBold.ttf",
+      "sha256": "7b619d14bc2327509a9ef32b0890f709626f7ecc9ff61191c2a4314c5499d2d9",
+      "family": "Barlow Condensed",
+      "version": "Version 1.408"
+    },
+    {
+      "file": "Geist-Bold.ttf",
+      "sha256": "e866b423b755233cae8bce6a37519f6fe630be9772fa08fc3114bff15bc8580f",
+      "family": "Geist",
+      "version": "Version 1.800; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "Geist-Light.ttf",
+      "sha256": "b799596432af964f66e6e583c78a208a3ffb97b5e43ac00af950b4807e895cf3",
+      "family": "Geist Light",
+      "version": "Version 1.800; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "Geist-Medium.ttf",
+      "sha256": "0090e004725f6f64b841715b4167920580f883fcf9b67fc6d744089103fec101",
+      "family": "Geist Medium",
+      "version": "Version 1.800; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "Geist-Regular.ttf",
+      "sha256": "5c8968eafb98a4c4f47033daf29e38e284a6f2a82eb017d171ab040fe7c4b615",
+      "family": "Geist",
+      "version": "Version 1.800; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "Geist-SemiBold.ttf",
+      "sha256": "612ec98df33935354f39e81e54101656961ab6e5549f64b63eb57868ba7bab8d",
+      "family": "Geist SemiBold",
+      "version": "Version 1.800; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "GeistMono-Bold.ttf",
+      "sha256": "ea1cabb4d152088721b5e0b1865bb43c75c1b2d468384a551e0958e53d4fa370",
+      "family": "Geist Mono",
+      "version": "Version 1.700; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "GeistMono-Light.ttf",
+      "sha256": "6b46aec3f2b91bf224ba7922029bde4d5d453c0217b53b2e65019582549c3023",
+      "family": "Geist Mono Light",
+      "version": "Version 1.700; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "GeistMono-Medium.ttf",
+      "sha256": "90b15711dc3779b2e64e8aff5228154dd019a90bce4947549c4a8a8a43f2ac25",
+      "family": "Geist Mono Medium",
+      "version": "Version 1.700; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "GeistMono-Regular.ttf",
+      "sha256": "42d8ad2e610238e64e8abfcde3037c63f7850a73928742b7ab7229d897bcb155",
+      "family": "Geist Mono",
+      "version": "Version 1.700; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "GeistMono-SemiBold.ttf",
+      "sha256": "8b6e127117b03046495b40d4227de66bf5f81f7fe2f4546ee578e89738052314",
+      "family": "Geist Mono SemiBold",
+      "version": "Version 1.700; ttfautohint (v1.8.4.16-eb64)"
+    },
+    {
+      "file": "MaterialSymbolsSharp.ttf",
+      "sha256": "8b93289f6b5e0421d52e9bcaff5cce0c72c34dce0a949de3e5f772b58383d85c",
+      "family": "Material Symbols Sharp",
+      "version": "Version 2.975"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "images": {
+    "theme/fastfetch-logo.png": "d6ee01a7f0f6ac4be3bac181c4b066eaafd7afe18760a9d5317dd489106988ef",
+    "theme/wuling/unlock.png": "e37575d5e0b50b6e6ff67e10c4bcd46c272b13164a7a7d8f7e405eb7d364dc3a",
+    "theme/wuling/preview.png": "cfd9465f281a8a5c99e8c6883fa49b94f4471752f5efd4565256efc6e987c9a7",
+    "theme/wuling/preview-unlock.png": "e7f37de14141f7046966f4ecee4f0fdf5a0d054879841e7453e3b37a656fdcaa",
+    "theme/wuling/backgrounds/1-line-wuling.jpg": "0785aae78935cdffcb872e56e0260f888fa91ad2c14f8bd89ffffea0e036b5e1",
+    "theme/wuling/backgrounds/2-thin-wuling.jpg": "b28b76112817b0bfe077eca888413feafb7787586e0b773b282869eb24e75b0f",
+    "theme/wuling/backgrounds/3-band-wuling.jpg": "22c3d63ad6b98831fe27c7ef903a57627a6122c6bd19cf331810f324f06ddaff",
+    "theme/wuling-paper/unlock.png": "93176fb994739fe54a6467f2b56a7c5d79880d84586a50d86fda5b3f32766862",
+    "theme/wuling-paper/preview.png": "b2036dedad888e93e28e244d5023e31cd544f46e3033a421765f31f710491de2",
+    "theme/wuling-paper/preview-unlock.png": "41979c41b9dbfc81d60bd90ff6da6bb0b433df6b5ab036fc6f36741c7a64d046",
+    "theme/wuling-paper/backgrounds/1-line-wuling-paper.jpg": "17e6b9f1b5a19523934376a76c7b2474baffeb1578a8837e91b6f0bf6668f6fc",
+    "theme/wuling-paper/backgrounds/2-thin-wuling-paper.jpg": "040c4fcfce28550486fd133ec6d5c6131a31a98c6e709ae52e9483322bc5abf7",
+    "theme/wuling-paper/backgrounds/3-band-wuling-paper.jpg": "a655dd4832ce382912286c9ea812c4f15459e715d27b7c9ce09481079dd33746",
+    "theme/wuling-hud/unlock.png": "e37575d5e0b50b6e6ff67e10c4bcd46c272b13164a7a7d8f7e405eb7d364dc3a",
+    "theme/wuling-hud/preview.png": "0d3805fbe9b1a294342592c1e63ee8dede2e57cb1df554f3fbebabc3083abd4c",
+    "theme/wuling-hud/preview-unlock.png": "e7f37de14141f7046966f4ecee4f0fdf5a0d054879841e7453e3b37a656fdcaa",
+    "theme/wuling-hud/backgrounds/1-band-wuling-hud.jpg": "22c3d63ad6b98831fe27c7ef903a57627a6122c6bd19cf331810f324f06ddaff",
+    "theme/wuling-hud/backgrounds/2-thin-wuling-hud.jpg": "b28b76112817b0bfe077eca888413feafb7787586e0b773b282869eb24e75b0f",
+    "theme/wuling-hud/backgrounds/3-line-wuling-hud.jpg": "0785aae78935cdffcb872e56e0260f888fa91ad2c14f8bd89ffffea0e036b5e1",
+    "theme/wuling-hud-paper/unlock.png": "93176fb994739fe54a6467f2b56a7c5d79880d84586a50d86fda5b3f32766862",
+    "theme/wuling-hud-paper/preview.png": "693a8bb137f24b3dc4f761f42d6bab935662ccdff872beaf23af0990e80adc32",
+    "theme/wuling-hud-paper/preview-unlock.png": "41979c41b9dbfc81d60bd90ff6da6bb0b433df6b5ab036fc6f36741c7a64d046",
+    "theme/wuling-hud-paper/backgrounds/1-band-wuling-hud-paper.jpg": "a655dd4832ce382912286c9ea812c4f15459e715d27b7c9ce09481079dd33746",
+    "theme/wuling-hud-paper/backgrounds/2-thin-wuling-hud-paper.jpg": "040c4fcfce28550486fd133ec6d5c6131a31a98c6e709ae52e9483322bc5abf7",
+    "theme/wuling-hud-paper/backgrounds/3-line-wuling-hud-paper.jpg": "17e6b9f1b5a19523934376a76c7b2474baffeb1578a8837e91b6f0bf6668f6fc"
+  }
+}

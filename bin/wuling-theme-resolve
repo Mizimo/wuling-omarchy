@@ -1,0 +1,6 @@
+#!/bin/bash
+# omarchy:summary=Resolve theme, tokens and user overrides
+# omarchy:args=[--theme <name>] [--json]
+# omarchy:examples=wuling theme resolve
+set -euo pipefail
+exec "$(dirname "$(readlink -f "$0")")/wuling" theme resolve "$@"
