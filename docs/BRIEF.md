@@ -68,8 +68,9 @@ The owner sees the result after C and F. **Rebooting kujira always asks the owne
 - `tools/check`: tokens, generation, command metadata, shell syntax, privacy scan of staged files.
 - **Acceptance:** fresh VM install and removal leaves a `~/.config` inventory diff of nothing. All four themes apply, on 4.0.6
   and 4.5. `wuling config set menu.selected fill` changes the real menu, survives re-applying the theme, and leaves the user's
-  current background alone (Omarchy moves to the next image when a theme is set again). Moving to a WULING theme from any other theme, another WULING theme
-  included, shows that preset's first image, and Omarchy's switcher reaches all three. Backgrounds checked at 1920×1080, 16:10, 3:2 and 21:9 on a real output. The boot unlock screen seen
+  current background alone (Omarchy moves to the next image when a theme is set again). The first move to a WULING theme from any other theme, another WULING
+  theme included, shows that preset's first image; after that, Omarchy 4.5's own memory of the user's choice for each theme stands (4.0.6 has
+  none, so there it is always the first image). Omarchy's switcher reaches all three. Backgrounds checked at 1920×1080, 16:10, 3:2 and 21:9 on a real output. The boot unlock screen seen
   for real in a VM (`plymouthd`, `plymouth show-splash`, `plymouth ask-for-password`). Then on kujira: theme applied; `omarchy-plymouth-set-by-theme wuling` run there, seen at the next owner-approved
   reboot.
 
