@@ -1,78 +1,98 @@
-# Phase 0: unmodified Omarchy baseline
+# Phase 0: original Omarchy baseline
 
-**Status: INCOMPLETE / STOPPED (2026-11-01 UTC).** Cleanup and inventory are complete. No uninterrupted 15-minute baseline was obtained, and the popup exercise was not started. These partial observations must not set a WULING resource budget.
+**Status: measurement complete under inbox v154.** The 900-second idle capture and both ten-cycle native popup exercises completed. Screenshot outcomes are listed separately below. This is a measured reference, not an approved WULING resource cap or a long-duration leak verdict.
 
-## Scope and conditions
+## Conditions and inventory
 
-Measured on **kujira**, using the existing desktop session, without installing software, changing configuration, restarting the shell, or rebooting. The two existing remote sessions are **external, recorded only**. Their workloads were not inspected or controlled. Therefore this is an undriven desktop observation on a running system, not an isolated whole-machine idle benchmark.
+The existing desktop on **kujira** was observed without installing software, changing configuration, rebooting, or restarting the shell. The two pre-existing remote sessions and their workloads were external, recorded only; their contents were not inspected or controlled. The desktop retained an existing visible application window. This is an undriven desktop observation on a running system, not an isolated whole-machine idle benchmark.
 
-At the start, the session already had stay-awake enabled and the idle service disabled. The observer requires that original condition and an unlocked session throughout; it never changes the idle or lock configuration. The planned menu and calendar popup exercise was withheld when the idle observation failed its safety conditions. No keys, pointer events, audio playback, power operations, authentication attempts, or network changes are used.
+The design lead confirmed that the earlier scale change was made by the owner and the earlier lock was caused by closing the lid. Before this run, the owner unlocked the session and the design lead disabled the lid-close lock binding. The verifier confirmed the binding change, its backup, and empty compositor configuration errors. Restoration belongs to the design lead. Stay-awake remained enabled and idle activation disabled, as before; authentication configuration was not changed.
 
-## Inventory
-
-| Component | Observed version or state |
+| Component | Observed state |
 |---|---|
 | Omarchy / settings | 4.0.6-1 / 4.0.6-1 |
 | Hyprland | 0.56.2-4 |
 | Quickshell | 0.3.2.r7.g2b4501a-1 |
 | Qt base / declarative | 6.12.0-3 / 6.12.0-2 |
-| Mesa | 1:26.2.5-1 |
-| Running kernel | 7.2.8-9-omarchy |
-| CPU / memory | Intel Core i5-6300U, 4 logical CPUs; 7.50 GiB kernel-reported RAM |
-| Graphics | Intel HD Graphics 520, i915 |
-| Display | One internal display, 1366 × 768 at 60.111 Hz, scale 1; DPMS on, VRR off |
+| Mesa / running kernel | 1:26.2.5-1 / 7.2.8-9-omarchy |
+| CPU / RAM / GPU | Intel Core i5-6300U, 4 logical CPUs; 7.50 GiB kernel-reported RAM; Intel HD Graphics 520 / i915 |
+| Display | One internal 1366 × 768 display at 60.111 Hz, scale 1, DPMS on, VRR off |
 | Theme | Tokyo Night |
-| Font availability | Noto CJK present; Geist, Barlow, and Material Symbols absent from `fc-list` |
-| Audio | PipeWire 1.6.9, built-in analog stereo input/output; `pw-play` available; no playback performed |
+| Fonts in fontconfig | Noto CJK present; Geist, Barlow, Material Symbols absent |
+| Audio | PipeWire 1.6.9; built-in analog stereo input/output; pw-play available; no playback performed |
 
-The current `shell.json` is version 1, with an opaque top bar and the clock as center anchor. The configured screensaver/lock delays are 150/300 seconds, with the pre-existing stay-awake state overriding idle activation. The plugin override array is empty. The bar contains:
+`omarchy plugin list` was run with the shell session environment: 37 discovered plugins, all first-party, 31 enabled. The current `shell.json` has an opaque top bar, clock center anchor, an empty plugin override array, and configured screensaver/lock delays of 150/300 seconds overridden by the existing stay-awake state. Bar widgets: left menu/workspaces; center indicators/clock/keyboard layout/weather/system update; right tray/agents/Bluetooth/network/audio/monitor/power. Enabled plugins and mounted widgets are different sets.
 
-- Left: menu, workspaces.
-- Center: indicators, clock, keyboard layout, weather, system update.
-- Right: tray, agents, Bluetooth, network, audio, monitor, power.
+The new inventory matches the earlier package, plugin, font, kernel, shell-config and theme inventory. Current-boot timing remains firmware 4.846 s + loader 6.335 s + kernel 21.085 s + userspace 4.662 s = **36.929 s**, with graphical.target reached at 4.657 s in userspace. Fresh blame and critical-chain outputs were retained privately. These are boot timings, not shell first-frame latency, and no reboot was used to obtain them.
 
-Plugin discovery uses `omarchy plugin list` with the existing shell's session environment, including `OMARCHY_PATH`. There are 37 discovered plugins, 31 enabled, all first-party. The complete raw list and config remain in private evidence; enabled plugins and mounted bar widgets are distinct concepts.
+## Idle: 900 seconds
 
-Current-boot timing from `systemd-analyze`: firmware **4.846 s**, loader **6.335 s**, kernel **21.085 s**, userspace **4.662 s**, total **36.929 s**. `graphical.target` was reached at **4.657 s** in userspace. `blame` and `critical-chain` were captured for this boot. The critical chain includes 1.132 s in network initialization and 289 ms in power-profile service startup; service durations overlap and must not be summed. These are system boot timings, not measurements of the shell's first usable frame. No reboot was performed to obtain them.
+Capture: **2026-11-01 13:03:29 UTC to 2026-11-01 13:18:29 UTC**, 91 samples on the 900-second schedule, 899.995 seconds between completed first/last samples, 90 CPU intervals. Observed wall-clock sample intervals were 9.990–10.010 seconds.
 
-## Intended measurement protocol and collector
-
-The observer runs over SSH from stdin and writes JSONL only to the collecting machine. It reads the existing shell and compositor's `/proc` records, uses read-only lock/idle IPC checks, and checks shell-owned layer namespaces. No library is injected into either process.
-
-- Idle: 91 samples on a 10-second monotonic schedule, covering 900 seconds and 90 CPU intervals. PID start times, boot identity, original stay-awake state, unlocked state, and absence of shell popups are checked. CPU includes the small cost of servicing observation IPC; it is not an observer-free estimate.
-- PSS: `smaps_rollup:Pss`; USS: `Private_Clean + Private_Dirty + Private_Hugetlb`. Swap PSS is kept separate. KiB are converted to MiB using 1024.
-- CPU: differences of process user + system ticks divided by elapsed monotonic time. **100% means one core**. Means are duration weighted; p95 uses linear interpolation across the 90 interval values.
-- GPU: fdinfo records are deduplicated by DRM device + client ID within each process. This i915 driver exports **`drm-total-*` and `drm-resident-*`, not `drm-memory-*`**. Missing legacy fields are not reported as zero. Regions and accounting categories remain separate. Shared buffers can appear in both processes or multiple clients; do not add these values together or add them to CPU PSS as a unique physical-memory total.
-- Popup exercise: native `shell summon omarchy.menu '{"menu":"root"}'` / `shell hide omarchy.menu`, then `omarchy.clock open` / `close`, ten cycles each. IPC methods are enumerated first. The corresponding nonzero shell-owned layer must appear after every open and disappear after every close. Memory is sampled after 3 seconds open and 5 seconds closed, with a further 30-second settled sample after each group. Opening the menu does not select an action; opening the calendar does not edit its settings.
-- Excluded captures are kept separately: a short initial collector capture omitted the driver's `drm-total-*` fields. It was stopped and excluded. A subsequent 350-second capture stopped when an extra shell layer appeared. The following audit observed a display scale change from 2 to 1; the actor and transient popup were not identified. Both partial captures are excluded. A fresh inventory and second observation at scale 1 required unchanged shell layer geometry, but that observation was also interrupted by a real session lock. The verifier did not alter the display or restart the desktop.
-
-## Stop evidence and partial results
-
-1. The scale-2 observation recorded 36 samples spanning 350.007 seconds (06:42:02–06:47:52 UTC). The next observation encountered an additional shell layer and stopped. The following audit showed normal background/bar layers at scale 1. The transient layer and actor were not identified; the capture is not usable as a fixed-condition baseline.
-2. After a fresh scale-1 inventory, 25 samples spanned 239.998 seconds (06:49:12–06:53:12 UTC). The next guard detected a real lock. The shell reports `locked=true`, `requested=true`, `sessionLocked=true`, `secure=true`, with the secure event at **06:53:22.679 UTC**. The idle service still reports stay-awake enabled and idle disabled.
-3. `loginctl` concurrently reported `LockedHint=no`. That hint does **not** override the shell's actual secure lock state. The observer sent no lock, unlock, key, pointer, authentication, power, or settings command. The trigger is outside the observer's command sequence; its source has not been established.
-4. The final read-only audit still found the session locked. The observer exited, its controller PID was absent, and the original shell/compositor start times were unchanged. Shell configuration, current theme files, and the four audited shell source files matched their earlier fingerprints. No popup was opened by this task and no owned UI required dismissal.
-
-The following table describes **only the interrupted 240-second scale-1 observation**. It is included to preserve useful measurements, not as the requested idle baseline. Memory columns are medians; CPU is the duration-weighted mean, with 100% equal to one core.
-
-| Process | PSS MiB (range) | USS MiB | Swap PSS MiB | CPU % | GPU total system0 MiB | GPU resident system0 MiB |
+| Process | PSS median [min–max] MiB | USS median MiB | Swap PSS median MiB | CPU mean / p95 % | FDs [min–max] | Threads [min–max] |
 |---|---:|---:|---:|---:|---:|---:|
-| omarchy-shell | 295.48 (295.42–299.21) | 282.88 | 0.00 | 0.346 | 121.15 | 120.89 |
-| Hyprland | 84.34 (84.33–84.34) | 77.07 | 27.73 | 1.550 | 120.80 | 111.04 |
+| omarchy-shell | 304.46 [304.19–305.68] | 292.46 | 0.00 | 0.043 / 0.100 | 93–98 | 25–26 |
+| Hyprland | 73.82 [73.82–73.82] | 67.20 | 27.73 | 0.136 / 0.200 | 134–140 | 16–16 |
 
-During that partial interval the shell had 93 file descriptors and 25 threads; Hyprland had 135–142 file descriptors and 16 threads. The driver's stolen-system0 counters were zero. GPU values are per-process DRM-client accounting, with the sharing limitations described above.
+| Process | GPU system0 total median [min–max] MiB | GPU system0 resident median [min–max] MiB | PSS last − first MiB |
+|---|---:|---:|---:|
+| omarchy-shell | 121.08 [121.08–130.47] | 113.60 [113.60–122.99] | -0.98 |
+| Hyprland | 120.80 [116.73–121.11] | 111.03 [106.96–111.34] | +0.00 |
 
-**Not measured:** a complete 900-second stable idle interval; the ten main-menu cycles; the ten calendar-panel cycles; open deltas; closed/settled return. The partial intervals are not concatenated. There is no pass claim, leak conclusion, or resource-cap recommendation.
+This driver exports `drm-total-*` and `drm-resident-*`, not `drm-memory-*`. Missing legacy fields are not zero. The stolen-system0 counters remained zero. DRM records are deduplicated by device/client within each process, but shared buffers can be charged to multiple clients or processes. Do not sum the GPU columns across processes or add them to PSS as unique physical memory.
 
-## Required continuation
+## Native popup exercise
 
-The design lead must coordinate the locked session and a stable measurement window before another run. This read-only round does not authorize an unlock workaround, credential use, display restoration, or changes to idle configuration. Once the session is available and the lead resumes the round, capture a fresh inventory and the full 15-minute interval, then perform and verify the two native popup sequences. Do not reuse these partial values as the baseline.
+Ten main-menu cycles and ten clock/calendar-panel cycles completed. Every native IPC open was followed by a nonzero matching shell-owned layer, and every close by its disappearance. No key or pointer events were sent. The open point is sampled after 3 seconds; the closed point after 5 seconds; a further settled point follows 30 seconds after each group.
 
+“First” means the first measured open in this run, not a cold process start. Values below are differences from the immediately preceding closed point for first/warm opens. Warm values are medians of cycles 2–10. The final column is measured against the start of that entire ten-cycle group.
 
-## Reproduction and evidence
+| Surface / process | First open Δ PSS MiB | Warm open Δ PSS MiB | Warm closed Δ PSS MiB | After group +30 s Δ PSS / USS MiB |
+|---|---:|---:|---:|---:|
+| menu / shell | +7.56 | +6.31 | -0.41 | -3.29 / -3.31 |
+| menu / compositor | +0.00 | +0.00 | +0.00 | -0.00 / +0.00 |
+| clock / shell | +8.19 | +6.28 | -0.49 | -2.50 / -2.50 |
+| clock / compositor | +0.00 | +0.00 | +0.00 | +0.00 / +0.00 |
 
-`measure.py` contains the observer and the staged bounded popup exercise. Inventory and interrupted observer paths were exercised on the host; the popup branch has only been syntax checked and remains unexecuted. `summarize.py` aggregates complete local JSONL evidence and refuses incomplete captures or missing cycles. Its rejection of the current incomplete capture was verified; no complete-run summary was produced. Supply the two verified current process IDs explicitly; never reuse IDs from an old report. The script deliberately refuses to run unless the session already has stay-awake enabled and is unlocked. It does not establish those conditions.
+| Surface / process | First open Δ GPU total / resident MiB | Warm open Δ GPU total / resident MiB | After group +30 s Δ GPU total / resident MiB |
+|---|---:|---:|---:|
+| menu / shell | +23.75 / +23.75 | +12.66 / +12.66 | +0.07 / +0.07 |
+| menu / compositor | +16.03 / +16.03 | +11.96 / +11.95 | +4.07 / +4.07 |
+| clock / shell | +23.25 / +23.26 | +12.38 / +12.38 | -0.39 / -0.38 |
+| clock / compositor | +7.95 / +7.95 | +14.03 / +14.03 | -4.07 / -4.07 |
 
-For an authorized continuation, run `inventory`, then `idle`, then `exercise`, streaming each invocation over SSH and saving its stdout locally as `inventory.jsonl`, `idle.jsonl`, and `exercise.jsonl`. The raw inventory contains machine-specific information and must remain private. The collector creates no remote source file, runtime directory, background service, or armed marker. Its popup error handler closes only the popup it opened; it never unlocks or restarts anything.
+### Closed shell PSS by cycle
 
-Private evidence is under `~/.cache/wuling-build/w0/`; it is not committed. Public records include only this sanitized report and generic scripts. The final inventory reads the current state-directory theme name. Separate theme/source fingerprints support the post-run audit.
+| Cycle | Menu: closed PSS MiB | Clock: closed PSS MiB |
+|---|---:|---:|
+| 1 | 306.22 | 303.74 |
+| 2 | 303.46 | 302.06 |
+| 3 | 303.04 | 301.56 |
+| 4 | 303.72 | 301.43 |
+| 5 | 302.76 | 300.55 |
+| 6 | 303.12 | 298.95 |
+| 7 | 303.56 | 300.21 |
+| 8 | 302.99 | 300.13 |
+| 9 | 302.03 | 299.09 |
+| 10 | 301.60 | 300.21 |
+
+In this run, warmed shell PSS rose by about 6.3 MiB while either surface was open and returned below its immediately preceding closed point at the median five-second closed sample. After each group settled, shell PSS was 3.29 MiB and 2.50 MiB below its respective group starting point. The closed samples do not show steadily accumulating retained PSS. Hyprland’s settled GPU allocation was 4.07 MiB higher after the menu group, then 4.07 MiB lower after the clock group; the final value matched its pre-menu value. These observations describe this short sequence and do not establish allocation ownership, long-term leak freedom, or a memory cap.
+
+## Reference screenshots
+
+**0 captured; all 15 requested reference views skipped under the v154 privacy rule.** Before measurement and again after the popup exercise, the privacy gate found one pre-existing visible application window. Its title and contents were not retained or inspected. The window was not moved, hidden, or covered to obtain a capture. No grim call, image file, reference OSD, notification, notification-history popup, or search typing was performed.
+
+The skipped set is: desktop/top bar; menu root, Setup, System, menu search; audio, network, Bluetooth, power, clock and agents panels; volume OSD; neutral notification; notification history; and keyboard-shortcut overview. Each entry and its reason is recorded privately in `w0/ref/index.json`. Reference images remain outstanding; a later screenshot-only continuation needs a desktop without visible owner windows or personal data. No lock screen or authorization window was captured.
+
+## Method, audit and limits
+
+- The observer streams from stdin over SSH; evidence is written only to the collecting machine. No injection, settings change, remote helper installation, service, runtime directory, or armed marker is used.
+- PSS comes from smaps_rollup; USS is Private_Clean + Private_Dirty + Private_Hugetlb. Swap PSS is separate. KiB → MiB uses 1024.
+- CPU is process user + system tick change divided by monotonic elapsed time; 100% means one core. Means are duration weighted and p95 uses linear interpolation. Servicing the read-only observation IPC is included in measured CPU.
+- PID start times, boot identity, unlocked state, existing stay-awake state and shell layer geometry were guarded. Environment variables for compositor IPC came from the active runtime instance.
+- Menu IPC was shell summon omarchy.menu with the root route, then shell hide omarchy.menu. Calendar IPC was omarchy.clock open / close. Methods were enumerated first; no action inside either surface was selected.
+- Final audit: unlocked; original process identities retained; no test popup; observer processes gone; shell config, theme files, relevant shell sources and the lead-owned lid binding fingerprint unchanged.
+- Earlier incomplete captures remain separate and are excluded. The initial collector omission of drm-total fields was corrected before this accepted run. No values were stitched across interruption, lock, or scale changes.
+- This is one long-lived session and one run, with external workloads retained. Prior cache residency and Swap PSS affect comparisons. Ten cycles and 30-second settling do not establish long-term leak freedom or a resource cap. Future incremental comparisons should match display scale, theme, session age, warmup and observation protocol.
+
+`measure.py` provides inventory, idle and exercise modes; `summarize.py` rejects incomplete captures and missing transitions. Both the complete path and the earlier incomplete-capture rejection have been exercised. Supply verified current process IDs rather than reusing historical IDs. Raw inventory and screenshots are private, under `~/.cache/wuling-build/w0/`; accepted measurements are specifically in `kujira/v154/`. Only this sanitized report and generic scripts are committed.

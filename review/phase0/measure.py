@@ -22,6 +22,14 @@ parser.add_argument('--compositor-pid', type=int, required=True)
 args = parser.parse_args()
 pids = {'shell': args.shell_pid, 'compositor': args.compositor_pid}
 env = dict(x.split('=', 1) for x in Path(f'/proc/{args.shell_pid}/environ').read_bytes().decode().strip('\0').split('\0') if '=' in x)
+runtime = Path(f'/run/user/{os.getuid()}')
+instances = [p for p in (runtime/'hypr').iterdir() if p.is_dir() and (p/'.socket.sock').exists()]
+if not instances:
+    raise RuntimeError('no compositor IPC instance')
+instance = max(instances, key=lambda p: p.stat().st_mtime)
+env.update(XDG_RUNTIME_DIR=str(runtime), HYPRLAND_INSTANCE_SIGNATURE=instance.name)
+if not __debug__:
+    raise RuntimeError('run without Python optimization: safety assertions are required')
 hz = os.sysconf('SC_CLK_TCK')
 
 def emit(kind, **data):
@@ -51,7 +59,9 @@ def guard():
     lock = json.loads(ipc('lock', 'status'))
     assert idle['stayAwake'] is True and idle['enabled'] is False, 'original stay-awake changed'
     for key in ['locked', 'requested', 'pending', 'sessionLocked', 'secure', 'authenticating']:
-        assert not lock.get(key, False), f'lock condition: {key}'
+        if lock[key]:
+            emit('abort', reason=f'lock condition: {key}', lock=lock, idle=idle)
+            raise RuntimeError(f'lock condition: {key}')
     assert not any(v for k, v in lock.items() if 'locked' in k.lower() and isinstance(v, bool)), 'lock state'
     return dict(idle=idle, lock=lock)
 
