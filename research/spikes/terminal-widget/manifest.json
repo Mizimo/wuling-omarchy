@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"research.terminal-widget","name":"Disposable panel contract probe","version":"0.1.0","kinds":["bar-widget"],"entryPoints":{"barWidget":"Widget.qml"},"barWidget":{"displayName":"Panel probe","defaultSection":"right"}}

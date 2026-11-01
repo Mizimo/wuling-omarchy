@@ -1,0 +1,33 @@
+file,line,kind,request_path
+bin/omarchy-capture-screenrecording-with-webcam,15,script,omarchy-capture-screenrecording-with-webcam -> omarchy-menu-select
+bin/omarchy-games-retro-install,17,script,omarchy-games-retro-install -> omarchy-menu-select
+bin/omarchy-menu-file,48,script,omarchy-menu-file -> omarchy-menu-select
+bin/omarchy-menu-herdr-keybindings,231,script,omarchy-menu-herdr-keybindings -> omarchy-menu-select
+bin/omarchy-menu-keybindings,588,script,omarchy-menu-keybindings -> omarchy-menu-select
+bin/omarchy-menu-plugin,33,script,omarchy-menu-plugin -> omarchy-menu-select
+bin/omarchy-menu-timezone,9,script,omarchy-menu-timezone -> omarchy-menu-select
+bin/omarchy-menu-tmux-keybindings,137,script,omarchy-menu-tmux-keybindings -> omarchy-menu-select
+bin/omarchy-remove-gaming-xbox-cloud,7,script,omarchy-remove-gaming-xbox-cloud -> omarchy-webapp-remove -> omarchy-menu-select
+bin/omarchy-remove-launcher-entry,71,script,omarchy-remove-launcher-entry -> omarchy-webapp-remove -> omarchy-menu-select
+bin/omarchy-remove-service-sunshine,64,script,omarchy-remove-service-sunshine -> omarchy-webapp-remove -> omarchy-menu-select
+bin/omarchy-remove-service-tailscale,10,script,omarchy-remove-service-tailscale -> omarchy-webapp-remove -> omarchy-menu-select
+bin/omarchy-theme-remove,12,script,omarchy-theme-remove -> omarchy-menu-select
+bin/omarchy-transcode,179,script,omarchy-transcode -> omarchy-menu-select
+bin/omarchy-tui-remove,22,script,omarchy-tui-remove -> omarchy-menu-select
+bin/omarchy-webapp-remove,39,script,omarchy-webapp-remove -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,40,action:learn.keybindings,omarchy-menu-keybindings -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,46,action:learn.tmux-keybindings,omarchy-menu-tmux-keybindings -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,47,action:learn.herdr-keybindings,omarchy-menu-herdr-keybindings -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,63,action:trigger.capture.screenrecord.webcam,omarchy-capture-screenrecording-with-webcam -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,64,action:trigger.transcode,omarchy-transcode -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,169,action:setup.plugin.enable,omarchy-menu-plugin -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,170,action:setup.plugin.disable,omarchy-menu-plugin -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,172,action:setup.plugin.clone,omarchy-menu-plugin -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,173,action:setup.plugin.remove,omarchy-menu-plugin -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,255,action:install.gaming.retro-launcher,omarchy-games-retro-install -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,281,action:remove.webapp,omarchy-webapp-remove -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,282,action:remove.tui,omarchy-tui-remove -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,284,action:remove.theme,omarchy-theme-remove -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,304,action:remove.service.tailscale,omarchy-remove-service-tailscale -> omarchy-webapp-remove -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,309,action:remove.gaming.xbox-cloud,omarchy-remove-gaming-xbox-cloud -> omarchy-webapp-remove -> omarchy-menu-select
+default/omarchy/omarchy-menu.jsonc,349,action:update.timezone,omarchy-menu-timezone -> omarchy-menu-select

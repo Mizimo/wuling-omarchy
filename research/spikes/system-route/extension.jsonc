@@ -1,0 +1,8 @@
+{
+  "system": {
+    "icon": "",
+    "label": "System",
+    "aliases": ["power-menu"],
+    "action": "omarchy-shell shell toggle research.focus"
+  }
+}

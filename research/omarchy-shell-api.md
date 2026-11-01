@@ -1,10 +1,9 @@
 # Omarchy shell extension research
 
-A-1 interface study and disposable experiments, not a product implementation
-or an approved design. The 4.0.6 VM experiments below are complete, including
-an observed menu-facade blocker. The 4.5.0-rc2 comparison is **source-only so
-far**: an independent stock VM is staged, but its official rc-channel switch
-and runtime checks have not run. No 4.5 runtime pass is claimed.
+A-1/A-2 interface studies and disposable experiments, not a product
+implementation or approved design. Both 4.0.6 and 4.5.0-rc2 now have runtime
+controls. A-2 results, limitations and the draft-theme review are in §17; the
+406 menu-facade blocker does not reproduce in the 450 control.
 
 ## Sources and evidence notation
 
@@ -17,7 +16,7 @@ References below use `406 path:line` or `450 path:line`; lines refer to those
 exact commits. A source finding describes implementation at that revision,
 not a guarantee of future compatibility. Recommendations are explicitly marked.
 Raw VM logs, package inventories, screenshots and configuration manifests stay
-outside this repository in the local `wa1` evidence directory. No old WULING
+outside this repository in the local `wa1` and `wa2` evidence directories. No old WULING
 implementation is imported.
 
 ## 1. Replacement bar and widgets
@@ -208,8 +207,9 @@ source; no upstream file was patched or instrumented.
 product dependency on this stack. The route probe records the defect and uses
 the ordinary public `omarchy-shell shell hide research.menu` CLI for Esc when
 the facade is missing. That fallback tests routing, not AppLibrary success.
-The corresponding Array.isArray/profile checks remain in 450; its VM result
-must be checked separately. (`450 shell/shell.qml:363–366,635–636,822–836`.)
+The corresponding Array.isArray/profile checks remain in 450, but A-2 now
+confirms its original-registry-manifest lookup avoids this failure; see §17.
+(`450 shell/shell.qml:363–366,635–636,822–836,1398`.)
 Local evidence: `vm406/guest-evidence/facade-menu-sequence.json`,
 `facade-sequence.json`, `facade-overlay.json`; probe: `spikes/facade/`.
 
@@ -591,9 +591,9 @@ decision before product code.
 
 The basic scoped shell API and service-less hosted-widget boundary remain in
 the source. The 406 experiments use its real default keys. The separate 450
-runtime matrix remains open: repeat the five functional probes, the facade
-control, six-section bar catalog and Super+Alt+Space dock exception. Do not
-carry the 406 passive-notification result over to 450's full `act` behavior.
+runtime matrix is completed in A-2 (§17): five functional probes, facade
+control, six-section catalog and dock exception. Do not carry the 406
+passive-notification result over to 450's full `act` behavior.
 
 ## 14. Runtime cost and experiment results
 
@@ -750,3 +750,263 @@ agent-specific WULING palette. (`406 default/themed/claude.json.tpl:1–43`.)
 
 No upstream files need modification to install these disposable plugins.
 The proposed long-term structure is in [maintainability.md](maintainability.md).
+
+## 17. A-2 runtime findings (v400 / v401)
+
+**The registered-widget host and the overlay replacement are viable research
+paths on both tested versions.** The host needs a real compatibility layer;
+importing MenuModel.js does not make a replacement menu behaviorally equivalent.
+The native System extension works on both versions without changing bindings.
+These are independent experiments, not a product implementation or approval to
+use internal APIs indefinitely. Evidence below is local under `wa2/`; no logs,
+raw JSON, screenshots or theme images are in git.
+
+### RC update and differences affecting WULING
+
+The independent RC disk completed official `omarchy channel set rc` and
+`omarchy update -y`: installed Omarchy 4.5.0rc2-1, Hyprland 0.56.2-4,
+Quickshell 0.3.2.r7.g2b4501a-1, Qt base 6.12.0-3 / declarative 6.12.0-2,
+Mesa 1:26.2.5-1. Installed shell, registry and MenuModel hashes match the pinned
+450 source. The initial update invocation ended with status 143 without a
+conclusive cause; the subsequent official update completed with status 0.
+No manual package replacement or upstream patch was used.
+
+All five A-1 functional probes passed on RC: bar at both resolutions, four
+edges and two outputs; volume-key OSD; notification D-Bus handover and dismiss;
+focused overlay; runtime menu tree with true/false guards and checked rows.
+Each probe restored its owned configuration. RC has 422 default menu rows,
+compared with 333 at 406. See `vm450/*-test.log`, `menu-facade-test-r2.log` and
+its collected guest evidence. A-1's cost experiment was not repeated in A-2.
+
+| Contract | 406 | 450 runtime / implication |
+|---|---|---|
+| `menu` facade | Revoked in minimal control, AppLibrary unavailable | Stable, AppLibrary available. The delegate now reads the original registry manifest rather than its model-converted copy (`450 shell/shell.qml:1398`). The isolated sequence conversion is still reproducible, but does not revoke this facade. |
+| Overlay facade | Stable; no AppLibrary | Same; public DesktopEntries is an independent option with different launch semantics. |
+| Super+Alt+Space | Menu apps route | Dock, outside the menu replacement mechanism. |
+| Background/theme aliases | `style.background`, `style.theme` | `appearance.background`, `appearance.theme`. Resolve through installed model rather than hard-coded paths. |
+| Network shortcut | Super+Ctrl+W | Super+Ctrl+N; W opens background selection (`450 default/hypr/bindings/utilities.lua:15,106`). |
+| Bar layout | left / center / right | Six sections including centerBegin / centerEnd / tray; default catalog loads into the independent host. |
+| Transparent CLI | `bar.transparent` boolean | Writes `bar.background="none"`; false maps to opaque. The probe handles both (`450 bin/omarchy-bar:223–272`). Glass mode remains outside this probe. |
+| Shared panel facade | Basic coordination | Additional tray-section state and popout-card geometry callbacks. |
+| Menu request/reply | select/input, single selection | Adds multi-select, preselection and on-change commands/change keys; ignoring these breaks callers. |
+| Language | English menu model | Shipped rows translated before user extensions, English search terms retained. A replacement must call this logic as well. |
+
+The successful 450 facade control supersedes the earlier source-only uncertainty
+in §4/§13. It does not retroactively change the 406 result.
+
+### Thin host, panels and input skin
+
+The independent [host](spikes/bar-host/) is **316 QML lines**, with all 14
+requested default widgets loaded from the installed registry. The complete
+[member contract](bar-host-contract.md) names consumers, failure behavior and
+version differences. The four icon/status metric mirrors are not overrides:
+native widgets read Style.bar directly. The [mouse/keyboard matrix](bar-host-matrix.csv) separates
+working interactions from unavailable hardware/data. Default panel shortcuts,
+numbered right-section panel selection, Esc, outside clicks, mutual exclusion
+and Tab were exercised through QMP, with shell IPC used for inspection.
+Native arrow behavior is preserved: for example audio arrows operate its
+volume/cursor, while the probe Terminal's horizontal arrows switch panels.
+
+The CLI layout controls and watched shell.json updates worked on both versions.
+Panel anchors followed top/bottom/left/right. Moving audio to the left moved its
+popup anchor; changing clock format updated its label. With a physical virtual
+output and a second headless output, a QMP shortcut opened audio only on the
+currently focused output. See `vm*/host-layout*.log`, `host-layout.json` and
+`shots/*-host-{top,bottom,left,right}-audio.png`.
+
+The Terminal model imports installed `qs.Ui.Panel` / `KeyboardPanel`. Its QMP
+shortcut, Esc, outside click, audio handoff, Tab and arrows worked under both
+native bar and independent host on both versions. Switching from the host to
+the native bar used an official shell restart after the 406 hot-switch pilot
+left stale/duplicate handlers. Clean hot replacement is **not** established.
+See `vm*/overlay-terminal-both-bars.json` and `spikes/terminal-widget/`.
+
+VM limitations are material: no Bluetooth adapter, battery, brightness device,
+SNI application or pending-update indicator. Bluetooth's default shortcut
+showed its no-adapter panel. Power had no visible panel; in the 406 probe its
+invisible `opened` flag could remain set, so visible-panel mutual exclusion is
+reported separately. Agents was hidden at 406 with no account data; its native
+empty-state panel was captured separately. A temporary US/German layout fixture
+made the keyboard widget testable and was removed. Weather became available
+once its native data arrived. No hardware success is inferred from component
+loading alone.
+
+For v401, the host draws its own Barlow Condensed **21 px** clock text and a
+volume percentage, while an opacity-zero Loader fills exactly the same slot
+with the native widget. `visible` stays true. Both versions passed clock left
+(calendar), right (format and width update), middle (timezone selection), default
+calendar shortcut, audio left and audio wheel. Popup screenshots remain fully
+visible and correctly anchored because each popup is an independent window.
+See `shots/*-host-skin-{bar,clock,audio}.png` and `vm*/host-matrix-rest*.log`.
+Qt documents that Item opacity does not disable input; the runtime proof also
+checks these particular upstream components. [Qt Item opacity](https://doc.qt.io/qt-6/qml-qtquick-item.html#opacity-prop).
+
+This is a workable adapter for these two components, with explicit costs:
+
+- Bind the visible label to the native state (`displayText`, current PipeWire
+  sink volume); otherwise format changes and service updates can disagree.
+- Let the host own width from its label plus padding and constrain the native
+  Loader to that width. Reading native implicitWidth as a second layout owner
+  can cause loops or mismatched hit areas. Recompute adjacent slots and anchors
+  when a clock format or volume digit count changes.
+- Keep native enabled/visible state and lifetime. A hidden/disconnected native
+  widget cannot supply input; opacity also hides its built-in hover/pressed/open
+  indicators, so an eventual host must decide which visible feedback to draw.
+- These native state properties and button geometry are internal dependencies.
+  A future popup changed from a separate window to an in-tree item could inherit
+  transparency. Recheck both interactions and pixels after upstream updates.
+- The probe's vertical own clock text is intentionally basic, not a finished
+  vertical design. Drag, overflow and complete hover behavior are not implemented.
+
+The native-bar control uses the draft shell.toml and stores
+`bar.fontFamily="Geist Mono"`. Native `Bar.qml:72` still reads
+`Style.font.family`; that JSON key does not change its font. The independent
+host deliberately honors it. Neither setting adds a continuous baseline,
+custom section separators or an arbitrary center ornament to the native bar.
+Those require a replacement host or additional supported widgets, not color
+keys. Planning estimates for host hardening and drag are in the contract file.
+
+### Overlay route takeover and the work behind Dispatch A
+
+The overlay manifest with `clonedFrom: omarchy.menu` passes plugin validation.
+On both versions it keeps its shell facade and can close itself without the
+406 menu-probe CLI fallback. All menu-bound default keys and power-menu,
+settings and a user-extension alias reach it; the 450 dock exception is verified
+by an unchanged call count. Both bars were tested. Public DesktopEntries listed
+apps, and selecting Chromium launched an actual client in each bar control.
+
+Enabling the replacement disables **all kinds of the source menu plugin**.
+Consequently its native bar-widget registration disappears: the independent
+host's menu slot has no component/zero width, and the native bar loses its menu
+button too. Declaring only overlay does not preserve the source's other kind.
+A replacement needs its own small bar-widget if that button is required.
+
+`DesktopEntry.execute()` is not an AppLibrary-equivalence guarantee: the public
+API currently ignores terminal requirements and field codes. The simple Chromium
+launch proves only the path exercised. [Quickshell DesktopEntry](https://quickshell.org/docs/v0.3.0/types/Quickshell/DesktopEntry/).
+On 450 a genuine menu-kind plugin can instead use the now-working AppLibrary
+facade, subject to the version-specific contract and its parity tests.
+
+The complete shipped lexical caller inventories are
+[406](menu-request-callers-406.csv) and [450](menu-request-callers-450.csv),
+including transitive scripts and JSONC actions. Reproduce with
+`menu-request-callers.py /path/to/checkout`. A conditional caller is a potential
+path, not a claim every invocation opens a picker. User extensions and external
+CLI callers can add more and cannot be exhaustively enumerated by shipped code.
+
+The direct select callers cover keybindings (desktop, tmux and herdr), file
+selection, timezone, plugin enable/disable/clone/remove, theme removal, webapp
+and TUI removal, RetroArch core selection, transcode format/resolution and webcam
+selection. The native clock's middle button adds
+`plugins/panels/clock/BarWidget.qml:155` (406) / `:171` (450) → timezone → select.
+No additional shipped direct `menu-input` caller was found; the public input
+CLI itself remains part of the replacement contract. Theme/background/Plymouth
+image pickers use the separate image-selector / image-picker request path and
+are not automatically replaced by `omarchy.menu`.
+
+Both select and input create a selection file and wait for a done file. A
+replacement must finish on accept **and cancel**, preserve row encoding, output
+and exit semantics, multiple selection and requested size. In 450 it must also
+handle preselected rows and on-change argument arrays/change keys. The probe
+intentionally does not implement these protocols; using it as a daily menu
+would leave native selection callers waiting. Sources: `406 bin/omarchy-menu-
+select:70–100`, `omarchy-menu-input:28–61`; `450 bin/omarchy-menu-select:109–147`.
+
+| §4 rule | Runtime import can supply | Replacement still owns |
+|---|---|---|
+| 1–2 parsing / normalization / merge | MenuModel helpers, exact installed semantics | File watching, error/reload lifecycle, preserving extension behavior |
+| 3 when / checked | Guard script generation and interpretation helpers | Process scheduling, pending reruns, refresh and stale-result handling |
+| 4 routes / aliases | Installed route resolver | Dispatch, action execution, links, lock-aware application policy |
+| 5 navigation / request-reply | Some pure model helpers | History/back state, selection protocol and cancellation; UI focus/lifecycle |
+| 6 search / ordering | Matching and score helpers | Current/deep grouping, query state, viewport and keyboard parity |
+| 7 apps / providers | Pure row helpers; 450 menu facade has AppLibrary | Provider subprocesses, volatile cache, refresh/deletion/icons; 406 launch parity |
+| 450 translation | Installed translation helper | Locale changes, loading translation data, translated/English search tests |
+
+Estimate: **15–25 engineering days** for one-version behavioral equivalence and
+reviewable tests, plus **5–10 days** for the second-version differences and edge
+cases, excluding visual design, animation and packaging. This is a planning
+estimate based on the separate orchestration layers, not measured development
+time. A route reader alone is far smaller. A normal upstream update needs a
+focused 1–2 day compatibility review; changed menu orchestration can exceed it.
+Check manifests/facades, MenuModel exports, static tree and aliases, guards,
+providers, AppLibrary, search/i18n, request payloads and all caller inventories,
+then repeat keyboard, pointer, cancellation and locked-key controls. Runtime
+import avoids a copied parser fork but does not eliminate this maintenance.
+
+### Native System action extension
+
+Both versions passed Super+Esc, power key, power-menu alias, clicking the System
+row, and repeated toggle. The extension keeps the native icon, label and alias
+because normalization otherwise clears omitted fields. The original menu calls
+`cancel()` and executes the action directly (`406 Menu.qml:854–864`); it does
+not open a System submenu first. No intervening menu was observed in 220 (406) / 222 (450) compositor-layer
+samples over three seconds; maximum sample gaps were 17.0 / 15.8 ms. This is
+not an exhaustive per-frame flash proof.
+Searching `reboot` still finds the original System/Reboot action. It was viewed,
+never executed. Removing the extension restored the original System menu.
+
+The negative lock control opened the ordinary overlay behind the secure lock
+and exposed it after password unlock. The guard in `spikes/system-route/guard.sh`
+checks `lock isLocked` and only toggles when the answer is exactly false. In both
+VMs it kept the overlay closed while locked and after unlock; normal unlocked
+open/close still worked. This solves the observed already-locked power-key case,
+not an atomic check-versus-lock race or an authentication boundary. No default
+key needed to be unbound. Evidence: `vm*/system-route.json`,
+`system-lock-resume.log`, host lock captures and `shots/*-system-*.png`.
+
+### Draft themes, genuine screenshots and constraints
+
+All four designer-supplied drafts were copied as plain theme directories and
+applied through official theme set on 406. The requested 1366×768 surfaces are
+listed in the local `shots/INDEX.md`; images remain outside git. Tokyo Night
+root/audio/lock captures provide the before control. Canon artwork and music
+were not used. Lock theme captures use preview; the separate secure-lock
+experiment above exists only for route behavior. Polkit captures use `pkexec true`
+launched by the compositor and cancelled without authentication. The initial
+SSH-detached attempt had a dead parent and no dialog; final polkit images were
+retaken through the desktop session.
+
+| Token / surface | Observation |
+|---|---|
+| `menu.selected-border-width = "0 0 0 2"` | Works: single left border, including AS yellow and PAPER dark edge. |
+| Menu selected background / alpha | Consumed by `Color.qml:99`; alpha 1 is visibly opaque in the supplied drafts. No independent alpha sweep was needed for these drafts. |
+| `border-width` | Popup/notification one-pixel frames and selected per-side border render. Native geometry and controls still own their individual layout. |
+| Selected detail text | **Poor contrast in AS**: the breadcrumb/detail keeps `root.foreground` at opacity .52 even when selected (`406 Menu.qml:1292–1301`), unlike the main label's selected-text. On a light selected fill it becomes faint. This is not an ignored selected-text token. Drafts were not edited. |
+| Lock | Preview reflects background, placeholder and active border. Idle/error/selection roles exist but were not all activated for theme screenshots. |
+| Polkit | Prompt, background, border and scrim reflect each draft. Error roles were not triggered; cancellation succeeded. |
+| Native bar font | JSON fontFamily ignored by native bar; a host or system fontconfig setting is required. |
+| Power / Bluetooth / agents | Power screenshot is an unavailable no-battery trial, not a panel. Bluetooth shows no adapter; agents shows the native no-account state. |
+| Applications | Native generated configs shown in foot+fastfetch, btop, Neovim, Chromium new tab and tiled windows. The first Neovim launch showed parser downloads; it was recaptured after startup. These are app results, not shell.toml alone. |
+
+A separate git-marked copy included harmless denied-file probes. Official theme
+set reported dropping `foot.ini`, `hyprland.lua`, `neovim.lua`; the staged files
+of those names were regenerated from official templates. `colors.toml`,
+`shell.toml`, `icons.theme` and `unlock.png` retained identical SHA-256 hashes.
+Border colors therefore survive git installation via generated official files.
+Evidence: guest `theme-git.stderr` and `theme-git-check.json`.
+
+Official `omarchy-plymouth-set-by-theme wuling-as` completed with status 0 in a
+PTY and rebuilt the boot image. The first non-PTY invocation could not obtain
+sudo authentication and did not count as success. After reboot, QMP capture was
+attempted, but this VM has a plain Btrfs root, **no LUKS**: the disk-unlock screen
+was **not captured (沒拍到)**. No reinstall was done. Boot reached the greeter;
+the official `omarchy-plymouth-reset` subsequently restored default Plymouth
+and SDDM assets and completed with status 0.
+
+Final cleanup and configuration comparison are recorded with the round's local
+closure inventory. Raw experiment failures remain in evidence: route-name and
+shortcut assumptions, the 450 background setting change, native Esc clearing a
+query before closing, and QMP screendump's `no surface` under virgl. Corrected
+controls and image review determine the results above; none was silently counted
+as a pass.
+
+Closure: both original themes/configurations were restored and `.config`
+inventory differences were empty, including after the final shell restart.
+Probe fonts, plugins, bindings/extensions and draft directories were removed;
+volume returned to 40%, stay-awake was off, secure lock was off. Both guests
+powered off normally with status 0. Their round containers were removed. Each
+VM retains only its original baseline and latest A-2 clean disk checkpoint;
+the superseded A-1 clean checkpoint was deleted. The previously authorized
+generic VM runtime image is retained for the development VMs. Evidence and
+127 indexed 1366×768 screenshots remain local; the round's `closure.json`
+records disk sizes and the exact cleanup inventory.

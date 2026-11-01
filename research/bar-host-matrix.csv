@@ -1,0 +1,16 @@
+widget,406,450,left,right,middle,wheel,tooltip,limitation
+omarchy.menu,loaded,loaded,native menu,actual terminal launch,no distinct handler,no handler,empty native text,removed from both bars when overlay replacement disables source plugin
+omarchy.workspaces,loaded,loaded,workspace 2 focus,no distinct handler,no distinct handler,no handler,empty native text,native workspace labels retained
+omarchy.indicators,loaded,loaded,Stay Awake state changed,no distinct handler,no distinct handler,no handler,Allow Idle Lock and Screensaver then Stay Awake,only available Stay Awake indicator exercised
+omarchy.clock,loaded,loaded,calendar,format changed,timezone picker,no bar handler,empty in 406; format hint in 450,calendar arrows browse month instead of changing panel
+omarchy.keyboard-layout,loaded,loaded,US to German,cycle exercised,no distinct handler,no handler,English then German,two-layout runtime fixture; restored by Hyprland reload
+omarchy.weather,loaded,loaded,weather panel,notification,refresh,no bar handler,empty native text,became visible after native weather data arrived
+omarchy.system-update,loaded hidden,loaded hidden,not available,not available,no distinct handler,no handler,not available,no pending-update indicator; no system update triggered for mouse test
+omarchy.tray,loaded hidden,loaded hidden,not available,not available,not available,not available,not available,no SNI application or nested tray entries in baseline
+omarchy.agents,loaded hidden,loaded visible,450 panel,450 native agent action,450 native handler invoked,no handler,empty native text,406 no account indicator; empty-state panel captured through shell summon
+omarchy.bluetooth,loaded hidden,loaded hidden,no visible target,no visible target,no distinct handler,no handler,no visible target,default shortcut opens no-adapter panel; no adapter for toggle test
+omarchy.network,loaded,loaded,network panel,network panel,no distinct handler,no handler,empty native text,406 shortcut W; 450 N and W is background picker
+omarchy.audio,loaded,loaded,audio panel,mute toggled,no distinct handler,volume changed and restored,empty native text,arrows change internal volume/cursor; Tab switches panel
+omarchy.monitor,loaded,loaded,display panel,display panel,no distinct handler,QMP delivered; no brightness device,empty native text,brightness effect unavailable in VM
+omarchy.power,loaded hidden,loaded hidden,no visible target,no visible target,no distinct handler,no handler,no visible target,no battery; no visible panel; 406 probe retained an invisible opened flag
+research.terminal-widget,loaded,loaded,shared native Panel opened,no distinct handler,no distinct handler,no handler,disposable probe tooltip,Esc outside click Tab arrows and audio handoff tested on host and native bar

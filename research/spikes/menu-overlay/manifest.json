@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"research.menu-overlay","name":"Disposable overlay menu routing probe","version":"0.1.0","kinds":["overlay"],"keepLoaded":true,"entryPoints":{"overlay":"Overlay.qml"},"omarchy":{"clonedFrom":"omarchy.menu"}}
