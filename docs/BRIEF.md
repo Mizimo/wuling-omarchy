@@ -29,6 +29,7 @@ kit/                     WULING's shared QML components
 plugins/<part>/          one plugin each: manifest, entry points, README, i18n
 bin/                     `wuling` and its commands, with `# omarchy:`-style metadata
 sounds/                  cues
+fonts/                   the fonts Omarchy doesn't ship, with licences
 install                  the installer
 tests/                   checks that need no display; VM acceptance
 ```
@@ -45,13 +46,16 @@ The owner sees the result after C and F. **Rebooting kujira always asks the owne
 ### B — Theme and foundations
 
 - `tokens/` from `design/src/tokens.css` and `design/theme-draft.py`; delete `theme-draft.py` once `tools/` replaces it.
-  Generation is deterministic; a check regenerates into a temporary directory and compares bytes. Contrast is checked at
-  generation: text at least 4.5:1, a row's detail text as Omarchy actually draws it.
+  Generation is deterministic; a check regenerates the text files into a temporary directory and compares bytes, and compares
+  images through a manifest of hashes. Contrast is checked at generation: text at least 4.5:1, a row's detail text as Omarchy
+  actually draws it.
 - `theme/` with the four themes of DESIGN §2: `colors.toml`, `shell.toml`, `icons.theme`, `light.mode` for PAPER,
   `backgrounds/` (`design/assets/bg-*.jpg`), `unlock.png`, `preview.png` and `preview-unlock.png` from real captures, and the
   preset's values for plugins. Confirm that file survives Omarchy's git-install filter.
 - `wuling` command: `commands --json`, `theme resolve`, `config get|set`, `status --json` (stub), `doctor`. Stable JSON with a
   schema version.
+- `fonts/` with their licences: Geist, Geist Mono, Barlow Condensed, and Material Symbols Sharp cut down to the glyphs WULING
+  uses. CJK comes from Omarchy's own `noto-fonts-cjk`.
 - `install` and `wuling uninstall`, covering themes, fonts (`~/.local/share/fonts/wuling`) and the skill now, and written so
   later plugins, the bindings block and the menu extension slot in:
   - Print the plan first: files, built-ins changed, keys added, required Omarchy version. Proceed on consent; `--yes` for scripts.
