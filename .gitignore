@@ -13,3 +13,5 @@ __pycache__/
 
 # Fonts are fetched by design/fetch-fonts.sh (OFL / Apache-2.0), not committed
 design/fonts/
+design/proto/
+design/mockups/proto/

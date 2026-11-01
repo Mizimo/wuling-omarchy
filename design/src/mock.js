@@ -17,9 +17,10 @@ const GLYPH = (c = 'currentColor', s = 30) => `<svg viewBox="0 0 30 30" width="$
   <g clip-path="url(#tri${s})" stroke-width=".9"><path d="M5 13.2C9 11.8 11.5 14.6 15 13.4S21 11.6 25 13"/>
   <path d="M5 16.4C8.6 15.2 11.8 17.8 15.4 16.6S21.4 15 25 16.2"/><path d="M5 19.6C9.4 18.4 12 20.8 15.6 19.8S21 18.6 25 19.6"/></g>
   <path d="M6.2 6.6H12.6M17.4 6.6H23.8" stroke-width="1.2"/></g><rect x="13.2" y="5.4" width="3.6" height="2.4" fill="currentColor"/></svg>`;
-const ms = (n, st = '') => `<span class="msym" style="${st}">${n}</span>`;
+// icons: Material Symbols ligatures; a packed page maps names to codepoints (window.ICONS) so its font can be subset
+const ms = (n, st = '') => `<span class="msym" style="${st}">${(window.ICONS && window.ICONS[n]) || n}</span>`;
 const stack = (l, v, cls = '') => `<div class="stack ${cls}"><span class="lbl">${l}</span><span class="val">${v}</span></div>`;
-const S = (h) => document.body.insertAdjacentHTML('beforeend', h);
+const S = (h) => (document.querySelector('.stage') || document.body).insertAdjacentHTML('beforeend', h);
 
 // ------------------------------------------------------------------ bar
 function bar(o = {}) {
@@ -207,13 +208,14 @@ function power() {
 
 // ------------------------------------------------------------------ compose
 document.addEventListener('DOMContentLoaded', () => {
-  const dimmed = SCREEN === 'power';
+  const dimmed = SCREEN === 'power' || SCREEN === 'proto';
   S(`<div class="screen ${dimmed ? 'dim' : ''}"></div>`);
   hud();
   if (SCREEN === 'desk' || SCREEN === 'comms') { bar(); windows(); }
   if (SCREEN === 'comms') comms();
   if (SCREEN === 'terminal') { bar({ title: false, ws: ['active', 'occ', '', ''], trmOn: true }); terminal(); }
   if (SCREEN === 'power') { bar({ title: false, ind: false, upd: false }); power(); }
+  if (SCREEN === 'proto') bar({ title: false, ind: false, upd: false });
   // Omarchy's centerAnchor: the clock sits at the exact centre and the rest of the centre section flanks it
   const a = document.querySelector('.bar .anchor');
   if (a) document.querySelector('.bar').style.setProperty('--anchor-half', (a.offsetWidth / 2 + 12) + 'px');
