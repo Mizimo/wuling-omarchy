@@ -9,13 +9,13 @@ WULING is built only from Omarchy's own extension points:
 
 It never edits Omarchy's files and never forks Omarchy's code. Omarchy's keybindings, menus and update flow stay as they are, and installing WULING needs no `sudo` (the optional boot screen is applied with Omarchy's own command).
 
-**Status:** design phase. Nothing here is installable yet.
+**Status:** in development. The four themes and the installer work (`./install`, see [bin/README.md](bin/README.md)); the bar, panels and other plugins are being built.
 
 ## 中文
 
 武陵外勤終端：給 Omarchy 4 的桌面，以《明日方舟：終末地》的武陵為主題。只用 Omarchy 官方開放的擴充方式：omarchy-shell 外掛和 Omarchy 主題。不改 Omarchy 的檔案、不分叉它的程式；操作和快捷鍵照 Omarchy，安裝不需要 sudo。
 
-**狀態：**設計階段，還不能安裝。
+**狀態：**開發中。四個主題和安裝程式已經可以用（`./install`，說明見 [bin/README.md](bin/README.md)），頂欄、面板和其他外掛還在做。
 
 ## License
 

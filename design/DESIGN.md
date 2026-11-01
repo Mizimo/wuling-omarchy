@@ -88,12 +88,12 @@ One source (`tokens/`) generates the theme files and the plugins' style data. No
 
 `fill` is for fills. `accent-ink` is the accent as text or a thin line. On PAPER yellow is only ever a fill.
 
-**Omarchy's `colors.toml`** is generated from these (see `design/theme-draft.py` for the exact mapping, plus the ANSI
-colours). PAPER's `accent` is the ochre `#6B5F00`, because Omarchy's templates use `accent` as text. Set
+**Omarchy's `colors.toml`** is generated from these (the exact mapping and the ANSI colours are in `tokens/wuling.json`, and the
+code in `bin/lib/wuling/theme.py`). PAPER's `accent` is the ochre `#6B5F00`, because Omarchy's templates use `accent` as text. Set
 `hyprland_active_border` and `hyprland_inactive_border`. **Ship no `hyprland.lua`**: Omarchy's defaults are already
 square and flat (gaps 10/5, border 2), and a git-installed theme would drop the file anyway.
 
-**Omarchy's `shell.toml`** is in `design/theme-draft.py`, including the rule for its menu: a raised row with a yellow
+**Omarchy's `shell.toml`** comes from `bin/lib/wuling/theme.py`, including the rule for its menu: a raised row with a yellow
 left edge on MIST, a yellow fill on PAPER. Omarchy draws a row's detail text in the menu's text colour at .52, so a
 white or yellow fill on MIST would hide it.
 

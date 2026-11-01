@@ -45,8 +45,7 @@ The owner sees the result after C and F. **Rebooting kujira always asks the owne
 
 ### B — Theme and foundations
 
-- `tokens/` from `design/src/tokens.css` and `design/theme-draft.py`; delete `theme-draft.py` once `tools/` replaces it.
-  Generation is deterministic; a check regenerates the text files into a temporary directory and compares bytes, and compares
+- `tokens/` from `design/src/tokens.css`. Generation is deterministic; a check regenerates the text files into a temporary directory and compares bytes, and compares
   images through a manifest of hashes. Contrast is checked at generation and printed: primary and selected text at least 4.5:1; a
   row's detail text, which Omarchy always draws at 52 % of the text colour, at least 3:1, computed the way it is drawn.
 - `theme/` with the four themes of DESIGN §2: `colors.toml`, `shell.toml`, `icons.theme`, `light.mode` for PAPER,
