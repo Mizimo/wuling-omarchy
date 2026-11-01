@@ -1,0 +1,141 @@
+key,4.0.6_line,4.0.6_template_value,4.0.6_commented,4.5.0-rc2_line,4.5.0-rc2_template_value,4.5.0-rc2_commented
+bar.active,11,"""{{ red }}""",False,11,"""{{ red }}""",False
+bar.background,7,"""{{ background }}""",False,7,"""{{ background }}""",False
+bar.background-alpha,8,1.0,False,8,1.0,False
+bar.scale-with-font,15,true,False,15,true,False
+bar.size-horizontal,16,26,False,16,26,False
+bar.size-vertical,17,28,False,17,28,False
+bar.text,9,"""{{ foreground }}""",False,9,"""{{ foreground }}""",False
+controls.focus-border,52,"""{{ foreground }}""",False,52,"""{{ foreground }}""",False
+controls.focus-border-alpha,54,0.25,False,54,0.25,False
+controls.focus-border-width,53,1,False,53,1,False
+controls.focus-color,50,"""{{ foreground }}""",False,50,"""{{ foreground }}""",False
+controls.focus-fill-alpha,51,0.08,False,51,0.08,False
+controls.hover-cursor-border,43,"""{{ foreground }}""",False,43,"""{{ foreground }}""",False
+controls.hover-cursor-border-alpha,45,0.25,False,45,0.25,False
+controls.hover-cursor-border-width,44,1,False,44,1,False
+controls.hover-cursor-color,41,"""{{ foreground }}""",False,41,"""{{ foreground }}""",False
+controls.hover-cursor-fill-alpha,42,0.08,False,42,0.08,False
+controls.normal-border,36,"""{{ foreground }}""",False,36,"""{{ foreground }}""",False
+controls.normal-border-alpha,38,0.4,False,38,0.4,False
+controls.normal-border-width,37,1,False,37,1,False
+controls.normal-color,34,"""{{ foreground }}""",False,34,"""{{ foreground }}""",False
+controls.normal-fill-alpha,35,0.04,False,35,0.04,False
+controls.pressed-fill-alpha,64,0.22,False,64,0.22,False
+controls.selected-border,59,"""{{ foreground }}""",False,59,"""{{ foreground }}""",False
+controls.selected-border-alpha,61,1.0,False,61,1.0,False
+controls.selected-border-width,60,0,False,60,0,False
+controls.selected-color,57,"""{{ foreground }}""",False,57,"""{{ foreground }}""",False
+controls.selected-fill-alpha,58,0.18,False,58,0.18,False
+controls.selection-fill-alpha,65,0.35,False,65,0.35,False
+font.base-size,106,12,False,106,12,False
+font.body,112,12,True,112,12,True
+font.body-small,111,11,True,111,11,True
+font.caption,110,10,True,110,10,True
+font.display,116,24,True,116,24,True
+font.display-large,117,28,True,117,28,True
+font.heading,115,16,True,115,16,True
+font.icon,119,14,True,119,14,True
+font.icon-large,120,18,True,120,18,True
+font.icon-small,118,11,True,118,11,True
+font.subtitle,113,13,True,113,13,True
+font.title,114,14,True,114,14,True
+hyprland.active-border,23,"""{{ shell_gradient hyprland_active_border accent }}""",False,23,"""{{ shell_gradient hyprland_active_border accent }}""",False
+hyprland.active-border-foreground,24,"""{{ shell_gradient hyprland_active_border foreground }}""",False,24,"""{{ shell_gradient hyprland_active_border foreground }}""",False
+image-picker.scrim,231,"""{{ background }}""",False,,,
+image-picker.scrim-alpha,232,0.5,False,,,
+image-picker.selected-border,234,"""{{ accent }}""",False,232,"""{{ accent }}""",False
+image-picker.selected-border-alpha,235,1.0,False,233,1.0,False
+image-picker.text,233,"""{{ foreground }}""",False,231,"""{{ foreground }}""",False
+image-picker.unselected-border,236,"""{{ foreground }}""",False,234,"""{{ foreground }}""",False
+image-picker.unselected-border-alpha,237,0.28,False,235,0.28,False
+launcher.background,159,"""{{ background }}""",False,159,"""{{ background }}""",False
+launcher.background-alpha,160,0.95,False,160,0.95,False
+launcher.border,162,"""hyprland.active-border-foreground""",False,162,"""hyprland.active-border-foreground""",False
+launcher.border-alpha,163,1.0,False,163,1.0,False
+launcher.scrim,164,"""{{ background }}""",False,164,"""{{ background }}""",False
+launcher.scrim-alpha,165,0.5,False,165,0.5,False
+launcher.selected-background,166,"""{{ foreground }}""",False,166,"""{{ foreground }}""",False
+launcher.selected-background-alpha,167,0.08,False,167,0.08,False
+launcher.selected-border,169,"""hyprland.active-border-foreground""",False,169,"""hyprland.active-border-foreground""",False
+launcher.selected-border-alpha,170,0.25,False,170,0.25,False
+launcher.selected-text,168,"""{{ accent }}""",False,168,"""{{ accent }}""",False
+launcher.text,161,"""{{ foreground }}""",False,161,"""{{ foreground }}""",False
+lock.background,213,"""{{ background }}""",False,213,"""{{ background }}""",False
+lock.background-alpha,214,0.8,False,214,0.8,False
+lock.border,218,"""hyprland.active-border""",False,218,"""hyprland.active-border""",False
+lock.border-active,219,"""hyprland.active-border""",False,219,"""hyprland.active-border""",False
+lock.border-alpha,221,1.0,False,221,1.0,False
+lock.border-error,220,"""{{ red }}""",False,220,"""{{ red }}""",False
+lock.placeholder,216,"""{{ mix foreground background 34% }}""",False,216,"""{{ mix foreground background 34% }}""",False
+lock.selection,223,"""{{ accent }}""",False,223,"""{{ accent }}""",False
+lock.selection-alpha,224,0.45,False,224,0.45,False
+lock.text,215,"""{{ foreground }}""",False,215,"""{{ foreground }}""",False
+lock.text-error,217,"""{{ red }}""",False,217,"""{{ red }}""",False
+menu.background,176,"""{{ background }}""",False,176,"""{{ background }}""",False
+menu.background-alpha,177,1.0,False,177,1.0,False
+menu.border,179,"""hyprland.active-border-foreground""",False,179,"""hyprland.active-border-foreground""",False
+menu.border-alpha,180,1.0,False,180,1.0,False
+menu.scrim,181,"""{{ background }}""",False,181,"""{{ background }}""",False
+menu.scrim-alpha,182,0.5,False,182,0.5,False
+menu.selected-background,183,"""{{ foreground }}""",False,183,"""{{ foreground }}""",False
+menu.selected-background-alpha,184,0.08,False,184,0.08,False
+menu.selected-border,186,"""hyprland.active-border-foreground""",False,186,"""hyprland.active-border-foreground""",False
+menu.selected-border-alpha,187,0.25,False,187,0.25,False
+menu.selected-text,185,"""{{ accent }}""",False,185,"""{{ accent }}""",False
+menu.text,178,"""{{ foreground }}""",False,178,"""{{ foreground }}""",False
+notifications.background,144,"""{{ background }}""",False,144,"""{{ background }}""",False
+notifications.background-alpha,145,1.0,False,145,1.0,False
+notifications.border,149,"""hyprland.active-border""",False,149,"""hyprland.active-border""",False
+notifications.border-alpha,150,1.0,False,150,1.0,False
+notifications.border-width,151,2,True,151,2,True
+notifications.countdown,152,"""{{ accent }}""",False,152,"""{{ accent }}""",False
+notifications.text,146,"""{{ foreground }}""",False,146,"""{{ foreground }}""",False
+polkit.accent,205,"""{{ accent }}""",False,205,"""{{ accent }}""",False
+polkit.background,195,"""{{ background }}""",False,195,"""{{ background }}""",False
+polkit.background-alpha,196,1.0,False,196,1.0,False
+polkit.border,199,"""hyprland.active-border""",False,199,"""hyprland.active-border""",False
+polkit.border-alpha,201,1.0,False,201,1.0,False
+polkit.border-error,200,"""{{ red }}""",False,200,"""{{ red }}""",False
+polkit.scrim,202,"""{{ background }}""",False,202,"""{{ background }}""",False
+polkit.scrim-alpha,203,0.5,False,203,0.5,False
+polkit.text,197,"""{{ foreground }}""",False,197,"""{{ foreground }}""",False
+polkit.text-error,198,"""{{ red }}""",False,198,"""{{ red }}""",False
+popups.background,127,"""{{ background }}""",False,127,"""{{ background }}""",False
+popups.background-alpha,128,1.0,False,128,1.0,False
+popups.border,130,"""hyprland.active-border""",False,130,"""hyprland.active-border""",False
+popups.border-alpha,131,1.0,False,131,1.0,False
+popups.border-width,132,2,True,132,2,True
+popups.text,129,"""{{ foreground }}""",False,129,"""{{ foreground }}""",False
+spacing.control-gap,84,8,True,84,8,True
+spacing.control-height,88,28,True,88,28,True
+spacing.control-padding-x,85,10,True,85,10,True
+spacing.control-padding-y,86,6,True,86,6,True
+spacing.dropdown-width,96,240,True,96,240,True
+spacing.huge,83,18,True,83,18,True
+spacing.input-padding-y,87,7,True,87,7,True
+spacing.label-gap,92,4,True,92,4,True
+spacing.lg,79,8,True,79,8,True
+spacing.md,78,6,True,78,6,True
+spacing.number-field-width,98,120,True,98,120,True
+spacing.panel-gap,93,14,True,93,14,True
+spacing.panel-padding,94,18,True,94,18,True
+spacing.popup-padding,95,14,True,95,14,True
+spacing.popup-row-height,89,28,True,89,28,True
+spacing.row-gap,90,8,True,90,8,True
+spacing.row-padding-x,91,12,True,91,12,True
+spacing.scale,73,1.0,False,73,1.0,False
+spacing.scale-with-font,74,true,False,74,true,False
+spacing.searchable-dropdown-width,97,260,True,97,260,True
+spacing.searchable-popup-min-height,99,220,True,99,220,True
+spacing.sm,77,4,True,77,4,True
+spacing.xl,80,10,True,80,10,True
+spacing.xs,76,3,True,76,3,True
+spacing.xxl,81,12,True,81,12,True
+spacing.xxs,75,2,True,75,2,True
+spacing.xxxl,82,14,True,82,14,True
+tooltip.background,137,"""{{ background }}""",False,137,"""{{ background }}""",False
+tooltip.background-alpha,138,0.97,False,138,0.97,False
+tooltip.border,140,"""hyprland.active-border-foreground""",False,140,"""hyprland.active-border-foreground""",False
+tooltip.border-alpha,141,1.0,False,141,1.0,False
+tooltip.text,139,"""{{ foreground }}""",False,139,"""{{ foreground }}""",False

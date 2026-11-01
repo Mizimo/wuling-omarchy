@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"research.osd","name":"Disposable OSD probe","version":"0.1.0","kinds":["panel"],"keepLoaded":true,"omarchy":{"clonedFrom":"omarchy.osd"},"entryPoints":{"panel":"Service.qml"}}

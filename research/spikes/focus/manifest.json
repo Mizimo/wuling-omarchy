@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"research.focus","name":"Disposable focus probe","version":"0.1.0","kinds":["overlay"],"keepLoaded":true,"entryPoints":{"overlay":"Overlay.qml"}}

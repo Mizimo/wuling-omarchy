@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"research.bar","name":"Disposable bar probe","version":"0.1.0","kinds":["bar"],"entryPoints":{"bar":"Bar.qml"}}

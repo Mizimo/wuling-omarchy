@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"research.menu","name":"Disposable menu routing probe","version":"0.1.0","kinds":["menu"],"keepLoaded":true,"omarchy":{"clonedFrom":"omarchy.menu"},"entryPoints":{"menu":"Menu.qml"}}

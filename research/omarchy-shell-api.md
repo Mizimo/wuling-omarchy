@@ -1,0 +1,752 @@
+# Omarchy shell extension research
+
+A-1 interface study and disposable experiments, not a product implementation
+or an approved design. The 4.0.6 VM experiments below are complete, including
+an observed menu-facade blocker. The 4.5.0-rc2 comparison is **source-only so
+far**: an independent stock VM is staged, but its official rc-channel switch
+and runtime checks have not run. No 4.5 runtime pass is claimed.
+
+## Sources and evidence notation
+
+- **406**: Omarchy **4.0.6**, commit
+  [`237f1b4071a0bff2296c6d740ba2b9fd695ebfa0`](https://github.com/omacom/omarchy/tree/237f1b4071a0bff2296c6d740ba2b9fd695ebfa0).
+- **450**: Omarchy **4.5.0-rc2**, commit
+  [`5978d93ae7da0a325b7493501911e3f1266cadd3`](https://github.com/omacom/omarchy/tree/5978d93ae7da0a325b7493501911e3f1266cadd3).
+
+References below use `406 path:line` or `450 path:line`; lines refer to those
+exact commits. A source finding describes implementation at that revision,
+not a guarantee of future compatibility. Recommendations are explicitly marked.
+Raw VM logs, package inventories, screenshots and configuration manifests stay
+outside this repository in the local `wa1` evidence directory. No old WULING
+implementation is imported.
+
+## 1. Replacement bar and widgets
+
+A manifest declares `kinds: ["bar"]` and `entryPoints.bar`; the user selects
+its id in `~/.config/omarchy/shell.json` under `bar.id`. The host injects
+`omarchyPath`, `shell`, `manifest`, `pluginRegistry`, `barWidgetRegistry` and
+`barConfig` **only when the entry declares each property**. The entry is one
+QML object, not an automatically repeated window. The plugin creates a
+`PanelWindow` for each `Quickshell.screens` entry and owns its anchors,
+layer, input region and exclusion zone. (`406 shell/shell.qml:170,220`;
+`406 shell/plugins/bar/Bar.qml:1210,1248`.)
+
+`barConfig` is a detached copy, including position, transparency, center anchor
+and `layout`. `shell.bar` is a scalar facade: `barHidden`, `barSize`,
+`fontFamily`, `position`. A replacement should expose those properties on its
+root so other plugins receive correct clearance. Horizontal/vertical theme
+sizes are `Style.bar.sizeHorizontal` / `sizeVertical`; scaling follows
+`[bar] scale-with-font` and `[font] base-size`. Merely selecting the plugin
+does not apply these sizes to its windows. (`406 shell/shell.qml:329,446`;
+`406 shell/services/PluginBarStateApi.qml:3`;
+`406 shell/Commons/Style.qml:297,341,386`.)
+
+The host falls back to `omarchy.bar` for a missing/invalid bar selection or a
+`Loader.Error`, remembering `failedBarId` until selection/reload changes it.
+A component that loads successfully but draws nothing or throws in its own
+logic is not covered by that fallback. (`406 shell/shell.qml:182–264`.)
+
+The widget registry exposes component references, metadata and revision in a
+detached catalog; a replacement can instantiate built-in and installed widgets.
+This is not sufficient for full compatibility:
+
+- Widget constructors expect the bar contract, including settings, module id,
+  tooltip/click registration, popup coordination and shell access.
+- The host routes built-in panel hotkeys to the replacement's
+  `summonBarWidget`, `hideBarWidget`, `isBarWidgetOpen` methods. Without these,
+  the visible button can exist while the default shortcut fails.
+- `shell.pluginShellForBarEntry(ownerId, id)` provides target-scoped lifecycle
+  and settings, **no service lookup**. A third-party widget needing its own
+  service loses that integration under a replacement bar. Do not promise
+  arbitrary third-party widget compatibility.
+- A full bar itself receives narrow proxies for `omarchy.idle`,
+  `omarchy.media`, `omarchy.nightlight`, `omarchy.notifications`, not arbitrary
+  live service objects. Built-in audio/indicator behavior needs those proxies.
+
+Sources: `406 shell/services/PluginBarWidgetRegistryApi.qml:3–23`;
+`406 shell/Ui/PluginBarApi.qml:13–85`; `406 shell/shell.qml:592–654,691–739,1141–1215`;
+`406 shell/services/PluginFirstPartyServiceApi.qml:3–46`;
+`406 shell/plugins/panels/audio/Panel.qml:21`.
+The service-less limitation remains at `450 shell/shell.qml:713`.
+
+## 2. Panels and coexistence
+
+`shell.summon/toggle/hide(id, payloadJson)` controls configured, enabled UI
+plugins. A full bar can control configured non-authentication UI plugins;
+ordinary third-party plugins can control their own lifecycle. CLI IPC is also
+available to ordinary user processes. A panel/overlay/menu entry implements
+`open(payloadJson)` and `close()`. The host queues payloads while loading.
+Multiple independent entries can remain open: `openPanelIds` is a set, not a
+global single-panel slot. (`406 shell/shell.qml:404,626–650,1126–1230`.)
+
+Built-in bar panels have a separate single-popout coordinator. Opening one
+calls `bar.requestPopout(owner)`, which closes the previous owner. Their anchor
+is the invoking item's window/screen and geometry, clamped to available space;
+top/bottom/left/right positions are handled explicitly. A replacement bar must
+provide this contract if it hosts these panels. (`406 shell/plugins/bar/Bar.qml:556`;
+`406 shell/Ui/PopupCard.qml:11–147`; `406 shell/Ui/KeyboardPanel.qml:41–205`.)
+
+`KeyboardPanel` uses a fullscreen overlay surface, briefly requests Exclusive
+keyboard focus, then switches to OnDemand. Its visible card is anchored to the
+bar; the rest is an outside-click catcher, with special treatment of the bar
+strip. Popup ownership and keyboard focus are distinct concerns.
+(`406 shell/Ui/KeyboardPanel.qml:7–32,79–127`.)
+
+**Design implication:** an independent Terminal can coexist as a separate
+plugin, but focus still belongs to one surface, and fullscreen input masks can
+cover another panel. Decide whether Terminal joins the bar's single-popout
+coordinator or stays independent; coexistence must be verified for outside
+click, Esc, monitor changes and keyboard restoration. A third-party plugin
+does not get a general shared panel manager through its facade.
+
+## 3. Overlay windows and monitor policy
+
+| Surface | 4.0.6 implementation | Consequence for a new plugin |
+|---|---|---|
+| OSD | Overlay layer, Ignore exclusion, None keyboard focus, empty input mask; no explicit screen assignment | Set monitor policy explicitly if required; do not assume the host injects it |
+| Notifications | One Overlay window per screen, None keyboard focus, input mask around toast column | All outputs receive the stock presentation; do not accidentally consume the whole screen |
+| Menu | Overlay layer, Exclusive keyboard focus, fullscreen click catcher, Ignore exclusion; no explicit screen assignment | A Dispatch/power overlay owns Esc, outside-click and monitor policy |
+| Bar panels | Overlay layer, anchor's screen, Exclusive-to-OnDemand focus transition | Reuse the documented behavior contract, not a copied implementation |
+
+Sources: `406 shell/plugins/osd/Osd.qml:128–142`;
+`406 shell/plugins/notifications/Service.qml:946–984`;
+`406 shell/plugins/menu/Menu.qml:1018–1077`;
+`406 shell/Ui/KeyboardPanel.qml:79–127`.
+
+4.5 adds `Ui.OverlayWindow`: it snapshots the focused Hyprland monitor when
+opened, waits for fullscreen geometry and scale before revealing content,
+handles monitor removal and RTL, and defaults to Overlay/Exclusive. It is
+absent from 4.0.6. A plugin importing it unconditionally cannot target both.
+(`450 shell/Ui/OverlayWindow.qml:7–101`.)
+
+## 4. Menu tree, extensions and Dispatch A
+
+There is **no exposed parsed Omarchy menu tree** in the third-party shell API.
+The menu capability is an *application* library (`sortedEntries`, names,
+subtext, icons, launch, remove); it is not the Omarchy command tree.
+`omarchy-menu` exposes toggle/summon/close/refresh/ping. The actual tree lives
+inside `Menu.qml`, with pure helpers in `MenuModel.js`.
+(`406 shell/services/PluginAppLibraryApi.qml:1–46`;
+`406 bin/omarchy-menu:7–34`; `406 shell/plugins/menu/Menu.qml:219–264`.)
+
+To independently reproduce 4.0.6 behavior, Dispatch A would need all of:
+
+1. Read `$OMARCHY_PATH/default/omarchy/omarchy-menu.jsonc` and the user's
+   `~/.config/omarchy/extensions/omarchy-menu.jsonc`. The parser strips full-line
+   `//` comments and trailing commas; it is not a general JSONC parser.
+   Accept the `items` object wrapper or a direct id-to-item object. Invalid
+   input yields no rows. (`406 shell/plugins/menu/Menu.qml:51–52`;
+   `406 shell/plugins/menu/MenuModel.js:1–63`.)
+2. Normalize `parent` (dotted prefix, otherwise root), root's empty parent,
+   `action` before `target` before menu kind, aliases (array or one string),
+   icon/iconFont/label/title/description/provider/when/checked. Preserve first
+   insertion order; later source entries overwrite matching ids. **Actual
+   normalization fills omitted fields before merging**, so a partial extension
+   can reset fields to defaults despite the comment describing a per-key
+   overlay. This behavior needs explicit parity fixtures.
+   (`406 shell/plugins/menu/MenuModel.js:13–95`.)
+3. Evaluate `when` and `checked` as shell expressions, batching package and
+   command presence and selected state readers. Visibility hides only on an
+   explicit false result. Empty static menus/links disappear recursively;
+   providers remain visible; recursion stops at depth 32. Reevaluate on open
+   and after relevant refreshes; account for a guard process still running.
+   (`406 shell/plugins/menu/MenuModel.js:254–277,383–481`;
+   `406 shell/plugins/menu/Menu.qml:942–1015`.)
+4. Route case-insensitively with `_` normalized to `-`; empty/go/menu routes
+   resolve to root, exact ids beat aliases. App aliases do not become command
+   routes. Activating an action route executes it rather than opening an empty
+   submenu. (`406 shell/plugins/menu/MenuModel.js:176–190`;
+   `406 shell/plugins/menu/Menu.qml:847–867`.)
+5. Reproduce submenu/back/history, link targets, action execution and dmenu
+   request/reply behavior. Commands run through the original action path;
+   apps launch through AppLibrary, not a guessed shell command.
+   (`406 shell/plugins/menu/Menu.qml:118–145,688–867`.)
+6. Search descendants of the current menu. Each term must match a substring
+   in label/leaf-id/aliases or a whole description word. Score exact label,
+   app whole word, prefix, substring, name and description tiers, then depth
+   and insertion order; place current-menu rows before deeper matches and
+   preserve the divider. Apps with no filter sort alphabetically.
+   (`406 shell/plugins/menu/MenuModel.js:279–352`;
+   `406 shell/plugins/menu/Menu.qml:562–638`.)
+7. Merge changing desktop entries without duplicate ids and refresh dynamic
+   provider rows (including fonts and power profiles); maintain icon refresh,
+   deletion and volatile-provider behavior. Static JSON alone is incomplete.
+   (`406 shell/plugins/menu/MenuModel.js:107–164`;
+   `406 shell/plugins/menu/Menu.qml:266–445`.)
+
+4.5 translates shipped menu rows **before** extensions. Original English
+labels remain search-only terms, not routing aliases. This is additional
+behavior for parity. (`450 docs/i18n.md:15–16`;
+`450 shell/plugins/menu/MenuModel.js:659–676`.)
+
+The disposable tree reader imports the installed internal JS module as an
+oracle, with no copied upstream implementation. That proves file access and
+static/guard evaluation, **not a supported parsed-tree API**, dynamic-provider
+parity, or permission to use that internal dependency in the product.
+
+### Runtime blocker: the third-party menu facade
+
+**406 VM result:** the intended menu AppLibrary capability is unavailable in
+this stack (Qt declarative 6.12.0-2). A minimal `kinds: ["menu"]` entry first receives
+a shell facade with `appLibrary == null`, then its shell property becomes null.
+The same QML declared as an overlay retains its facade. This also reproduces
+after a fresh shell process; removing the menu reader, windows, FileViews and
+dynamic objects does not remove the failure.
+
+The independent `facade` probe reproduces the relevant type boundary:
+`Array.isArray(["menu"])` is true, whereas the same sequence reached through
+an Instantiator delegate's `modelData.manifest.kinds` and `property var manifest`
+is false; `indexOf("menu")` still returns 0. The source's `manifestHasKind`
+requires `Array.isArray`. A panel Loader passes the delegate manifest to facade
+creation, so it initially gets a `no-menu` profile and no AppLibrary. The later
+prune compares that profile with the original registry manifest and revokes it.
+This attribution is supported by the minimal type/lifetime controls and the
+source; no upstream file was patched or instrumented.
+(`406 shell/shell.qml:352–355,527–533,607–609,797–811,1331–1346`.)
+
+**Design consequence:** do not treat the intended menu facade as a working
+product dependency on this stack. The route probe records the defect and uses
+the ordinary public `omarchy-shell shell hide research.menu` CLI for Esc when
+the facade is missing. That fallback tests routing, not AppLibrary success.
+The corresponding Array.isArray/profile checks remain in 450; its VM result
+must be checked separately. (`450 shell/shell.qml:363–366,635–636,822–836`.)
+Local evidence: `vm406/guest-evidence/facade-menu-sequence.json`,
+`facade-sequence.json`, `facade-overlay.json`; probe: `spikes/facade/`.
+
+### Whole-route replacement (v399 investigation)
+
+Declaring `kinds: ["menu"]` alone does **not** replace `omarchy.menu`; there is no
+`menu.id` equivalent to `bar.id`. The replacement mechanism is
+`omarchy.clonedFrom: "omarchy.menu"` on an enabled third-party manifest.
+`resolveEnabledId` redirects calls using the built-in id to that enabled
+replacement; enabling it also disables the source. This metadata can be tested
+on an independently written entry, without executing `plugin clone` or copying
+the upstream UI. It is still the host's *clone replacement* mechanism, not a
+separate general route-registration API. Multiple enabled replacements for one
+source are not an ordering contract to rely on.
+(`406 shell/services/PluginRegistry.qml:171–181,491–555`.)
+
+At 406 the CLI's root/apps/system/background/theme payloads all pass through
+`shell.toggle/summon("omarchy.menu", payload)` and can therefore reach that
+replacement without modifying keys. The 406 experiment delivered all six
+requested physical-key combinations. `background` resolved to `style.background`,
+`theme` to `style.theme`, `power-menu` to `system`, `settings` to `setup`, and
+a user extension alias to its own menu. The no-clonedFrom negative control
+left Super+Space with stock Omarchy and the probe call count at zero.
+Payload route/alias resolution remains
+the replacement's responsibility. At 450 Super+Alt+Space instead targets the
+dock and is outside this redirection. (`406 bin/omarchy-menu:14–34`;
+`450 default/hypr/bindings/utilities.lua:1–9`.)
+
+Loading `MenuModel.js` from the runtime OMARCHY_PATH worked in the 406 QML
+probe: 333 default rows and three extension rows were parsed without copying
+the module. The static reader merged 337 rows including the injected root,
+and its true/false `when` and true `checked` controls returned the expected
+visibility and checkmark. This establishes direct runtime import. However it
+contains helpers, not the complete live model. `when`/`checked` process
+execution, provider scheduling, AppLibrary row construction, menu history and
+display grouping are also in Menu.qml. Importing the JS alone cannot guarantee
+exact behavior following every update. It needs version/feature checks and
+parity checks against the installed version, and a deliberate maintenance
+decision. (`406 shell/plugins/menu/MenuModel.js:1–481`;
+`406 shell/plugins/menu/Menu.qml:246–445,562–638,942–1015`.)
+
+`locked = true` permits the compositor binding to execute while locked; it
+does not turn an ordinary Overlay layer into a session-lock surface. Omarchy
+lock uses `WlSessionLock`/`WlSessionLockSurface`, while its ordinary menu uses a
+PanelWindow. A locked-key test must distinguish command delivery from a menu
+actually being visible over the lock. In the 406 VM the real power key
+reached the replacement with the `system` payload while the lock remained
+secure. Host framebuffer capture showed only the lock, with the probe listed
+as an ordinary layer 3 surface. It became visible after password unlock.
+A separate stock-menu control behaved the same way: no system menu over
+the secure lock, then the stock System card visible after unlock. Therefore
+locked-key delivery is not a usable overlay above authentication.
+(`406 default/hypr/bindings/utilities.lua:9`;
+`406 shell/plugins/lock/Service.qml:257–275`;
+`406 shell/plugins/menu/Menu.qml:1018–1027`.)
+
+## 5. IPC takeover and notification ownership
+
+Third-party QML can register `Quickshell.Io.IpcHandler` with target `osd` or
+`notifications`; there is no manifest permission for those strings. Disable
+the corresponding first-party plugin through `disabledPlugins`, enable the
+replacement service, and ensure the old handler/server has gone before
+testing the new one. Do not rely on duplicate-target ordering. Services are
+created for enabled manifests and destroyed when disabled/removed, even when
+previously retained. (`406 shell/services/PluginRegistry.qml:148–168`;
+`406 shell/shell.qml:904–1026`; `406 shell/plugins/osd/Osd.qml:115`;
+`406 shell/plugins/notifications/Service.qml:857,931`.)
+
+The notification server is a `Quickshell.Services.Notifications.NotificationServer`
+inside the same shell process, with `keepOnReload: false`. Replacing it does
+not introduce another process. In the 406 VM, stock, replacement and restored
+stock all used the **same Quickshell PID and unique bus connection** for
+`org.freedesktop.Notifications`. With stock disabled and no replacement,
+the IPC target disappeared but that process still owned the D-Bus name.
+Do not use disappearance of the bus name as the handoff condition. Verify
+handler removal, replacement receipt/dismissal, then restored stock delivery.
+This is an in-process handoff, not evidence that a separate notification daemon
+can acquire the name. Immediate removal/re-enabling can produce a transient
+duplicate IPC-handler warning; disable and allow destruction before restoring
+the other component. IPC liveness alone does not establish notification delivery.
+(`406 shell/plugins/notifications/Service.qml:931–943`;
+`406 bin/omarchy-notification-wait:11–26`.)
+
+| Target | 4.0.6 methods to preserve | Callers and source |
+|---|---|---|
+| `osd` | `show(payloadJson)`, `close`, `state`, `ping` | `shell/plugins/osd/Osd.qml:115–125`; `bin/omarchy-osd:40`; `bin/omarchy-chromium-ytdlp-host:80`; `shell/services/AppLibrary.qml:174,245` |
+| `notifications` | `dndState`, `toggleDnd`, `setDnd(value)`, `isDnd`, `showHistory`, `clear`, `dismissAll`, `dismissOne`, `invokeLast`, `dismiss(summary)`, `ping` | `shell/plugins/notifications/Service.qml:857–926`; `default/hypr/bindings/utilities.lua:24–28`; `bin/omarchy-notification-dismiss:11`; `bin/omarchy-toggle-notification-silencing:5`; `bin/omarchy-notification-wait:23` |
+| `omarchy.indicators` | `refresh` | `shell/plugins/bar/widgets/Indicators.qml:168–173`; `bin/omarchy-toggle-notification-silencing:6`; `bin/omarchy-reminder:38,198`; `bin/omarchy-capture-screenrecording:246` |
+
+All table references are **406**. DND replies are `on`/`off`; setDnd accepts
+true/1/on/yes. `clear` clears history rather than visible toasts. The normal
+volume path is `XF86AudioRaiseVolume` → `omarchy-audio-output-volume raise`
+→ `omarchy-osd` → `osd.show`. Keep the script path working, not just a direct
+probe IPC call. (`406 default/hypr/bindings/media.lua:1–4`;
+`406 shell/plugins/notifications/Service.qml:860–895`.)
+
+`omarchy-shell -q` deliberately suppresses missing-target/method failures. A
+successful exit status from that wrapper is not proof of delivery: inspect a
+counter/state and the resulting surface. (`406 bin/omarchy-shell:13–17,65–82`.)
+
+IPC is only one calling path. The built-in audio/monitor panels and media
+service call `shell.summon("omarchy.osd", payload)` directly. Preserve that
+identity too, using the replacement metadata and a panel entry with open/close,
+otherwise volume keys can work while panel/media feedback disappears.
+The DND indicator reads `firstPartyServiceFor("omarchy.notifications")`;
+that proxy resolves replacements and expects `doNotDisturb` and
+`setDoNotDisturb(value)`. Merely registering an IPC target does not satisfy it.
+(`406 shell/plugins/panels/audio/Panel.qml:436`;
+`406 shell/plugins/panels/monitor/Panel.qml:259`;
+`406 shell/plugins/services/media/Service.qml:248`;
+`406 shell/plugins/bar/indicators/Dnd.qml:8`;
+`406 shell/shell.qml:461–517`.)
+
+For **450**, notifications exposes `ping`, `isDnd`, `toggleDnd`, `setDnd`,
+`act`, `dismissOne`, `dismissAll`, `invokeLast`, `invokeAction(n)`, `keyboard`,
+`showHistory`, `dismiss(summary)`, `count`, `expand`, `probe`. `act` can invoke,
+dismiss or focus; keyboard mode and numbered actions are additional behavior,
+not aliases for dismissal. The old `clear`/`dndState` are not declared in that
+handler. (`450 shell/plugins/notifications/Service.qml:1384–1475`.)
+
+Local handoff evidence: `vm406/guest-evidence/notification-{stock,probe,restored}-owner.txt`,
+`notification-disabled-owner.txt`, `notification-result.json`, and the restored
+stock toast capture. The native volume test delivered an audio payload and
+the original sink volume was restored after the test.
+
+The 450 caller audit additionally finds menu guards reading `isDnd`, the
+notification demo calling `dismissAll`, and the passwordless-sudo indicator
+refresh. Unchanged helpers still call show/close, ping, dismiss, toggleDnd and
+indicator refresh. (`450 default/omarchy/omarchy-menu.jsonc:131–132`;
+`450 shell/plugins/menu/MenuModel.js:439`;
+`450 bin/omarchy-dev-notification-demo:83`;
+`450 bin/omarchy-sudo-passwordless:470,488`;
+`450 bin/omarchy-osd:41`; `450 shell/services/AppLibrary.qml:189,260`;
+`450 bin/omarchy-notification-wait:23`; `450 bin/omarchy-notification-dismiss:11`;
+`450 bin/omarchy-toggle-notification-silencing:5–6`;
+`450 bin/omarchy-reminder:39,195`; `450 bin/omarchy-capture-screenrecording:506`.)
+
+## 6. Services and access boundaries
+
+| Need | Available path at 4.0.6 | Source |
+|---|---|---|
+| Audio | `Quickshell.Services.Pipewire`, normal Omarchy audio commands | `shell/plugins/panels/audio/Panel.qml:5–6` |
+| Brightness | `omarchy-brightness-display`, including monitor and no-OSD options | `shell/plugins/panels/monitor/Panel.qml:248` |
+| Network | `Quickshell.Networking`; Omarchy status/band commands | `shell/plugins/panels/network/Panel.qml:6,813` |
+| Bluetooth | `Quickshell.Bluetooth`; Omarchy device/power commands coordinate operations | `shell/plugins/panels/bluetooth/Panel.qml:5,268,638` |
+| Battery | `Quickshell.Services.UPower` | `shell/plugins/panels/power/Panel.qml:4` |
+| Media | `Quickshell.Services.Mpris`; full-bar narrow media proxy | `shell/plugins/panels/audio/Panel.qml:5,21`; `shell/services/PluginFirstPartyServiceApi.qml:34–44` |
+| Tray | `Quickshell.Services.SystemTray`; the widget supplies popup/menu interaction | `shell/plugins/bar/widgets/Tray.qml:1–25` |
+| Compositor | `Quickshell.Hyprland` and `hyprctl`/official command helpers | `shell/plugins/bar/Bar.qml:2`; `shell/Commons/Style.qml:350–388` |
+| Processes/files | `Quickshell.Io.Process`, `FileView`, `Quickshell.execDetached` under the user's identity | `shell/plugins/panels/bluetooth/Panel.qml:4,638`; `shell/shell.qml:124–145` |
+
+These are normal imported modules/commands, not additional Omarchy manifest
+capabilities. A plugin still obeys ordinary OS/device/polkit permissions.
+The *host facade* restricts cross-plugin service objects: ordinary plugins get
+their own service, menus are intended to get AppLibrary (see the runtime
+blocker in section 4), full bars get the narrow
+non-auth proxies described above. Authentication capabilities come from trusted
+first-party metadata and cannot be obtained by writing an arbitrary capability
+string. Lock/polkit state is deliberately outside the public object tree.
+This is an API boundary, not a sandbox for same-process QML.
+(`406 shell/services/PluginRegistry.qml:92–115`;
+`406 shell/shell.qml:394,592–654,904–947`.)
+
+**Recommendation:** read state through supported modules/commands and keep
+collection separate from display. Do not traverse host QObject parents to
+retrieve services withheld by the facade. Agent command metadata and JSON
+outputs belong in the later product plan, not these probes.
+
+## 7. Theme surface and complete field inventory
+
+The generated [shell field inventory](shell-theme-fields.csv) lists every
+active and commented key in both pinned `default/themed/shell.toml.tpl` files,
+including line numbers, defaults and removals. It can be reproduced with
+`inventory-theme.py` without executing upstream code. The parser is deliberately
+small: section names and string/number/width-list/bare tokens, not arbitrary
+TOML structures. Unknown keys can parse without having a consumer.
+(`406 shell/Commons/Color.qml:178–202`.)
+
+The full consumer-facing groups are:
+
+| Section | Fields / families |
+|---|---|
+| `bar` | background, background-alpha, text, active, scale-with-font, size-horizontal, size-vertical; additional consumer tokens icon-slot, icon-canvas, icon-font, status-slot |
+| `hyprland` | active-border, active-border-foreground |
+| `controls` | normal / hover-cursor / focus / selected color, fill-alpha, border, border-width, border-alpha; pressed-color, pressed-fill-alpha, selection-color, selection-fill-alpha |
+| `spacing` | scale, scale-with-font; xxs/xs/sm/md/lg/xl/xxl/xxxl/huge; control-gap, control-padding-x/y, input-padding-y, control-height, popup-row-height, row-gap, row-padding-x, label-gap, panel-gap, panel-padding, popup-padding, dropdown-width, searchable-dropdown-width, number-field-width, searchable-popup-min-height |
+| `font` | base-size; caption, body-small, body, subtitle, title, heading, display, display-large, icon-small, icon, icon-large |
+| `popups`, `tooltip` | background, background-alpha, text, border, border-alpha, border-width family |
+| `notifications` | popup fields plus countdown |
+| `menu`, template `launcher` | background, background-alpha, text, border, border-alpha, scrim, scrim-alpha, selected-background, selected-background-alpha, selected-text, selected-border, selected-border-alpha |
+| `polkit` | background, background-alpha, text, text-error, border, border-error, border-alpha, scrim, scrim-alpha, accent |
+| `lock` | background, background-alpha, text, placeholder, text-error, border, border-active, border-error, border-alpha, selection, selection-alpha |
+| `image-picker` | text, selected-border, selected-border-alpha, unselected-border, unselected-border-alpha; 406 also has scrim/scrim-alpha, removed from 450 template |
+
+Sources: `406 default/themed/shell.toml.tpl:5–237`;
+`406 shell/Commons/Style.qml:71–93,232–261,317–348`;
+`406 shell/Commons/Color.qml:73–132`;
+`450 default/themed/shell.toml.tpl:226–235`.
+The `launcher` section remains in the template but is not a separate Color
+singleton role at 406; do not assume every template key changes a live surface.
+
+Border consumers accept a solid color or gradient, optional `-alpha`, and
+CSS-style `border-width` lists with top/right/bottom/left overrides. Legacy
+`border-gradient` variants are compatibility inputs. These parameterized
+families are additional to the finite template inventory. Rounding/gaps also
+come from Hyprland state; the font family follows fontconfig rather than a
+general `[font] family` setting; `OMARCHY_MENU_FONT` is a startup environment
+override for menu-family consumers. (`406 docs/theming.md:201–240`;
+`406 shell/Commons/Style.qml:270–278,350–388`.)
+
+`colors.toml` is an extensible flat key dictionary, not a closed schema. Its
+canonical palette is `mode`, `accent`, `selection`, `muted`, `background`,
+`dark_background`, `darker_background`, `lighter_background`, `foreground`,
+`dark_foreground`, `light_foreground`, `bright_foreground`, `red`, `yellow`,
+`orange`, `green`, `cyan`, `blue`, `magenta`, `brown`, and bright variants of
+red/yellow/green/cyan/blue/magenta. Compatibility includes bg/fg short forms,
+purple/bright_purple, color0–color15, theme_type and selection_background /
+selection_foreground. Derived cursor is bright_foreground. Additional template
+keys such as `hyprland_active_border` are legal. Mode resolves explicit mode,
+legacy theme_type, light.mode, then background luminance/default dark.
+(`406 bin/omarchy-theme-color:113–280`;
+`406 themes/tokyo-night/colors.toml:1–31`.)
+
+Templates support `{{ key }}`, `_strip`, `_rgb`, mix helpers and gradient
+helpers. User `~/.config/omarchy/themed/*.tpl` run before built-ins; existing
+staged outputs win. A theme's `shell.<section>.toml` can replace one section.
+The active theme lives under `~/.local/state/omarchy/current/theme`.
+`~/.config/omarchy/shell.toml` overrides the theme live and survives switches;
+the theme's files load at startup and refresh through explicit theme IPC.
+(`406 bin/omarchy-theme-set-templates:370–400`;
+`406 docs/theming.md:18–43,177–199`;
+`406 shell/Commons/Color.qml:204–251`.)
+
+Theme assets include `backgrounds/`, previews, `unlock.png`, `icons.theme`,
+`keyboard.rgb` and `light.mode`; user backgrounds overlay the selected theme.
+**Git-installed themes are filtered when staged:** all Lua files (including
+hyprland.lua/neovim.lua/gum_env.lua), terminal launch configs, vscode.json and
+symlinks are dropped; corresponding official generated outputs are used.
+Therefore a public git theme cannot promise that its own hyprland.lua or app
+executable configuration will run. User-authored overrides/templates are a
+separate supported configuration path. (`406 docs/theming.md:9–66`.)
+
+Lock and polkit theme roles affect color, borders, text, scrim and shared
+spacing/type; they do not replace authentication layout/lifecycle or expose
+credential data. Plymouth's theme command reads `colors.toml` background and
+foreground plus `unlock.png`, then invokes the system-level Plymouth command.
+It is explicitly marked as requiring sudo; this optional owner action must
+remain distinct from a no-sudo WULING plugin/theme installation.
+(`406 default/themed/shell.toml.tpl:189–224`;
+`406 bin/omarchy-plymouth-set-by-theme:3–53`.)
+
+Theme activation dispatches terminal, Hyprland, btop, editor/browser and agent
+retint commands, including foot/tmux/GNOME/Pi/Claude/Hermes/T3Code/VS Code/
+Obsidian/keyboard. Hook files under `~/.config/omarchy/hooks/theme-set*` receive
+the theme name. Application-specific limits remain those of each helper;
+shell.toml alone does not theme applications.
+(`406 bin/omarchy-theme-set:318–338`; `406 docs/theming.md:40–46`.)
+
+## 8. Plugin settings and reload
+
+`shell.json` version 1 holds inline settings on `plugins[]` or
+`bar.layout.<section>[]` entries, plus bar selection and disabledPlugins.
+There is no universal `config:` nested object or multilayer plugin settings
+schema. `shell.updateEntryInline(id, settings)` replaces the matched entry's
+settings while preserving its id; callers must retain keys they want to keep.
+The host writes atomically, watches the file, and updates bindings.
+(`406 shell/shell.qml:111–145,1080–1119`; `406 docs/omarchy-shell.md:110–156`.)
+
+The plugin directory watcher observes close-write/create/delete/move, ignores
+hidden staging and .git changes, rescans and reloads affected code. A retained
+service's lifecycle differs from an ordinary UI entry; avoid depending on hot
+reload as if it were a clean process restart. Data/history/cache should live
+outside the code checkout, with an explicit format chosen by the plugin.
+(`406 shell/services/PluginRegistry.qml:656–739`;
+`406 shell/shell.qml:1030–1050,1455–1495`.)
+
+## 9. UI sounds
+
+Plugins can start ordinary user programs through Process/execDetached without
+loading Qt Multimedia. Omarchy includes PipeWire in its package set; the 406 VM has
+`/usr/bin/pw-play`, owned by `pipewire-audio 1:1.6.9-1` (read-only `pacman -Qo`).
+(`406 install/omarchy-other.packages:34–37`;
+`406 shell/plugins/panels/bluetooth/Panel.qml:638`.)
+
+**Recommendation:** initially use `Process` with an argv array invoking
+`pw-play` for an installed local WAV/OGG, bounded overlap and cancellation.
+This keeps Qt Multimedia out of the shell and avoids an additional custom
+daemon for a first implementation. Measure launch latency before deciding
+whether a small persistent PipeWire helper is warranted. Login music stays
+local and opt-in per project decisions; it is not part of these probes.
+
+## 10. Default bindings and reversible overrides
+
+Use the user's `~/.config/hypr/bindings.lua`, loaded after defaults, with
+`hl.unbind("...")` followed by `o.bind(...)`; do not edit packaged defaults.
+`o.bind` accepts a command or dispatcher and carries description/options.
+(`406 manual/31-dotfiles.md:62–74`; `406 default/hypr/helpers.lua:92–106`.)
+
+| Key | 4.0.6 | 4.5.0-rc2 |
+|---|---|---|
+| Super+Space | Omarchy menu root | Omarchy menu root |
+| Super+Alt+Space | Omarchy menu apps | `omarchy.dock apps` |
+| Super+Escape | system menu | system menu |
+| XF86PowerOff | system menu, locked allowed | system menu, locked allowed |
+
+Sources: `406 default/hypr/bindings/utilities.lua:1–9`;
+`450 default/hypr/bindings/utilities.lua:1–9`.
+
+**Installation proposal, not implemented:** inspect effective bindings and the
+user file first. Offer a generated, owned include/block that changes only the
+selected variant's keys, preserving flags and documenting the displaced
+binding. Refuse automatic takeover if a key has a conflicting user override
+unless the user explicitly selects it. Save the prior bytes/hash and a record
+of the inserted block. Removal deletes only an unchanged owned block; if the
+user edited it, report the conflict instead of overwriting their file. Reload
+Hyprland and check effective bindings after both operations. Removing the
+block restores current packaged defaults naturally; do not replay an old
+packaged default over a newer Omarchy version.
+
+## 11. Installation, update and monorepo implications
+
+`omarchy plugin add <git-url>` validates the URL, clones into a temporary
+directory, validates **one root manifest.json**, checks id collisions, moves
+to `~/.config/omarchy/plugins/<id>`, rescans, then optionally enables. A
+noninteractive/--yes add defaults to disabled unless `--enable` is supplied.
+No subdirectory selector or multiple-manifest installation is present.
+One manifest may declare multiple kinds but has one id and one entry per kind.
+Third-party discovery only scans immediate child directories.
+(`406 bin/omarchy-plugin-add:96–165`;
+`406 bin/omarchy-plugin-validate:23–36,111–116`;
+`406 shell/services/PluginRegistry.qml:689–719`.)
+
+Update fetches origin HEAD, shows a diff, confirms and fast-forwards, validating
+afterward and rolling back a failed validation. Removal disables/rescans and
+deletes a git checkout, unlinks a symlink, or backs up a non-git directory;
+clone-specific restoration does not automatically define restoration for a
+new independently written replacement plugin.
+(`406 bin/omarchy-plugin-update:25–78`;
+`406 bin/omarchy-plugin-remove:82–120`.)
+
+**Packaging implication:** the planned monorepo of separable plugins plus a
+theme cannot be installed completely by one `omarchy plugin add` call. Options
+for a later design decision are generated single-plugin distribution repos,
+or a documented user-level installer that places each plugin through the
+supported manual-directory mechanism and installs the theme separately.
+Internal symlinks are rejected by plugin validation; a shared UI kit must be
+packaged coherently rather than linked out of a plugin to an arbitrary tree.
+Any custom updater must preserve user settings and explicitly restore disabled
+built-ins. No installer or distribution decision is implemented in A-1.
+
+## 12. Language integration
+
+4.5 reads the user's `~/.config/omarchy/language` registry code. `I18n` exposes
+language, formatLocale, translations, plural/number formatting and direction.
+`Commons.Translations` loads plugin-local `en.json`, base-language JSON and
+exact-language JSON with fallback in that order; bound `t()` / `tn()` calls
+rerender on changes. Use zh-TW for Traditional Chinese and zh-CN for Simplified
+Chinese, not an invented system code. Manifest names/descriptions are not yet
+translated. (`450 docs/i18n.md:7–25,41–51`;
+`450 shell/Commons/Translations.qml:5–100`.)
+
+4.0.6 lacks that module. **Recommendation:** isolate locale adaptation from
+visual components and load a version-appropriate adapter so a missing import
+cannot break all of 4.0.6. At 450, follow the Omarchy language file and format
+locale, not only inherited LANG. The exact 406 fallback policy needs a design
+decision before product code.
+
+## 13. Compatibility changes requiring explicit handling
+
+| Area | Change in 4.5.0-rc2 | Source |
+|---|---|---|
+| Bar layout | left, centerBegin, center, centerEnd, right, tray; default third-party placement is centerEnd, not center; tray cannot contain itself | `450 shell/Commons/Util.qml:179`; `shell/services/PluginRegistry.qml:194–204,253–290` |
+| Notifications | New action/focus/keyboard/expansion behavior and IPC; changed default shortcuts | `450 shell/plugins/notifications/Service.qml:1384–1475`; `default/hypr/bindings/utilities.lua:24–31` |
+| Apps | Default Super+Alt+Space goes to dock apps | `450 default/hypr/bindings/utilities.lua:2` |
+| Overlays | Shared focused-monitor/scale-aware OverlayWindow, RTL support | `450 shell/Ui/OverlayWindow.qml:7–101` |
+| Language | Plugin catalogs, live locale, translated menu before extensions | `450 docs/i18n.md:7–25` |
+| Theme | Image picker drops scrim template keys; recheck actual consumer before promising a token | `450 default/themed/shell.toml.tpl:226–235` |
+| Plugin watcher | Reaps orphaned watcher processes before starting a replacement | `450 shell/services/PluginRegistry.qml:679–715` |
+
+The basic scoped shell API and service-less hosted-widget boundary remain in
+the source. The 406 experiments use its real default keys. The separate 450
+runtime matrix remains open: repeat the five functional probes, the facade
+control, six-section bar catalog and Super+Alt+Space dock exception. Do not
+carry the 406 passive-notification result over to 450's full `act` behavior.
+
+## 14. Runtime cost and experiment results
+
+### Environment and stock checkpoint
+
+Fresh Omarchy 4.0.6 ISO plus local cidata, followed by official `omarchy update -y`
+and a reboot. No old WULING payload is installed. Core package versions:
+
+| Package | Installed version |
+|---|---|
+| omarchy | 4.0.6-1 |
+| hyprland | 0.56.2-4 |
+| quickshell | 0.3.2.r7.g2b4501a-1 |
+| qt6-base | 6.12.0-3 |
+| qt6-declarative | 6.12.0-2 |
+| mesa | 1:26.2.5-1 |
+| pipewire-audio | 1:1.6.9-1 |
+
+The installed shell.qml, PluginRegistry.qml and MenuModel.js hashes match the
+406 source snapshot. The VM uses KVM, 8 vCPUs, 8 GiB guest RAM and virtio-vga-gl
+with host llvmpipe rendering. Host execution is nice 15 with idle I/O priority.
+1366×768 and 1920×1080 were verified through compositor output state and
+captures. The offline `original-omarchy-406` checkpoint contains stock Omarchy
+following the official update; `a1-clean-406` is the restored latest checkpoint.
+Both are offline disk snapshots without a saved RAM image. The retained ISO's previously verified SHA256
+is `b542db5fecc37395d9af6654a8146ebed225f275ae4d5a6fcf432e40afe7bb88`.
+
+### Functional checks on 406
+
+| Probe | Observed result | Local evidence under `vm406/` |
+|---|---|---|
+| Bar | Replacement at both requested sizes; one bar on each of two outputs. Horizontal edges reserve 26 px, vertical edges 28 px on both | `bar-r2-test.log`; `guest-evidence/bar-*-monitors.json`, captures and `bar-two-layers.json` |
+| OSD | Real volume key reached `osd.show`; direct built-in-id summon also reached the probe. Native OSD and original volume restored | `osd-test.log`; `guest-evidence/osd-volume.json`, `osd-identity.json`, `osd-native-restored.png` |
+| Notifications | notify-send receipt, Super+comma dismissal via dismissOne, same-process D-Bus ownership, restored stock toast | `notifications-test.log`, `supplemental-test.log`; notification evidence listed in section 5 |
+| Focus | Temporary compositor binding opened Exclusive-focus overlay; physical Esc closed it and incremented the counter | `focus-test.log`; `guest-evidence/focus-result.json` and capture |
+| Menu routes | No-metadata negative control, all six original key combinations, command/user aliases, runtime JS import and guard controls | `menu-r3-test.log`, `menu-r3-resume.log`; `guest-evidence/menu-routes.json`, `menu-tree.json` |
+| Locked power key | Command delivered while secure, ordinary overlay hidden until unlock; stock menu control agrees | `menu-locked-host.png`, `stock-menu-locked-host.png`; `guest-evidence/menu-locked-*.json` and after-unlock captures |
+| Menu facade | Fails independently of the route reader; overlay control retains facade; delegate sequence type mismatch reproduced | `guest-evidence/facade-*.json`; section 4 and `spikes/facade/` |
+
+The second output is a compositor-created headless output, not a physical
+connector/hotplug test. Bar catalog visibility is not full widget compatibility.
+The notification probe covers passive delivery/dismissal, not every history or
+action method. The menu probe does not implement app/provider/search parity,
+and its counted public-CLI close fallback does not pass the facade check.
+
+Each probe's configuration inventory was restored exactly (path, type, mode,
+link target and file SHA256). Inventories and empty difference lists are in
+`guest-evidence/{bar-r2,osd,notifications,focus,menu-r3,notification-gap}/`.
+The first bar attempt stopped because the pilot allowed idle lock; it was
+removed with an empty inventory diff and rerun. Early menu attempts exposed
+the facade defect and an incorrect test expectation for background/theme
+aliases; the recorded final route checks use the upstream resolved ids.
+
+### Cost method
+
+Formal stock → empty service → restored stock runs each start a fresh shell
+process, warm for 20 seconds and sample for 120 seconds at 4-second intervals
+(31 samples). Geometry is 1366×768. All three use the official stay-awake
+control; before/after checks require an unlocked session, active DPMS and the
+same geometry. The prior idle state is restored after testing. An earlier
+pilot that relied on modifier-only input was affected by idle lock and is
+excluded, with its raw logs retained under `invalid-idle-*`.
+
+Read shell PSS from smaps_rollup and CPU ticks from /proc; CPU is a percentage
+of one logical core. QEMU/host rendering CPU and memory are separate, including host-side virgl
+textures. CPU tick resolution is about 0.0083 percentage points over a 120-second
+run, so these very small CPU values are coarse. These VM/virgl figures do not predict a physical GPU.
+
+| Fresh-process run | Mean PSS (MiB) | PSS range (MiB) | Idle CPU (%) |
+|---|---:|---:|---:|
+| Stock A | 297.05 | 295.49–297.39 | 0.0166 |
+| Empty service B | 290.77 | 288.45–291.39 | 0.0167 |
+| Restored stock A2 | 293.20 | 290.15–294.05 | 0.0416 |
+
+All before/after condition checks passed. The empty service produced no measured
+increase in these runs, but its allocation is **not resolved** by this small
+sample: B is below both stock means and the two stock means themselves differ
+by 3.85 MiB. This is neither evidence of a memory saving nor a zero-cost claim.
+The method measures whole-process PSS, including sharing/startup variation;
+it is not an allocator accounting experiment. Raw samples and conditions:
+`guest-evidence/cost-fresh-{a,empty,a2}.json` and matching `-conditions.json`;
+run summaries: `cost-fresh-{a,empty,a2}.log`.
+
+
+## 15. Agent integration
+
+User provisioning links each directory in
+`$OMARCHY_PATH/default/agents/skills/` into the user's `.agents/skills`,
+`.claude/skills`, `.codex/skills`, `.pi/agent/skills`, `.hermes/skills` and
+existing Hermes profiles. The three requested migrations relink only named
+Omarchy skills or names present in that source directory; they do not clear
+the destination directories. (`406 bin/omarchy-provision-user:84–103`;
+`406 migrations/1786098807.sh:1`, `1786539345.sh:1`, `1787843905.sh:1`.)
+
+**VM experiment, 406:** a dummy `wuling` skill symlink and content survived
+`omarchy update -y` and explicit reruns of all three migrations in all five
+directories. The probe then removed only its five links and sentinel folder.
+The official update completed with exit 0. This establishes behavior for these
+versions; a future upstream skill using the same name would be a collision.
+Local evidence: `vm406/guest-evidence/agent-check.log`, `vm406/update-result.json`.
+
+`omarchy commands --json` returns `{ok: true, commands: [...]}`. Each record
+contains route, binary, group, name, summary, requires_sudo, hidden, args,
+examples, aliases, filename_route and routes. Metadata comes from `# omarchy:`
+comments. Discovery scans **only `$OMARCHY_PATH/bin/omarchy-*`**; it does not
+add commands from arbitrary PATH entries or plugin bin directories.
+(`406 bin/omarchy:167–294,313–339,642–692`.)
+
+**VM experiment, 406:** a disposable executable in `~/.local/bin` ran directly,
+but `omarchy wa1 probe` was rejected and the command was absent from the JSON
+catalog (369 visible records). Therefore WULING should expose its own `wuling`
+command catalog rather than install into the packaged Omarchy bin directory.
+Local evidence: `vm406/guest-evidence/agent-check.log`.
+
+Super+Shift+Ctrl+A calls `omarchy-agent --pick`. It reads the default agent;
+with none selected it opens `setup.default.agent`, otherwise launches the
+agent through the normal terminal helper with a common app id. Prompts use
+`omarchy-agent-prompt` → `omarchy-agent --prompt`; inline mode is distinct.
+`omarchy-agent-crash` gathers core metadata and directs the chosen agent to
+the installed diagnose-crash skill. These are existing Omarchy workflows,
+not a reason to introduce an agent credential store in WULING.
+(`406 default/hypr/bindings/utilities.lua:96`;
+`406 bin/omarchy-agent:37–140`; `406 bin/omarchy-agent-prompt:7–23`;
+`406 bin/omarchy-agent-crash:7–52`.)
+
+The agent panel separates collection from display. `omarchy-agent-usage-update`
+runs collectors and atomically replaces per-agent JSON files under
+`${XDG_STATE_HOME:-~/.local/state}/omarchy/agents/usage/`. Main.qml discovers
+and watches those files. The display record includes id/name/ready,
+usageStatusText/authHelpText, limits/tierLabel/balance, today's prompts,
+sessions/tokens/model breakdown, recentDays, total prompts/sessions,
+activeDays, modelUsage and flags for available stats. Rate limits and account
+balances remain local; optional cross-device aggregates apply to usage counts.
+(`406 bin/omarchy-agent-usage-update:4–51`;
+`406 shell/plugins/agents/Main.qml:5–77,212–275`.)
+
+**Recommendation:** consume the existing JSON and documented collector command
+for WULING's bar/Terminal; tolerate missing/new fields and collector failures,
+avoid logging account content, and share one collection schedule rather than
+start a collector per visual component. Do not copy Main.qml's implementation.
+The Claude app template already maps theme palette, selection, status, prompt
+and diff colors into its JSON theme; use that theme path instead of a separate
+agent-specific WULING palette. (`406 default/themed/claude.json.tpl:1–43`.)
+
+## 16. Reusable development checks
+
+| Tool / workflow | Third-party use and boundary | Source |
+|---|---|---|
+| `omarchy plugin validate DIR` | Directly useful for each staged plugin; validates manifest, reserved ids, entry points and symlinks. It does not execute QML or prove rendering | `406 bin/omarchy-plugin-validate:23–116` |
+| `test/all`, `test/cli`, `test/shell.d` | Upstream repository regression suites, not a generic plugin runner. Run against the pinned source in a disposable environment; use them as dependency checks, and give WULING its own tests | `406 test/all:3–23`; `test/shell:4–36` |
+| `test/acceptance`, `test/acceptance.d` | Exercises an installed desktop over SSH, discovers session environment, records artifacts; shared helpers can be sourced from the installed/test checkout. Run only in a disposable VM and restore modified state | `406 test/acceptance:1–70`; `agents/skills/acceptance-tests.md:5–40` |
+| Visual verification | Official fullscreen capture and short recordings, followed by inspection for clipping/focus/stale state. QMP input proves global shortcuts; wtype alone does not | `406 agents/skills/visual-verification.md:5–43`; `agents/skills/acceptance-tests.md:42–44` |
+| `omarchy dev link` | For a complete Omarchy checkout, changes system OMARCHY_PATH/sudo resolution and requires reboot for a coherent session. It is not a plugin installation mechanism and is unnecessary for WULING-only development | `406 bin/omarchy-dev-link:3–42,93–123` |
+
+No upstream files need modification to install these disposable plugins.
+The proposed long-term structure is in [maintainability.md](maintainability.md).

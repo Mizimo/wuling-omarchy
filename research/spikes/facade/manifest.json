@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"research.facade","name":"Disposable facade lifetime probe","version":"0.1.0","kinds":["menu"],"keepLoaded":true,"entryPoints":{"menu":"Facade.qml"}}
