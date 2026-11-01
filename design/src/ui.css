@@ -121,7 +121,7 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 
 /* ---------- TERMINAL 終端 — WULING's control panel (coexists with Omarchy's per-widget panels) ---------- */
 .trmp { position: absolute; right: 10px; width: 372px; background: color-mix(in srgb, var(--ink-2) 98%, transparent); border: 1px solid var(--line);
-  --c: 16px; clip-path: polygon(0 0, 100% 0, 100% 100%, var(--c) 100%, 0 calc(100% - var(--c))); display: flex; flex-direction: column; }
+  display: flex; flex-direction: column; }
 .trmp .sh { display: flex; align-items: center; gap: 8px; padding: 10px 14px 0; }
 .trmp .sh .no { font: 600 9px/1 var(--font-mono); color: var(--accent-ink); letter-spacing: .1em; }
 .trmp .sh .t { font: 500 9px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--paper-2); }

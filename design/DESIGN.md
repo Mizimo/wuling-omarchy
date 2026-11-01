@@ -101,7 +101,8 @@ white or yellow fill on MIST would hide it.
 
 - **Type.** Geist Mono for labels and readouts, Geist for body text, Barlow Condensed for the clock and large numerals,
   Noto Sans/Serif CJK for Chinese, Material Symbols Sharp for WULING's own icons. Sizes in `tokens.css`.
-- **Shape.** Square. Chamfers 6/10/16 px on chips, cards and panels. 1 px hairlines. No radius, no shadow.
+- **Shape.** Square. Chamfers 6/10 px on chips, cards and toasts. 1 px hairlines. No radius, no shadow. Panels on Omarchy's `qs.Ui`
+  panel, the Terminal included, keep its square frame: chamfering it would mean a second input layer to keep working on every version.
 - **Labels.** Micro labels are 8–9 px uppercase mono and decorative: nothing important is only in a micro label.
 - **Selection in WULING's own surfaces.** The plate inverts: `paper-0` ground, `ink-2` ink, 2 px yellow on the leading
   edge or foot.
