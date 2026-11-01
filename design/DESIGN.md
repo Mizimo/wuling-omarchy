@@ -59,7 +59,7 @@ contour lines. No painted landscapes. Every theme carries all three, so Omarchy'
 | Key | Values | Default |
 |---|---|---|
 | `labels` | `true`, `false`: the micro labels on bar cells | `true` |
-| `menu.selected` | `edge`, `fill`: the selected row in Omarchy's menu. Omarchy reads this from the theme, so setting it regenerates WULING's installed themes | `edge` on MIST, `fill` on PAPER |
+| `menu.selected` | The selected row in Omarchy's menu. `edge`: a raised row with a leading edge. `fill`: a solid row, yellow on PAPER; on MIST the raised row alone, because Omarchy draws detail text in the light text colour and yellow would hide it. Omarchy reads this from the theme, so setting it regenerates WULING's installed themes | `edge` on MIST, `fill` on PAPER |
 | `terminal.sections` | any of `clock link levels signal agent telemetry comms` | all |
 | `sounds` | `essential`, `full`, `off` | `essential` |
 | `motion` | `full`, `reduced` | `full` |
