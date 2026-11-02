@@ -86,10 +86,13 @@ Budget on kujira. **Report to the owner.**
 
 ### D — Notifications and OSD
 
-`plugins/notifications`, `plugins/osd`. **Acceptance:** real volume and brightness keys, `notify-send` with every urgency and
-actions, every key in DESIGN §9, a toast click running `omarchy-exec-argv` with a hostile argument, Omarchy's crash notification path
-(through `omarchy-crash-watch`), DND and its bypass rules, history into the Terminal. Omarchy's scripts that call them
-(the caller tables in the research). Handoff in both directions with no duplicate handlers. Both versions.
+`plugins/notifications`, `plugins/osd`. The notification rules and argv checks come from the installed version's own modules, imported behind the
+version check; if that fails the plugin does not take over, Omarchy's stays and `wuling doctor` says why. **Acceptance:** real volume and brightness
+keys, `notify-send` with every urgency and actions, every key in DESIGN §9, a toast click running `omarchy-exec-argv` with a hostile argument, Omarchy's
+crash notification path (through `omarchy-crash-watch`), DND and its bypass rules, history into the Terminal. A flood of 50; new toasts with the pointer on
+the stack; a shell restart with toasts up; a verification code never reaching the file; `showHistory` with the Terminal off, the log off, nothing recorded
+and under DND; removal deleting the history. Omarchy's scripts that call them (the caller tables in the research). Handoff in both directions with no
+duplicate handlers. Both versions.
 
 ### E — Dispatch and power menu
 

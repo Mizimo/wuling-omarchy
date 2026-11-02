@@ -195,7 +195,7 @@ under Omarchy's own bar too. Key: **Super+Ctrl+G**. 372 px wide, full height min
 | — | Signal | Now playing. Hidden when nothing plays | MPRIS | Play/pause, previous, next |
 | 05 | Agent | Per agent: plan, session and week meters, time to reset. Row: open the default agent. Hidden when no agent has usage | `~/.local/state/omarchy/agents/usage/*.json` | Row: `omarchy-agent --pick`. Agent: Omarchy's agents panel |
 | 06 | Telemetry | CPU, memory, temperature with sparklines. Sampled only while open | `/proc`, hwmon | — |
-| 07 | Comms log | Recent notifications | `wuling.notifications`' state file | Click: the notification's action |
+| 07 | Comms log | The newest rows that fit above the foot, at least 3; a `+N` row opens the rest and the body scrolls. Head: the count. Hidden while `wuling.notifications` is off | `wuling.notifications`' state file | Click: the row's stored `omarchy-exec-argv`, validated again. A row without one doesn't react |
 | | Foot | Lock, Sleep; Exit, Reboot, Off | Omarchy's commands | Dangerous ones open the power menu |
 
 Section numbers follow what is shown. Too tall: the body scrolls and the foot stays. Sections can be switched off in
@@ -212,14 +212,27 @@ scripts and keys reach it unchanged.
   `expand`, `probe`; do not assume the old names exist there. Also the service members `doNotDisturb` and
   `setDoNotDisturb` that the DND indicator reads, and `omarchy.indicators refresh`.
 - **Levels:** normal has a jade edge. One with actions or a click command has a yellow edge. Critical has a vermilion edge.
-- **Keep Omarchy's rules** (`shell/plugins/notifications/Service.qml`, `NotificationLogic.js`). Lifetimes: critical stays, low at
-  least 5 s, normal at least 8 s, at most 30 s. DND lets through app `omarchy-action` and critical from `notify-send`. Ephemeral
-  ones (`transient` hint, `notify-send`, `omarchy-action`) silenced by DND are not recorded.
+- **Keep Omarchy's rules**, from the installed version's own modules (`shell/plugins/notifications/`). Lifetimes: critical stays, low at
+  least 5 s, normal at least 8 s, at most 30 s. DND lets through app `omarchy-action` and critical from `notify-send`, and on 4.5 a detected
+  verification code. Ephemeral ones (`transient` hint, `notify-send`, `omarchy-action`) silenced by DND are not recorded.
 - **Toast:** 340 px, header (`Comms · 通訊`, app, time, close), art, summary, body, actions, a life line. Stacks from the
-  top right, on every output, as Omarchy does. While the Terminal is open on that output, toasts sit to its left.
+  top right, newest on top, on the outputs Omarchy uses: every output on 4.0.6; on 4.5 the focused one, where the stack stays until it
+  empties. While the Terminal is open on that output, toasts sit to its left.
+- **A flat stack, no decks.** What doesn't fit waits behind a one-line `+N` tail and moves up as space frees; at most 100 live, as Omarchy. With the
+  pointer on the stack, lifetimes pause and new toasts wait, at most 30 s, so nothing moves under the pointer. Toasts on screen survive a shell
+  restart, with Omarchy's grace.
+- **Keyboard**, the same on both versions. `act`: with no choice it dismisses, with one it runs it, with more it enters keyboard mode. Keyboard mode
+  is Omarchy's: ↓ J Tab, ↑ K Shift+Tab, Enter runs the click, Delete or Backspace dismisses, 1–9 press a button (buttons show their digit), Esc leaves,
+  and the same idle timeout. `expand` toggles: truncated bodies open and lifetimes pause; it returns `expanded` or `collapsed`. `probe` and `count` keep
+  Omarchy's fields.
 - **Actions:** buttons as the app sends them. **Clicking a toast** runs its `omarchy-exec-argv` hint as argv, never through a shell,
   with the same validation as Omarchy's. Omarchy's crash notification (`omarchy-crash-watch`) has no action buttons and depends on this.
-- **History** goes to `~/.local/state/wuling/notifications.json`. `showHistory` opens the Terminal at the log.
+- **History** goes to `~/.local/state/wuling/notifications.json`, 0600 in a 0700 directory: 100 rows and 24 hours on both versions. A row keeps what
+  Omarchy 4.5's `Store.persistable` keeps: no images or links, and text with a verification code only as the placeholder. `clear` clears history
+  only. Removal deletes the file: it holds other people's messages.
+- **`showHistory`** opens the Terminal at the log, all rows showing. If the Terminal or its log section is off, it replays the newest 6 as toasts and
+  changes no setting. Like Omarchy's replay this ignores DND: the user asked, and it is how to see what DND held back. A replay records nothing new.
+  With nothing to show, a low toast says `No recent notifications`, not a dead key.
 - Verify handoff by receipt and dismissal, not by the D-Bus name: it stays owned by the same process.
 
 ### 8.4 OSD — `wuling.osd`
