@@ -331,7 +331,7 @@ update, unlock or resume never replays it. Times run from the overlay's first pr
 - **Outputs:** the focused one runs the whole sequence; others show frame, title and progress in step; all wipe together.
 - **No desktop before its first frame.** The first frame is ink alone, from a service loaded with the shell (`keepLoaded`), which also reads the session
   marker before it draws, so a shell restart never flashes ink. Everything else loads behind that frame. Omarchy's first frame on both versions followed
-  this path in four real logins out of four (`research/phase-e-arrival.md`), so there is no cut to ink. The compositor's fade-in of the layer is left alone.
+  this path in four real logins out of four (`research/phase-e-arrival.md`), so there is no cut to ink. The compositor's fade-in is off for this one layer (`no_anim`, in WULING's Hyprland block, as Omarchy does for its own bar): on a cold 4.0.6 login the wallpaper arrived while the ink was still fading up and showed through for about 100 ms.
 - **Layout:** scales with the output's logical height, 768 being 1.0. The column stays 1126 design pixels wide and centred, so 21:9 gets wider
   margins, not a wider log.
 - **Language:** as §7. In English the Chinese halves don't show; 武陵 stays.
