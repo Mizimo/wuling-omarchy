@@ -387,6 +387,10 @@ Both new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to overwrit
 - **Versions:** Omarchy 4.0.6 (stable) now. Keep the 4.5 differences behind one small boundary (the table in
   `research/omarchy-shell-api.md` §17): six bar sections, notification methods, `style.*` → `appearance.*`, `background`
   instead of `transparent`, `Ui.OverlayWindow`, i18n.
+- **An Omarchy we haven't tested.** Omarchy updates on its own schedule, so a newer version must never leave someone with a broken desktop.
+  Parts on public interfaces keep running. Anything that imports an installed module checks that module's contents, not the version string, so an update that doesn't touch it changes
+  nothing; if it did change, that part stays on Omarchy's own and `wuling doctor` lists it. Installing on an untested version says so in the plan, names the tested versions and
+  asks, rather than refusing.
 
 ## 11. Budget
 
