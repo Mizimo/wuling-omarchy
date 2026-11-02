@@ -28,7 +28,7 @@ for lookup in font["GSUB"].table.LookupList.Lookup:
 text = "\n".join((ROOT / "design/src" / name).read_text() for name in ("mock.js", "proto.js", "ui.css", "proto.css"))
 # Include controls whose states are absent from the static mock (muted audio,
 # media transport). Generated kit copies are excluded from this source scan.
-text += "\n" + "\n".join(path.read_text() for part in ("kit", "plugins") for path in (ROOT / part).rglob("*.qml") if "generated" not in path.parts and (part == "kit" or "kit" not in path.relative_to(ROOT / part).parts))
+text += "\n" + "\n".join(path.read_text() for part in ("kit", "plugins") for path in (ROOT / part).rglob("*") if path.suffix in (".qml", ".js") and "generated" not in path.parts and (part == "kit" or "kit" not in path.relative_to(ROOT / part).parts))
 used = sorted(set(re.findall(r"[a-z][a-z0-9_]{2,}", text)) & names.keys())
 mapping = {name: chr(names[name]) for name in used}
 options = subset.Options()

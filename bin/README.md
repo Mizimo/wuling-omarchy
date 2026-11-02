@@ -22,10 +22,16 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   collector or reads credentials. Media selection and controls remain native.
 - `wuling action NAME [VALUE]`: fixed native actions used by the Terminal.
   Volume and brightness accept 0–100 or signed adjustments; they use the same
-  native OSD as keys. `panel NAME` opens the matching native panel. The three
+  OSD route as keys. `panel NAME` opens the matching native panel. The three
   dangerous foot actions open Omarchy's System menu until phase E replaces
   that route; this command never performs logout, reboot or poweroff directly.
 - `wuling terminal open|close|toggle`: the Field Terminal on the focused output.
+- `wuling notifications compatibility|state|boot|terminals|open-history|fallback`:
+  internal notification bridge and diagnostics. `compatibility` checks the
+  installed native modules. `persist` accepts bounded JSON lines on stdin and
+  writes private state; its acknowledgements never contain message text.
+  `state` contains private messages: do not include its output in public reports.
+- `wuling osd device output|input`: on-demand audio device label for the OSD.
 - `wuling doctor [--json]`: versions, required commands, owned resources,
   fontconfig matches and shipped plugin validation. Exit zero means all checks
   passed. A font match proves availability, not correct graphical rendering.
@@ -37,10 +43,14 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 for scripts; `--fastfetch` also opts into the mark in the user's fastfetch
 configuration. Interactive installation asks about fastfetch separately. No
 system font preference, authentication code or built-in binding is changed.
-It installs and enables the bar and Terminal plugins, appends
+It installs the bar, Terminal, notifications and OSD plugins, enables compatible
+new components, appends
 Terminal at the end of the native right section, and adds Super+Ctrl+G in an
 owned Lua block. An effective binding conflict is refused before changes.
 Updates preserve native widget placement and independent plugin disablement.
+Notifications and OSD use Omarchy's clone restoration contract. Notification
+module checks fail closed to the native provider and appear in `doctor`.
+Removal deletes WULING's private notification history.
 Install/removal reload the owned binding and restart the shell officially.
 
 Release code lives under the user's XDG data directory, state and the private

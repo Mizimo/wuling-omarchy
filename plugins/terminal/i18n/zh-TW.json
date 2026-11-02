@@ -44,5 +44,7 @@
   "weekday-4": "週四",
   "weekday-5": "週五",
   "weekday-6": "週六",
-  "weekday-7": "週日"
+  "weekday-7": "週日",
+  "count-unit": "則",
+  "show-all": "展開所有通知"
 }

@@ -1,0 +1,6 @@
+#!/bin/bash
+# omarchy:summary=Read the active OSD audio device on demand
+# omarchy:args=device <input|output>
+# omarchy:examples=wuling osd device output
+set -euo pipefail
+exec "$(dirname "$(readlink -f "$0")")/wuling" osd "$@"

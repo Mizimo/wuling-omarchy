@@ -1,0 +1,17 @@
+import QtQuick
+import @Store.js@ as Store
+import @Security.js@ as Security
+import @Delivery.js@ as Delivery
+import @Markup.js@ as Markup
+QtObject {
+    function snapshot(n, key) { return Store.snapshot(n, key, {Normal:1}); }
+    function argv(value) { return Security.parseExecArgv(value); }
+    function quiet(row, dnd) { return !!Delivery.quietReason(row, dnd); }
+    function ephemeral(row) { return Delivery.isEphemeral(row); }
+    function actions(row, sent) { return Delivery.deeds(row, sent); }
+    function persisted(row, limit) { return Store.persistable(row, limit); }
+    function execAction(row, index) { const actions = Security.parseExecActions(row.execActions); return actions && actions[index] ? actions[index].argv : null; }
+    function restored(row) { return Store.restored(row); }
+    function destination(row) { return !!Markup.hostname(row.source) || !!Security.safeExternalUrl(row.link || ""); }
+    function navigate(row) { const host=Markup.hostname(row.source); return Security.openExternalUrl(host ? "https://"+host+"/" : row.link || ""); }
+}

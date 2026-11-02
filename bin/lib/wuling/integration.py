@@ -7,12 +7,59 @@ import os
 from . import Error, ROOT, paths
 from . import owned
 
-IDS = ("wuling.bar", "wuling.terminal")
+IDS = ("wuling.bar", "wuling.terminal", "wuling.osd", "wuling.notifications")
 BINDING = 'o.bind("SUPER + CTRL + G", "Field Terminal", "wuling terminal toggle")\n'
 
 
 def installed_sources():
     return sorted((ROOT / "plugins").glob("*/manifest.json"))
+
+
+def add_replacements(data, record):
+    """Adopt new components once, using the native clone restoration contract."""
+    adopted = record.setdefault("replacements", {})
+    for path in installed_sources():
+        manifest = json.loads(path.read_text())
+        clone = manifest["id"]
+        source = manifest.get("omarchy", {}).get("clonedFrom")
+        if not source or clone in adopted:
+            continue
+        if clone == "wuling.notifications":
+            from . import notifications
+            gate = notifications.compatibility()
+            if not gate["ok"]:
+                record.setdefault("unavailable", {})[clone] = gate["reason"]
+                continue
+            record.get("unavailable", {}).pop(clone, None)
+        if any(identity(entry) == clone for entry in data.get("plugins", [])):
+            raise Error(f"Native configuration already mentions unowned {clone}")
+        # A user may already have another replacement. Never silently install
+        # a second owner of the same IPC target/server.
+        for entry in data.get("plugins", []):
+            other = identity(entry)
+            if not isinstance(other, str) or "/" in other or other in (".", ".."):
+                continue
+            if other in data.get("disabledPlugins", []):
+                continue
+            other_path = paths()["home"] / ".config/omarchy/plugins" / other / "manifest.json"
+            if other_path.is_file():
+                try:
+                    other_manifest = json.loads(other_path.read_text())
+                except ValueError as exc:
+                    raise Error(f"Cannot inspect active plugin {other}") from exc
+                if other_manifest.get("omarchy", {}).get("clonedFrom") == source:
+                    raise Error(f"{other} already replaces {source}; disable it before installing {clone}")
+        disabled = data.setdefault("disabledPlugins", [])
+        restores = data.setdefault("cloneSourceRestores", [])
+        if clone in disabled or clone in restores:
+            raise Error(f"Native configuration has an unowned setting for {clone}")
+        adopted[clone] = {"source": source, "disabled_before": source in disabled}
+        data.setdefault("plugins", []).append({"id": clone})
+        if source not in disabled:
+            disabled.append(source)
+            restores.append(clone)
+        if not restores:
+            data.pop("cloneSourceRestores", None)
 
 
 def locations():
@@ -33,6 +80,9 @@ def parse(text):
             raise ValueError("Expected native bar layout and plugin list")
         if not all(isinstance(items, list) for items in data.get("bar", {}).get("layout", {}).values()):
             raise ValueError("Expected bar section arrays")
+        if not all(isinstance(data.get(key, []), list) and all(isinstance(item, str) for item in data.get(key, []))
+                   for key in ("disabledPlugins", "cloneSourceRestores")):
+            raise ValueError("Expected native plugin state arrays")
         return data
     except ValueError as exc:
         raise Error("Native shell.json is invalid; preserve it and correct its structure first") from exc
@@ -75,8 +125,13 @@ def prepare(previous, execute):
         raise Error("Super+Ctrl+G is already bound; no files changed")
     written = owned.block(old_bindings, "bindings", BINDING, prior["bindings"]["written"] if prior else None)
     if prior:
-        # Preserve deliberate native enable/disable, layout, and inline settings.
-        return {"shell_text": before, "bindings_text": written, "record": deepcopy(prior)}
+        # Preserve deliberate enable/disable and layout choices. Only components
+        # newly shipped in this upgrade receive their first-install defaults.
+        record = deepcopy(prior)
+        changed = deepcopy(data)
+        add_replacements(changed, record)
+        return {"shell_text": before if changed == data else json.dumps(changed, ensure_ascii=False, indent=2) + "\n",
+                "bindings_text": written, "record": record}
     entries = list(data.get("plugins", []))
     for group in data.get("bar", {}).get("layout", {}).values():
         entries.extend(group)
@@ -86,9 +141,11 @@ def prepare(previous, execute):
     bar = changed.setdefault("bar", {})
     bar["id"] = "wuling.bar"
     bar.setdefault("layout", {}).setdefault("right", []).append({"id": "wuling.terminal"})
+    record = {"shell": {"before": before, "installed": deepcopy(changed), "created": not shell.exists()},
+              "bindings": {"written": written[len(old_bindings):], "created": not bindings.exists()}}
+    add_replacements(changed, record)
     return {"shell_text": json.dumps(changed, ensure_ascii=False, indent=2) + "\n", "bindings_text": written,
-            "record": {"shell": {"before": before, "installed": changed, "created": not shell.exists()},
-                       "bindings": {"written": written[len(old_bindings):], "created": not bindings.exists()}}}
+            "record": record}
 
 
 def write(tx, prepared):
@@ -97,10 +154,8 @@ def write(tx, prepared):
         tx.replace(path, data=data, mode=path.stat().st_mode & 0o777 if path.exists() else 0o644)
 
 
-def remove_shell(text, record):
+def remove_shell(text, record, replacements=None):
     data = parse(text)
-    if data == record["installed"]:
-        return record["before"], []
     # Omarchy's own commands reformat JSON. Compare owned values semantically,
     # then remove only those entries; an unrelated setting is never reverted.
     before = parse(record["before"])
@@ -120,6 +175,21 @@ def remove_shell(text, record):
         return True
     for section, entries in result.get("bar", {}).get("layout", {}).items():
         result["bar"]["layout"][section] = [entry for entry in entries if retain(entry, "wuling.terminal")]
+    for clone, entry in (replacements or {}).items():
+        result["plugins"] = [item for item in result.get("plugins", []) if retain(item, clone)]
+        retained = any(identity(item) == clone for item in result["plugins"])
+        if retained and clone not in result.setdefault("disabledPlugins", []):
+            result["disabledPlugins"].append(clone)
+        # The native command removes this flag when the user explicitly
+        # disables a clone. Without it, do not override a later native choice.
+        restores = result.get("cloneSourceRestores", [])
+        if clone in restores:
+            restores.remove(clone)
+            if not entry["disabled_before"]:
+                result["disabledPlugins"] = [item for item in result.get("disabledPlugins", []) if item != entry["source"]]
+        for key in ("cloneSourceRestores", "disabledPlugins"):
+            if key in result and not result[key]:
+                result.pop(key)
     # A native disable can already have removed our entries. Restore exact
     # original bytes only if all remaining values equal the baseline.
     return (record["before"] if result == before else json.dumps(result, ensure_ascii=False, indent=2) + "\n"), preserved
@@ -135,7 +205,7 @@ def remove(tx, record):
             if not path.exists():
                 continue
             if key == "shell":
-                restored, kept = remove_shell(path.read_text(), record[key])
+                restored, kept = remove_shell(path.read_text(), record[key], record.get("replacements"))
                 preserved.extend(kept)
                 delete = record[key]["created"] and restored == record[key]["before"]
             else:

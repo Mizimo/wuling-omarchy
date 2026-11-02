@@ -66,7 +66,10 @@ class StatusTests(IsolatedHome):
             self.assertIsNone(status.media())
 
     def test_disabled_sections_do_not_probe(self):
-        with patch.object(status, "probe", side_effect=AssertionError("unexpected probe")):
+        def comms_only(argv):
+            self.assertEqual(argv, ["omarchy-shell", "wuling.notifications", "log"])
+            return ""
+        with patch.object(status, "probe", side_effect=comms_only):
             collector = status.Collector(["comms"])
             try:
                 result = collector.read(wait=True)

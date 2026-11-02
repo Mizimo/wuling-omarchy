@@ -16,7 +16,11 @@ on close. State and the bounded telemetry history are discarded on close.
 Native agent display records are read, never credentials, and no collector is
 started. Signal uses Omarchy's selected player. Missing hardware hides the
 corresponding control; no playing media and no agent usage hide those
-sections. Comms is empty until the independent notification plugin is shipped.
+sections. Comms reads only WULING's private history while the independent
+notification plugin is enabled. It shows the newest rows that fit, at least
+three, with `+N` expanding the whole body. Row activation revalidates its stored
+argv through the notification service. Unchanged status samples retain the
+same delegates, including while a pointer is held down.
 The footer's dangerous actions currently open native System, never execute
 logout, reboot or shutdown directly.
 
@@ -29,3 +33,7 @@ Supported versions: Omarchy 4.0.6 and 4.5.0-rc2, through the installed panel and
 scoped bar API. Disable with `omarchy plugin disable wuling.terminal`; native
 panels and shortcuts remain. The owned new key is removed by
 `wuling uninstall`, which preserves edited user bindings and settings.
+The manifest declares the native `right` default section for re-enablement.
+Per-output `wuling.terminal.<output>` IPC exposes `geometry` and `history` to
+the notification plugin. Geometry comes from the panel instance's public
+`cardOrigin` and content dimensions; no private child is traversed.

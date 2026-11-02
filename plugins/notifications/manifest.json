@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "wuling.notifications",
+  "name": "WULING Comms",
+  "version": "0.1.0",
+  "kinds": ["service"],
+  "keepLoaded": true,
+  "entryPoints": {"service": "Entry.qml"},
+  "omarchy": {"clonedFrom": "omarchy.notifications"}
+}

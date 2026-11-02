@@ -13,6 +13,7 @@
     "displayName": "Field Terminal",
     "description": "System state and native controls",
     "category": "System",
+    "defaultSection": "right",
     "allowMultiple": false
   }
 }

@@ -7,6 +7,73 @@ from wuling import integration, lifecycle
 
 
 class IntegrationTests(InstallHome):
+    def test_active_other_replacement_is_refused_without_changes(self):
+        shell, _ = integration.locations()
+        other = self.home / ".config/omarchy/plugins/fixture.osd"
+        other.mkdir(parents=True)
+        (other / "manifest.json").write_text(json.dumps({"id":"fixture.osd","omarchy":{"clonedFrom":"omarchy.osd"}}))
+        data = json.loads(shell.read_text())
+        data["plugins"] = [{"id":"fixture.osd"}]
+        shell.write_text(json.dumps(data))
+        before = shell.read_text()
+        with self.assertRaises(Error):
+            lifecycle.install(True)
+        self.assertEqual(shell.read_text(), before)
+        self.assertIsNone(lifecycle.manifest())
+
+    def test_edited_clone_entry_is_preserved_but_disabled_on_removal(self):
+        lifecycle.install(True)
+        shell, _ = integration.locations()
+        data = json.loads(shell.read_text())
+        entry = next(row for row in data["plugins"] if integration.identity(row)=="wuling.osd")
+        entry["custom"] = "keep"
+        shell.write_text(json.dumps(data))
+        lifecycle.uninstall(True)
+        result = json.loads(shell.read_text())
+        self.assertIn(entry, result["plugins"])
+        self.assertIn("wuling.osd", result["disabledPlugins"])
+        self.assertNotIn("omarchy.osd", result["disabledPlugins"])
+
+    def test_missing_native_module_leaves_native_notifications_enabled(self):
+        with patch("wuling.notifications.compatibility", return_value={"ok":False,"reason":"Missing fixture module"}):
+            lifecycle.install(True)
+        shell, _ = integration.locations()
+        data = json.loads(shell.read_text())
+        self.assertNotIn("wuling.notifications", [integration.identity(r) for r in data.get("plugins",[])])
+        self.assertNotIn("omarchy.notifications", data.get("disabledPlugins",[]))
+        self.assertIn("wuling.notifications", lifecycle.manifest()["integration"]["unavailable"])
+
+    def test_clone_restores_native_but_keeps_an_original_disable(self):
+        shell, _ = integration.locations()
+        original = json.loads(shell.read_text())
+        original["disabledPlugins"] = ["omarchy.osd"]
+        shell.write_text(json.dumps(original))
+        lifecycle.install(True)
+        installed = json.loads(shell.read_text())
+        self.assertIn({"id": "wuling.osd"}, installed["plugins"])
+        self.assertNotIn("wuling.osd", installed.get("cloneSourceRestores", []))
+        lifecycle.uninstall(True)
+        self.assertEqual(json.loads(shell.read_text()), original)
+
+    def test_upgrade_adds_new_clone_once_and_preserves_intervening_user_edit(self):
+        sources = integration.installed_sources()
+        old_sources = [p for p in sources if p.parent.name in ("bar", "terminal")]
+        with patch("wuling.integration.installed_sources", return_value=old_sources):
+            lifecycle.install(True)
+        shell, _ = integration.locations()
+        data = json.loads(shell.read_text())
+        data["personal"] = "keep this edit"
+        shell.write_text(json.dumps(data))
+        lifecycle.install(True)
+        result = json.loads(shell.read_text())
+        self.assertEqual(sum(integration.identity(row) == "wuling.osd" for row in result["plugins"]), 1)
+        lifecycle.install(True)
+        self.assertEqual(json.loads(shell.read_text()), result)
+        lifecycle.uninstall(True)
+        result = json.loads(shell.read_text())
+        self.assertEqual(result["personal"], "keep this edit")
+        self.assertNotIn("omarchy.osd", result.get("disabledPlugins", []))
+
     def test_native_lua_binding_allows_update_but_duplicate_does_not(self):
         lifecycle.install(True)
         real = self.fake_command
@@ -43,6 +110,9 @@ class IntegrationTests(InstallHome):
         data["bar"]["position"] = "bottom"
         data["bar"].pop("id")
         data["plugins"] = []
+        # Match native clone-disable: it also consumes the restoration flags.
+        data.pop("cloneSourceRestores", None)
+        data.pop("disabledPlugins", None)
         data["bar"]["layout"]["right"] = []
         shell.write_text(json.dumps(data))
         bindings.write_text('-- personal note\n' + bindings.read_text())

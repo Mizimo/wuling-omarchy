@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "wuling.osd",
+  "name": "WULING OSD",
+  "version": "0.1.0",
+  "kinds": ["panel"],
+  "keepLoaded": true,
+  "entryPoints": {"panel": "Osd.qml"},
+  "omarchy": {"clonedFrom": "omarchy.osd"}
+}

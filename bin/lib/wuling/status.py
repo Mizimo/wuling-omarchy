@@ -10,7 +10,7 @@ import re
 import signal
 import subprocess
 import time
-from . import SCHEMA, paths
+from . import Error, SCHEMA, paths
 
 SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
 PROC = Path("/proc")
@@ -235,9 +235,16 @@ class Telemetry:
 
 
 def comms():
-    # The notification service arrives in phase D. Its future file is not
-    # guessed or acted upon here; no second history source is created.
-    return {"available": False, "items": []}
+    marker = probe_json(["omarchy-shell", "wuling.notifications", "log"])
+    if marker.get("provider") != "wuling.notifications":
+        return {"available": False, "items": []}
+    from . import notifications
+    try:
+        rows = notifications.read()["history"]
+        return {"available": True, "items": [{"key":row["key"], "app":label(row["app"], 80),
+                "summary":label(row["summary"], 2048), "time":row["ts"], "action":bool(row["execArgv"])} for row in rows]}
+    except (Error, OSError, ValueError):
+        return {"available": True, "items": [], "error": "Notification history is unavailable"}
 
 
 class Collector:

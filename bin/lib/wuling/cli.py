@@ -6,7 +6,7 @@ import json
 import re
 import shutil
 from . import Error, ROOT, SCHEMA, command, paths
-from . import actions, lifecycle, settings, status, theme
+from . import actions, lifecycle, notifications, osd, settings, status, theme
 
 
 def emit(value):
@@ -56,6 +56,10 @@ def doctor():
         except Error as exc:
             add("font:" + family, False, str(exc), "Check fontconfig and the user font directory.")
     plugins = sorted((ROOT / "plugins").glob("*/manifest.json"))
+    if (ROOT / "plugins/notifications/native-modules.json").is_file():
+        gate = notifications.compatibility()
+        add("notifications:compatibility", gate["ok"], gate.get("version") or gate.get("reason"),
+            "Keep Omarchy's native notifications enabled until WULING supports the installed modules.")
     for plugin in plugins:
         try:
             add("plugin:" + plugin.parent.name, True, command(["omarchy", "plugin", "validate", str(plugin.parent)]))
@@ -94,6 +98,11 @@ def main(argv=None):
     action.add_argument("value", nargs="?")
     term = sub.add_parser("terminal", help="Open or close the Field Terminal")
     term.add_argument("action", choices=["open", "close", "toggle"])
+    display = sub.add_parser("osd", help="Read OSD device state on demand")
+    display.add_argument("action", choices=["device"])
+    display.add_argument("kind", choices=["input", "output"])
+    notices = sub.add_parser("notifications", help="Inspect notification compatibility and private state")
+    notices.add_argument("action", choices=["compatibility", "state", "persist", "fallback", "boot", "terminals", "open-history"])
     sub.add_parser("doctor", help="Check versions, files, fonts and plugins").add_argument("--json", action="store_true")
     sub.add_parser("uninstall", help="Plan and remove unchanged owned resources").add_argument("--yes", action="store_true")
     args = parser.parse_args(argv)
@@ -126,6 +135,23 @@ def main(argv=None):
             emit(actions.run(args.name, args.value))
         elif args.verb == "terminal":
             emit(actions.terminal(args.action))
+        elif args.verb == "osd":
+            emit(osd.device(args.kind))
+        elif args.verb == "notifications":
+            if args.action == "persist":
+                notifications.persist()
+            elif args.action == "compatibility":
+                emit(notifications.compatibility())
+            elif args.action == "state":
+                emit(notifications.read())
+            elif args.action == "boot":
+                emit(notifications.boot())
+            elif args.action == "terminals":
+                emit({"schema_version": SCHEMA, "terminals": notifications.terminals()})
+            elif args.action == "open-history":
+                emit(notifications.open_history())
+            else:
+                emit(notifications.fallback())
         elif args.verb == "doctor":
             result = doctor()
             emit(result)

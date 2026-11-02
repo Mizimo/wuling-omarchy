@@ -28,8 +28,8 @@ for components not installed yet may resolve without changing a surface;
 To undo a setting, restore its previous value or the backed-up overrides and
 reapply the theme. Preserve unrelated concurrent edits.
 
-The bar and Terminal are independent Omarchy plugins:
-`wuling.bar`, `wuling.terminal`. Inspect native `omarchy plugin`
+The bar, Terminal, notifications and OSD are independent Omarchy plugins:
+`wuling.bar`, `wuling.terminal`, `wuling.notifications`, `wuling.osd`. Inspect native `omarchy plugin`
 and `omarchy bar` help before changing their enablement or placement. Bar
 replacement needs the official `omarchy restart shell`; never restart a live
 lock client or bypass Omarchy's refusal. Super+Ctrl+G belongs to Terminal;
@@ -37,6 +37,11 @@ all original keys still belong to Omarchy. `wuling terminal open` opens the
 panel on the focused output. `status --watch` belongs only to a visible view,
 and must stop when the view closes. Do not start an agent usage collector or
 read account credentials to populate the panel.
+Notifications and OSD replace their native providers through the official
+clone contract; disabling one restores its previously enabled native provider.
+Never bypass the notification module compatibility check. Notification state
+contains private messages: do not publish it or include it in diagnostics.
+Uninstall deletes that state; ordinary plugin disablement preserves it.
 
 `wuling uninstall` prints its plan and removes only unchanged resources it
 owns. It preserves user overrides and reports changed files instead of

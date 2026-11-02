@@ -14,14 +14,42 @@ Ui.Panel {
     property var actionQueue: []
     property string actionError: ""
     property string hostname: ""
+    property bool logExpanded: false
+    property bool revealLog: false
+    readonly property string screenName: QsWindow.window && QsWindow.window.screen ? QsWindow.window.screen.name : ""
+    property var logRows: []
     FileView { path: "/etc/hostname"; printErrors: false; onLoaded: terminal.hostname = text().trim().toUpperCase() }
     readonly property var sections: Kit.Runtime.setting("terminal.sections")
     readonly property var shown: sections.filter(key => key !== "agent" || (state.agent || []).length > 0)
         .filter(key => key !== "signal" || !!state.signal)
         .filter(key => key !== "link" || (state.link || []).length > 0)
+        .filter(key => key !== "comms" || !!state.comms && state.comms.available)
         .filter(key => key !== "levels" || !!state.levels && (state.levels.volume !== null || state.levels.brightness !== null))
     function number(key) { return String(shown.indexOf(key) + 2).padStart(2, "0"); }
     function has(key) { return shown.indexOf(key) >= 0; }
+    function geometry() { return {open:opened, x:panel.cardOrigin.x, y:panel.cardOrigin.y, width:panel.contentWidth, height:panel.contentHeight}; }
+    function reportGeometry() { geometryChanged.restart(); }
+    Timer {
+        id:geometryChanged; interval:0
+        onTriggered: if(terminal.screenName)Quickshell.execDetached(["omarchy-shell", "-q", "wuling.notifications", "terminal", terminal.screenName, JSON.stringify(terminal.geometry())]);
+    }
+    function history() {
+        if (sections.indexOf("comms") < 0 || bar && bar.barHidden) return "off";
+        logExpanded = true; revealLog = true; open(); scrollLog.restart(); return "ok";
+    }
+    IpcHandler {
+        enabled: terminal.screenName !== ""
+        target: "wuling.terminal." + terminal.screenName
+        function geometry(): string { return JSON.stringify(terminal.geometry()); }
+        function history(): string { return terminal.history(); }
+    }
+    Timer {
+        id: scrollLog; interval: 30
+        onTriggered: {
+            if (!terminal.opened) return;
+            if (terminal.has("comms")) { scroll.contentY = Math.max(0, Math.min(commsPart.y, contents.height - scroll.height)); terminal.revealLog = false; }
+        }
+    }
     function act(name, value) {
         const next = ["wuling", "action", name]; if (value !== undefined) next.push(String(value));
         // Slider drags retain the latest pending value, not a queue of stale
@@ -44,8 +72,17 @@ Ui.Panel {
     }
     function foot(action) { close(); act(action); }
     onOpenedChanged: {
-        if (!opened) state = ({});
+        if (!opened) { state = ({}); logExpanded = false; revealLog = false; }
         else actionError = "";
+        reportGeometry();
+    }
+    onScreenNameChanged: reportGeometry()
+    Component.onDestruction: if (screenName) Quickshell.execDetached(["omarchy-shell", "-q", "wuling.notifications", "terminal", screenName, '{"open":false,"width":0}'])
+    onStateChanged: {
+        const rows=state.comms && state.comms.available ? state.comms.items : [];
+        // Unchanged status samples must not destroy a row underneath a press.
+        if(JSON.stringify(rows)!==JSON.stringify(logRows))logRows=rows;
+        if(revealLog)scrollLog.restart();
     }
     Process {
         id: collector
@@ -94,6 +131,9 @@ Ui.Panel {
         margin: Kit.Runtime.px(10)
         gap: Kit.Runtime.px(10)
         contentWidth: Math.min(Kit.Runtime.g("terminal_width"), availableCardWidth)
+        onContentWidthChanged: if (terminal.opened) terminal.reportGeometry()
+        onContentHeightChanged: if (terminal.opened) terminal.reportGeometry()
+        onCardOriginChanged: if (terminal.opened) terminal.reportGeometry()
         contentHeight: availableCardHeight
         focusTarget: body
         popoutSwitching: terminal.popoutSwitching
@@ -151,7 +191,7 @@ Ui.Panel {
                         Behavior on opacity { NumberAnimation { duration: 90 } }
                         property Column layout: Column {
                             parent: part; width: part.width
-                            Kit.Section { width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey); detail: part.sectionKey === "clock" ? Quickshell.env("USER") : "" }
+                            Kit.Section { width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey); detail: part.sectionKey === "clock" ? Quickshell.env("USER") : part.sectionKey === "comms" ? terminal.logRows.length + (Kit.Runtime.language === "en" ? "" : " " + Kit.Runtime.tr("count-unit")) : "" }
                             Column { id: sectionContent; width: parent.width; topPadding: Kit.Runtime.px(8) }
                         }
                         property Rectangle divider: Rectangle {
@@ -279,8 +319,28 @@ Ui.Panel {
                         }
                     }
                     Part {
+                        id: commsPart
                         sectionKey: "comms"
-                        Kit.Label { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); height: Kit.Runtime.px(30); text: Kit.Runtime.tr("no-notifications"); color: Kit.Runtime.c("mist-4"); font.family: Kit.Runtime.sans }
+                        property int roomRows: Math.max(3, Math.floor((scroll.height - y - Kit.Runtime.px(60)) / Kit.Runtime.px(20)))
+                        property int shownRows: terminal.logExpanded ? terminal.logRows.length : Math.min(terminal.logRows.length, roomRows)
+                        Column {
+                            x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); spacing: Kit.Runtime.px(5)
+                            Repeater {
+                                model: terminal.logRows.slice(0, commsPart.shownRows)
+                                Kit.Button {
+                                    required property var modelData
+                                    width: parent.width; height: Kit.Runtime.px(15); borderVisible: false
+                                    enabled: modelData.action
+                                    Accessible.name: modelData.summary
+                                    onClicked: Quickshell.execDetached(["omarchy-shell", "wuling.notifications", "historyAction", modelData.key])
+                                    Kit.Micro { x: 0; width: Kit.Runtime.px(54); anchors.verticalCenter: parent.verticalCenter; text: parent.modelData.app.toUpperCase() }
+                                    Kit.Label { x: Kit.Runtime.px(62); width: parent.width - Kit.Runtime.px(100); height: parent.height; text: parent.modelData.summary; font.family: Kit.Runtime.sans; color: parent.foreground }
+                                    Kit.Label { anchors.right: parent.right; height: parent.height; text: Qt.formatDateTime(new Date(parent.modelData.time * 1000), "HH:mm"); font.pixelSize: Kit.Runtime.px(9); color: Kit.Runtime.c("mist-5") }
+                                }
+                            }
+                            Kit.Button { visible: terminal.logRows.length > commsPart.shownRows; width: parent.width; height: Kit.Runtime.px(22); borderVisible: false; text: "+" + (terminal.logRows.length - commsPart.shownRows); Accessible.name: Kit.Runtime.tr("show-all"); onClicked: terminal.logExpanded = true }
+                            Kit.Label { visible: !terminal.logRows.length; width: parent.width; height: Kit.Runtime.px(20); text: Kit.Runtime.tr("no-notifications"); color: Kit.Runtime.c("mist-4"); font.family: Kit.Runtime.sans }
+                        }
                     }
                 }
             }

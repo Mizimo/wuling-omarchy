@@ -1,0 +1,6 @@
+#!/bin/bash
+# omarchy:summary=Inspect notification compatibility and manage private state
+# omarchy:args=<compatibility|state|persist|fallback|boot|terminals|open-history>
+# omarchy:examples=wuling notifications compatibility | wuling notifications state
+set -euo pipefail
+exec "$(dirname "$(readlink -f "$0")")/wuling" notifications "$@"

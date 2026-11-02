@@ -1,0 +1,21 @@
+import QtQuick
+import @NotificationLogic.js@ as Native
+QtObject {
+    function snapshot(n, key) {
+        const row = Native.snapshotOf(n);
+        row.key = key; row.ts = row.timestamp / 1000; row.rawBody = row.body;
+        row.bodyRich = Native.styledBody(row.body, row.app, row.appIcon);
+        row.transient = n.hints && (n.hints.transient === true || n.hints.transient === 1);
+        row.senderPid = n.hints ? Number(n.hints["sender-pid"] || 0) : 0;
+        return row;
+    }
+    function argv(value) { return Native.parseExecArgv(value); }
+    function quiet(row, dnd) { return dnd && !Native.shouldBypassDnd({appName: row.app, urgency: row.urgency}, 2); }
+    function ephemeral(row) { return row.transient || Native.isEphemeralApp(row.app); }
+    function actions(row, sent) { return sent.map(a => ({kind:"action", value:a.id, label:a.text})); }
+    function persisted(row, limit) { return row; } // Python applies the common private projection.
+    function execAction(row, index) { return null; }
+    function restored(row) { row.bodyRich = Native.styledBody(row.body || "", row.app, row.appIcon); return row; }
+    function destination(row) { return false; }
+    function navigate(row) { return false; }
+}
