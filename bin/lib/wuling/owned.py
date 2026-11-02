@@ -87,7 +87,7 @@ class Transaction:
     def __init__(self):
         self.root = paths()["state"]
         self.path = self.root / "transaction.json"
-        self.data = {"schema_version": 1, "owner": "wuling", "id": uuid.uuid4().hex, "operations": [], "directories": []}
+        self.data = {"schema_version": 1, "owner": "wuling", "id": uuid.uuid4().hex, "operations": [], "directories": [], "created_state": not self.root.exists()}
 
     def flush(self):
         atomic_write(self.path, json.dumps(self.data, indent=2) + "\n", 0o600)
@@ -153,6 +153,11 @@ class Transaction:
             from .lifecycle import restore_external
             restore_external(self.data["theme_restore"])
         self.path.unlink(missing_ok=True)
+        if self.data.get("created_state"):
+            try:
+                self.root.rmdir()
+            except OSError:
+                pass
         for name in reversed(self.data["directories"]):
             try:
                 Path(name).rmdir()

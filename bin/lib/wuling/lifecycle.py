@@ -1,14 +1,13 @@
 """User-level installation with explicit ownership, consent and rollback."""
 
 from pathlib import Path
-import base64
 import json
 import os
 import re
 import shutil
 import tempfile
-from . import Error, ROOT, atomic_write, command, paths, read_json
-from . import jsonc, owned, settings, theme
+from . import Error, ROOT, command, paths, read_json
+from . import jsonc, owned, settings, theme, theme_effects
 
 OWNER = "org.wuling.desktop"
 PAYLOAD = ("bin", "tokens", "theme", "fonts", "skills", "kit", "plugins", "sounds")
@@ -22,11 +21,7 @@ DESKTOP_VALUES = {
 
 
 def desktop_snapshot():
-    path = Path.home() / ".config/dconf/user"
-    return {"keys": {key: command(["dconf", "read", "/org/gnome/desktop/interface/" + key]) for key in DESKTOP_KEYS},
-            "dump": command(["dconf", "dump", "/"]),
-            "database": base64.b64encode(path.read_bytes()).decode() if path.is_file() else None,
-            "mode": path.stat().st_mode & 0o777 if path.is_file() else 0o600}
+    return {"keys": {key: command(["dconf", "read", "/org/gnome/desktop/interface/" + key]) for key in DESKTOP_KEYS}}
 
 
 def restore_desktop(original, current, last=None):
@@ -38,16 +33,6 @@ def restore_desktop(original, current, last=None):
         desired = original["keys"][key] if ours else value
         address = "/org/gnome/desktop/interface/" + key
         command(["dconf", "write", address, desired] if desired else ["dconf", "reset", address])
-    # dconf rewrites its binary layout even when its logical values are back.
-    # Restore identical logical content byte-for-byte only when the entire
-    # database still equals the original, preserving unrelated user changes.
-    path = Path.home() / ".config/dconf/user"
-    observed = owned.stamp(path)
-    if command(["dconf", "dump", "/"]) == original["dump"] and owned.stamp(path) == observed:
-        if original["database"] is not None:
-            atomic_write(path, base64.b64decode(original["database"]), original["mode"])
-        elif path.is_file():
-            path.unlink()
 
 
 def compatibility():
@@ -65,6 +50,10 @@ def manifest():
     data = read_json(paths()["state"] / "install.json")
     if data is not None and (data.get("owner") != OWNER or data.get("schema_version") != 1):
         raise Error("Existing WULING state is not a recognised installation; refusing to overwrite it")
+    if data:
+        data["theme_effects"] = theme_effects.normalize_changes(data.get("theme_effects", {}))
+        if data.get("desktop"):
+            data["desktop"] = {"keys": {key: data["desktop"].get("keys", {}).get(key, "") for key in DESKTOP_KEYS}}
     return data
 
 
@@ -77,28 +66,8 @@ def save_manifest(tx, data):
 
 
 def config_snapshot():
-    """Transient snapshot for effects of the official theme operation only.
-
-    Only changed paths are retained, privately, for removal. No data is logged.
-    Theme source directories are managed as separate owned resources.
-    """
-    root = Path.home() / ".config"
-    result = {}
-    for directory, dirs, files in os.walk(root, followlinks=False):
-        parent = Path(directory)
-        if parent == paths()["themes"]:
-            dirs[:] = []
-            continue
-        for name in dirs + files:
-            path = parent / name
-            rel = str(path.relative_to(root))
-            if path.is_symlink():
-                result[rel] = {"link": os.readlink(path)}
-            elif path.is_file():
-                result[rel] = {"data": base64.b64encode(path.read_bytes()).decode(), "mode": path.stat().st_mode & 0o777}
-            elif path.is_dir():
-                result[rel] = {"directory": True}
-    return result
+    """Read only the audited theme fields, never unrelated profile contents."""
+    return theme_effects.snapshot()
 
 
 def apply_theme(name, preserve_background=False):
@@ -108,6 +77,7 @@ def apply_theme(name, preserve_background=False):
         command(["omarchy", "theme", "refresh"])
     else:
         env = os.environ.copy()
+        env["OMARCHY_THEME_WAIT"] = "1"
         env.pop("OMARCHY_THEME_SKIP_BACKGROUND", None)
         command(["omarchy", "theme", "set", name], env=env)
 
@@ -137,63 +107,15 @@ def restore_external(data):
     desktop_current = desktop_snapshot()
     apply_theme(data["name"])
     restore_desktop(data.get("desktop"), desktop_current, data.get("desktop_after"))
-    # Only touched paths need restoration. Edits made since our operation are
-    # put back after the official theme setter has run its normal hooks.
-    changes = effects(before, after)
-    root = Path.home() / ".config"
-    for rel, change in sorted(changes.items(), key=lambda item: item[0].count("/"), reverse=True):
-        if rel == "dconf/user":
-            continue
-        target = root / rel
-        desired = change["before"] if current.get(rel) == change["after"] else current.get(rel)
-        if desired is None:
-            if target.is_dir() and not target.is_symlink():
-                try:
-                    target.rmdir()
-                except OSError:
-                    pass
-            else:
-                target.unlink(missing_ok=True)
-        elif "data" in desired:
-            atomic_write(target, base64.b64decode(desired["data"]), desired["mode"])
-        elif "link" in desired:
-            if target.is_symlink() or target.is_file():
-                target.unlink()
-            if not target.exists():
-                target.symlink_to(desired["link"])
+    theme_effects.restore(effects(before, after), current)
 
 
 def effects(before, after):
-    return {key: {"before": before.get(key), "after": after.get(key)} for key in sorted(before.keys() | after.keys())
-            if before.get(key) != after.get(key)}
+    return theme_effects.changes(before, after)
 
 
 def restore_effects(tx, changes, current):
-    """Leave independently edited files alone; directories are removed if empty."""
-    preserved = []
-    root = Path.home() / ".config"
-    for rel, change in sorted(changes.items(), key=lambda item: item[0].count("/"), reverse=True):
-        old, new = change["before"], change["after"]
-        actual = current.get(rel)
-        if actual == old:
-            continue
-        if actual != new:
-            preserved.append(rel)
-            continue
-        path = root / rel
-        if old is None:
-            if new == {"directory": True}:
-                try:
-                    path.rmdir()
-                except OSError:
-                    pass
-            elif owned.exists(path):
-                tx.replace(path, delete=True)
-        elif "data" in old:
-            tx.replace(path, data=base64.b64decode(old["data"]), mode=old["mode"])
-        elif "link" in old:
-            tx.replace(path, link=old["link"])
-    return preserved
+    return theme_effects.restore(changes, current, tx)
 
 
 def prepare_payload(destination):
@@ -346,13 +268,14 @@ def uninstall(yes=False):
                 + "\nPreserve user overrides and edited resources:\n" + "\n".join("  " + name for name in preserved)
                 + "\nRestore previous theme if a WULING theme is active. No keys or built-ins changed in this phase.", yes)
         with owned.Transaction() as tx:
+            config_current = config_snapshot()
             if theme.active_name() in settings.tokens()["themes"]:
                 desktop_current = desktop_snapshot()
                 apply_in_transaction(tx, record["original_theme"])
                 restore_desktop(record.get("desktop"), desktop_current)
             # Official theme restoration handles native output first. Restore
             # remaining unchanged effects, never a user's independently edited file.
-            kept_effects = restore_effects(tx, record.get("theme_effects", {}), config_snapshot())
+            kept_effects = restore_effects(tx, record.get("theme_effects", {}), config_current)
             if record.get("fastfetch"):
                 slot = record["fastfetch"]
                 path = Path(slot["path"])
@@ -381,6 +304,7 @@ def uninstall(yes=False):
                 pass
         command(["fc-cache", "-f", str(Path.home() / ".local/share/fonts")])
         print("WULING removed. User-owned configuration is preserved.")
+        print("Native outputs outside the rollback list remain under Omarchy: theme-set hooks, editor extensions, agent palettes, Obsidian vault themes, Fcitx theme assets and browser policy. The previous theme was reapplied where applicable; these paths were not snapshotted or restored by WULING.")
         if preserved or kept_effects:
             print("Preserved changed paths: " + ", ".join(preserved + kept_effects))
 

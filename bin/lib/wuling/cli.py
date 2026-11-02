@@ -72,8 +72,14 @@ def doctor():
     return {"schema_version": SCHEMA, "ok": all(row["ok"] for row in checks), "checks": checks}
 
 
+class JsonArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        emit({"schema_version": SCHEMA, "error": {"code": "wuling_error", "message": message}})
+        self.exit(2)
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog="wuling", description="WULING themes and desktop components for Omarchy")
+    parser = JsonArgumentParser(prog="wuling", description="WULING themes and desktop components for Omarchy")
     sub = parser.add_subparsers(dest="verb", required=True)
     cmd = sub.add_parser("commands", help="List supported commands and metadata")
     cmd.add_argument("--json", action="store_true")

@@ -9,7 +9,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "bin/lib"))
 from wuling import Error, paths
-from wuling import jsonc, lifecycle, owned, settings, theme
+from wuling import jsonc, lifecycle, owned, settings, theme, theme_effects
 
 
 class IsolatedHome(unittest.TestCase):
@@ -95,6 +95,24 @@ class OwnershipTests(IsolatedHome):
         owned.recover()
         self.assertEqual(file.read_text(), "old")
         self.assertFalse(tx.path.exists())
+        self.assertFalse(paths()["state"].exists())
+
+    def test_failure_preserves_preexisting_empty_state_directory(self):
+        paths()["state"].mkdir(parents=True)
+        with self.assertRaises(RuntimeError):
+            with owned.Transaction():
+                raise RuntimeError("injected")
+        self.assertTrue(paths()["state"].is_dir())
+
+    def test_theme_member_insertion_removal_preserves_unrelated_bytes(self):
+        originals = ['{ // personal\n "editor.fontSize":14,\n}\n', '{}\n', '{"other":{"nested":true}}']
+        for original in originals:
+            installed = theme_effects.replace_member(original, '\"Omarchy\"')
+            self.assertEqual(theme_effects.replace_member(installed, None), original)
+        original = '{"first":1, "workbench.colorTheme":"old", "last":2}'
+        changed = theme_effects.replace_member(original, '\"new\"')
+        self.assertEqual(theme_effects.replace_member(changed, '\"old\"'), original)
+        self.assertEqual(json.loads(theme_effects.replace_member(changed, None)), {"first":1, "last":2})
 
     def test_recovery_preserves_concurrent_edit(self):
         file = self.home / "file"
@@ -153,8 +171,8 @@ class InstallTests(IsolatedHome):
         paths()["current"].mkdir(parents=True)
         (paths()["current"] / "theme.name").write_text("tokyo-night\n")
         (self.home / ".agents/skills").mkdir(parents=True)
-        (self.home / ".config/example").mkdir(parents=True)
-        (self.home / ".config/example/theme").write_text("tokyo-night\n")
+        (self.home / ".config/Code/User").mkdir(parents=True)
+        (self.home / ".config/Code/User/settings.json").write_text('{"workbench.colorTheme":"tokyo-night","editor.fontSize":14}\n')
         self.command_patch = patch("wuling.lifecycle.command", side_effect=self.fake_command)
         self.command_patch.start()
         self.euid_patch = patch("wuling.lifecycle.os.geteuid", return_value=1000)
@@ -170,7 +188,8 @@ class InstallTests(IsolatedHome):
             return "4.0.6-1"
         if argv[:3] == ["omarchy", "theme", "set"]:
             (paths()["current"] / "theme.name").write_text(argv[3] + "\n")
-            (self.home / ".config/example/theme").write_text(argv[3] + "\n")
+            path = self.home / ".config/Code/User/settings.json"
+            path.write_text(theme_effects.replace_member(path.read_text(), json.dumps(argv[3])))
         return ""
 
     def test_repeated_install_remove_preserves_user_state(self):
@@ -244,20 +263,90 @@ class InstallTests(IsolatedHome):
             lifecycle.install(True)
         self.assertEqual(lifecycle.config_snapshot(), before)
         self.assertFalse((paths()["data"] / "current").exists())
+        self.assertFalse(paths()["state"].exists())
 
-    def test_failing_theme_hook_restores_configuration(self):
+    def test_failing_theme_hook_restores_only_attributed_configuration(self):
         before = lifecycle.config_snapshot()
         original = self.fake_command
         def failing(argv, **kwargs):
             result = original(argv, **kwargs)
             if argv == ["omarchy", "theme", "set", "wuling"]:
-                (self.home / ".config/example/created-by-hook").write_text("partial")
+                (self.home / ".config/unattributed-hook-file").write_text("partial")
                 raise Error("injected official hook failure")
             return result
         with patch("wuling.lifecycle.command", side_effect=failing), self.assertRaises(Error):
             lifecycle.install(True)
         self.assertEqual(lifecycle.config_snapshot(), before)
         self.assertFalse((paths()["data"] / "current").exists())
+
+    def test_concurrent_application_write_is_never_journalled_or_undone(self):
+        from threading import Event, Thread
+        import base64
+        paused, release = Event(), Event()
+        unrelated = self.home / ".config/unrelated-app/session.json"
+        unrelated.parent.mkdir()
+        unrelated.write_text("old draft")
+        editor = self.home / ".config/Code/User/settings.json"
+        sentinel = "independent private draft"
+        errors = []
+        original = self.fake_command
+        def native(argv, **kwargs):
+            if argv == ["omarchy", "theme", "set", "wuling"]:
+                paused.set()
+                if not release.wait(10):
+                    raise RuntimeError("fixture barrier timed out")
+            return original(argv, **kwargs)
+        def install():
+            try:
+                lifecycle.install(True)
+            except BaseException as exc:
+                errors.append(exc)
+        with patch("wuling.lifecycle.command", side_effect=native):
+            worker = Thread(target=install)
+            worker.start()
+            try:
+                self.assertTrue(paused.wait(10))
+                journal = (paths()["state"] / "transaction.json").read_text()
+                self.assertNotIn("unrelated-app", journal)
+                self.assertNotIn("editor.fontSize", journal)
+                unrelated.write_text(sentinel)
+                editor.write_text(editor.read_text().replace('"editor.fontSize":14', '"editor.fontSize":17'))
+            finally:
+                release.set()
+                worker.join(10)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(errors, [])
+        record = (paths()["state"] / "install.json").read_text()
+        self.assertNotIn(sentinel, record)
+        self.assertNotIn(base64.b64encode(sentinel.encode()).decode(), record)
+        self.assertNotIn("unrelated-app", record)
+        self.assertNotIn("editor.fontSize", record)
+        lifecycle.uninstall(True)
+        self.assertEqual(unrelated.read_text(), sentinel)
+        self.assertEqual(json.loads(editor.read_text()), {"workbench.colorTheme":"tokyo-night", "editor.fontSize":17})
+
+    def test_legacy_unscoped_records_cannot_restore_unrelated_paths(self):
+        import base64
+        path = self.home / ".config/unrelated.txt"
+        path.write_text("new")
+        changes = {"unrelated.txt": {"before": {"data":base64.b64encode(b"old").decode(),"mode":0o644},
+                                    "after": {"data":base64.b64encode(b"new").decode(),"mode":0o644}}}
+        with owned.Transaction() as tx:
+            lifecycle.restore_effects(tx, changes, {})
+        self.assertEqual(path.read_text(), "new")
+
+
+class UsageTests(unittest.TestCase):
+    def test_all_parser_errors_are_json(self):
+        import subprocess
+        for args in (["unknown"], [], ["theme","bad"], ["status","--bad"], ["theme","resolve","--theme"]):
+            with self.subTest(args=args):
+                result = subprocess.run([str(ROOT / "bin/wuling"), *args],capture_output=True,text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.stderr, "")
+                value = json.loads(result.stdout)
+                self.assertEqual(value["schema_version"], 1)
+                self.assertEqual(value["error"]["code"], "wuling_error")
 
 
 if __name__ == "__main__":
