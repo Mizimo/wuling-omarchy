@@ -2,6 +2,13 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-02 — kujira is not rebooted
+
+Asked when to reboot kujira to see the boot screen, the owner chose "kujira 不用重開". Its disk is encrypted, so a reboot needs someone at the machine.
+
+**The boot screen and real logins are judged in VMs.** The final report says plainly that neither has been seen on real hardware. On kujira the
+animations are judged through `wuling session preview`.
+
 ## 2026-11-02 — login and logout animations
 
 The owner: "之前niri版本的登入登出動畫都很好看", and when asked: "兩段都加（我們什麼時候決定不要動畫了？）".

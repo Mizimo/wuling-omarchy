@@ -41,7 +41,7 @@ Each plugin's README states: entry points, state it owns, messages, settings, fa
 ## Phases
 
 Each phase ends with: checks green → the verifier tests in a VM and on kujira → the design lead approves → pushed.
-The owner sees the result after C and F. **Rebooting kujira always asks the owner first.**
+The owner sees the result after C and F. **kujira is not rebooted** (DECISIONS, 2026-11-02): the boot screen and real logins are judged in VMs and reported as unseen on real hardware.
 
 ### B — Theme and foundations
 
@@ -109,8 +109,7 @@ are exactly as with the plugin off. On kujira `wuling session preview exit` only
 
 Arrival (DESIGN §8.9), `plugins/sound`, login music (off by default), localisation complete. **Acceptance:** Arrival once per session, never on
 a shell restart, theme switch, update, unlock or resume; skip by key and click, a held key ignored; a lock request during it; several outputs;
-a cold shader cache, frame by frame from outside the VM, with no frame of wallpaper or bar before the ink (the earlier experiment had a much smaller overlay); gone within 3.5 s; within 2 MB of a run without it. Real logins in a VM; on kujira `wuling session preview arrival`, and the
-real one at the owner-approved reboot. Cue overlap bounded, tests on a private null sink with no physical sound. A 24-hour soak on kujira with PSS, CPU and handles flat. An Omarchy update survives, overrides intact. Partial
+a cold shader cache, frame by frame from outside the VM, with no frame of wallpaper or bar before the ink (the earlier experiment had a much smaller overlay); gone within 3.5 s; within 2 MB of a run without it. Real logins in a VM; on kujira `wuling session preview arrival` only. Cue overlap bounded, tests on a private null sink with no physical sound. A 24-hour soak on kujira with PSS, CPU and handles flat. An Omarchy update survives, overrides intact. Partial
 enable/disable of every part. **Final report to the owner.**
 
 ## Verifying
