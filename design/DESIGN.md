@@ -310,7 +310,7 @@ blocks what the user asked for. Switching the plugin off leaves Omarchy's own st
 greeter and a lock screen, which stay Omarchy's here.
 
 **Arrival, once per login session.** The marker is in `$XDG_RUNTIME_DIR/wuling/`, keyed by the session id, so a shell restart, theme switch,
-update, unlock or resume never replays it. Times run from the overlay's first presented frame. Always MIST until the wave.
+update, unlock or resume never replays it. Times run from the overlay's first presented frame. Always MIST until the wave. It plays only at the start of a session: no marker yet, and the compositor started under 30 s ago. WULING installed or `wuling.session` first enabled on a desktop that has been running writes the marker and plays nothing; the worst a slow login can do is miss the animation, which is why a plain age check is good enough here.
 
 | When | What |
 |---|---|
