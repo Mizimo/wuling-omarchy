@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""Rebuild WULING's original synthesized cue WAVs (development: NumPy).
+The original deterministic RNG sequence is retained, including unused sound
+calculations, so the shipped cue samples remain byte-identical. No music or
+ambient loop is written. Runtime uses only the prebuilt PCM files and pw-play.
+"""
+import math
+import os
+import wave
+
+import numpy as np
+
+SR = 48000
+OUT = os.path.join(os.path.dirname(__file__), "..", "sounds")
+rng = np.random.default_rng(7)
+
+
+def t_(dur):
+    return np.arange(int(SR * dur)) / SR
+
+
+def env_exp(n, tau):
+    return np.exp(-np.arange(n) / (SR * tau))
+
+
+def biquad(x, kind, f0, q=0.707):
+    """RBJ cookbook biquad (lowpass/highpass/bandpass)."""
+    w0 = 2 * math.pi * f0 / SR
+    a = math.sin(w0) / (2 * q)
+    c = math.cos(w0)
+    if kind == "lp":
+        b0, b1, b2 = (1 - c) / 2, 1 - c, (1 - c) / 2
+    elif kind == "hp":
+        b0, b1, b2 = (1 + c) / 2, -(1 + c), (1 + c) / 2
+    else:  # bandpass, constant 0 dB peak
+        b0, b1, b2 = a, 0.0, -a
+    a0, a1, a2 = 1 + a, -2 * c, 1 - a
+    b0, b1, b2, a1, a2 = b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0
+    y = np.zeros_like(x)
+    x1 = x2 = y1 = y2 = 0.0
+    for i, xi in enumerate(x):
+        yi = b0 * xi + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2
+        x2, x1, y2, y1 = x1, xi, y1, yi
+        y[i] = yi
+    return y
+
+
+def sweep_sine(f0, f1, dur, curve=2.0):
+    t = t_(dur)
+    k = (t / dur) ** curve
+    f = f0 + (f1 - f0) * k
+    return np.sin(2 * np.pi * np.cumsum(f) / SR)
+
+
+def bell(f, dur, partials=((1, 1, 1), (2.76, .45, .55), (5.40, .22, .3), (8.93, .1, .18))):
+    t = t_(dur)
+    s = np.zeros_like(t)
+    for ratio, amp, dec in partials:
+        s += amp * np.sin(2 * np.pi * f * ratio * t) * np.exp(-t / (dur * dec * .5))
+    att = np.minimum(1, t / 0.002)
+    return s * att
+
+
+def click(dur=0.004, f=3200, q=4.0):
+    n = rng.standard_normal(int(SR * dur))
+    n *= np.linspace(1, 0, n.size) ** 2
+    return biquad(np.pad(n, (0, int(SR * 0.02))), "bp", f, q) * 3
+
+
+def place(dst, src, at):
+    i = int(at * SR)
+    end = min(dst.size, i + src.size)
+    dst[i:end] += src[: end - i]
+    return dst
+
+
+def norm(x, peak_db=-3.0):
+    p = np.max(np.abs(x)) or 1
+    return x / p * 10 ** (peak_db / 20)
+
+
+def fade(x, fin=0.002, fout=0.01):
+    a, b = int(SR * fin), int(SR * fout)
+    if a:
+        x[:a] *= np.linspace(0, 1, a)
+    if b:
+        x[-b:] *= np.linspace(1, 0, b)
+    return x
+
+
+def write(name, x, peak=-3.0):
+    if name in {"key", "key-back", "unseal"}:
+        return
+    x = fade(norm(x.astype(np.float64), peak))
+    pcm = (np.clip(x, -1, 1) * 32767).astype("<i2")
+    path = os.path.join(OUT, name + ".wav")
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes(pcm.tobytes())
+    print(f"{name:14s} {x.size / SR * 1000:6.0f} ms")
+
+
+def drop(f0=1150, f1=2350, dur=0.09, tau=0.026):
+    """water-drop: rising-pitch bubble resonance + tiny transient."""
+    s = sweep_sine(f0, f1, dur, 0.6) * env_exp(int(SR * dur), tau)
+    return s + 0.25 * click(0.002, 5200, 3)[: s.size] if s.size <= click().size else s
+
+
+def main():
+    os.makedirs(OUT, exist_ok=True)
+
+    # key — water-drop tick with a faint metal tick on top
+    k = np.zeros(int(SR * 0.12))
+    place(k, sweep_sine(1100, 2300, 0.08, 0.55) * env_exp(int(SR * .08), .022), 0.0)
+    place(k, 0.35 * np.sin(2 * np.pi * 4200 * t_(.03)) * env_exp(int(SR * .03), .006), 0.0)
+    place(k, 0.5 * click(0.0015, 6000, 2.5), 0.0)
+    write("key", k, -6)
+
+    kb = np.zeros(int(SR * 0.11))
+    place(kb, sweep_sine(1500, 950, 0.07, 0.8) * env_exp(int(SR * .07), .02), 0.0)
+    place(kb, 0.4 * click(0.0015, 4200, 2.5), 0.0)
+    write("key-back", kb, -9)
+
+    # seal — stamp thud + double latch
+    s = np.zeros(int(SR * 0.55))
+    place(s, sweep_sine(78, 42, 0.42, 0.7) * env_exp(int(SR * .42), .11), 0.0)
+    thump = biquad(rng.standard_normal(int(SR * .08)) * env_exp(int(SR * .08), .012), "lp", 420, .8) * 2.2
+    place(s, thump, 0.0)
+    place(s, 0.7 * click(0.003, 2600, 6), 0.035)
+    place(s, 0.5 * click(0.003, 3400, 6), 0.075)
+    write("seal", s, -3)
+
+    # unseal — rising two-note bell chime + airy release
+    u = np.zeros(int(SR * 1.3))
+    place(u, 0.8 * bell(880.0, 1.0), 0.0)
+    place(u, 0.9 * bell(1318.5, 1.1), 0.12)
+    air = biquad(rng.standard_normal(int(SR * .6)), "bp", 2400, .7)
+    air *= np.sin(np.linspace(0, np.pi, air.size)) ** 2 * 0.25
+    place(u, air, 0.05)
+    write("unseal", u, -4)
+
+    # deny — double low buzz (saturated square-ish)
+    d = np.zeros(int(SR * 0.42))
+    def buzz(dur):
+        t = t_(dur)
+        w = np.tanh(3.2 * np.sin(2 * np.pi * 110 * t)) + 0.4 * np.tanh(3 * np.sin(2 * np.pi * 220.7 * t))
+        e = np.minimum(1, t / .004) * np.minimum(1, (dur - t) / .02)
+        return biquad(w * e, "lp", 1800, .7)
+    place(d, buzz(.13), 0.0)
+    place(d, buzz(.13), 0.19)
+    write("deny", d, -9)
+
+    # notify — glass ping ; alert — two harsher pings
+    write("notify", bell(1568.0, .7), -7)
+    a = np.zeros(int(SR * .8))
+    place(a, bell(1760.0, .5, ((1, 1, 1), (2.0, .5, .5), (4.1, .3, .3))), 0.0)
+    place(a, bell(1760.0, .5, ((1, 1, 1), (2.0, .5, .5), (4.1, .3, .3))), 0.16)
+    write("alert", a, -5)
+
+    # open / close — airy swishes (filtered noise sweep)
+    def swish(f0, f1, dur):
+        n = rng.standard_normal(int(SR * dur))
+        out = np.zeros_like(n)
+        seg = 64
+        for i in range(0, n.size, seg):
+            f = f0 * (f1 / f0) ** (i / n.size)
+            out[i:i + seg] = n[i:i + seg] * (0.5 + 0.5 * math.sin(math.pi * i / n.size))
+        out = biquad(out, "bp", math.sqrt(f0 * f1), .9)
+        return out * np.sin(np.linspace(0, np.pi, out.size)) ** 1.5
+    o = swish(500, 2600, .16); place(o, 0.35 * click(.002, 3600, 4), .13)
+    write("open", o, -10)
+    write("close", swish(2400, 450, .14), -11)
+
+    # toggle — relay double click
+    tg = np.zeros(int(SR * .06)); place(tg, click(.002, 3000, 5), 0); place(tg, .7 * click(.002, 2300, 5), .018)
+    write("toggle", tg, -8)
+
+    # boot — low swell + chord shimmer + final latch
+    b = np.zeros(int(SR * 2.0))
+    t = t_(1.6)
+    sw = (np.sin(2 * np.pi * 55 * t) + .6 * np.sin(2 * np.pi * 110.3 * t) + .25 * np.sin(2 * np.pi * 164.9 * t)) * (t / 1.6) ** 2
+    place(b, sw * 0.8, 0.0)
+    place(b, 0.35 * biquad(rng.standard_normal(t.size) * (t / 1.6) ** 3, "bp", 1800, .6), 0.0)
+    place(b, 0.6 * bell(659.25, .9), 1.55)
+    place(b, 0.8 * click(.003, 2600, 6), 1.55)
+    write("boot", b, -4)
+
+    # ambient loop for the Seal (20 s, seamless): drone + mist + sparse drops
+    L = 20.0
+    t = t_(L)
+    drone = (0.5 * np.sin(2 * np.pi * 55 * t) + 0.32 * np.sin(2 * np.pi * 82.41 * t + .5)
+             + 0.18 * np.sin(2 * np.pi * 110.05 * t)) * (0.8 + 0.2 * np.sin(2 * np.pi * t / L * 2))
+    mist = biquad(rng.standard_normal(t.size), "lp", 520, .6) * (0.5 + 0.5 * np.sin(2 * np.pi * t / L * 3)) * 0.9
+    amb = drone * 0.5 + mist * 0.35
+    for at in (2.3, 6.9, 9.4, 13.8, 17.1):
+        place(amb, 0.18 * sweep_sine(900 + 300 * rng.random(), 1900, .09, .55) * env_exp(int(SR * .09), .03), at)
+    # hover — faint high tick as the lock-on brackets snap to a target
+    h = np.zeros(int(SR * .05))
+    place(h, 0.6 * click(.0012, 5200, 3), 0.0)
+    place(h, 0.25 * np.sin(2 * np.pi * 3100 * t_(.025)) * env_exp(int(SR * .025), .005), 0.0)
+    write("hover", h, -21)
+
+    # tick — detent: list step, slider cell, volume step (the player varies pitch per step)
+    tk = np.zeros(int(SR * .045))
+    place(tk, click(.0015, 3800, 6), 0.0)
+    place(tk, 0.3 * np.sin(2 * np.pi * 1900 * t_(.02)) * env_exp(int(SR * .02), .004), 0.0)
+    write("tick", tk, -15)
+    for k in range(1, 8):   # pitch steps for levels / lists / holds (+4 % each); SoundEffect has no rate control
+        r = 1 + .04 * k
+        write(f"tick-{k}", np.interp(np.arange(0, tk.size - 1, r), np.arange(tk.size), tk), -15)
+
+    # select — confirm: latch click + bright ping + short low body
+    se = np.zeros(int(SR * .42))
+    place(se, click(.002, 3000, 5), 0.0)
+    place(se, 0.55 * bell(2093.0, .34, ((1, 1, 1), (2.0, .35, .5), (3.0, .15, .3))), 0.008)
+    place(se, 0.5 * sweep_sine(220, 140, .09, .8) * env_exp(int(SR * .09), .03), 0.0)
+    write("select", se, -8)
+
+    # drop — small water drop: readouts and tooltips resolving
+    write("drop", drop(900, 1900, .08, .022), -15)
+
+
+if __name__ == "__main__":
+    main()

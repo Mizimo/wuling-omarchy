@@ -91,6 +91,7 @@ Ui.Panel {
     }
     function foot(action) { close(); act(action); }
     onOpenedChanged: {
+        Kit.Runtime.cue(opened ? "open" : "close");
         if (!opened) { collector.running = false; restartingCollector = false; state = ({}); logExpanded = false; revealLog = false; }
         else { actionError = ""; startCollector(); }
         reportGeometry();
@@ -116,12 +117,14 @@ Ui.Panel {
             onStreamFinished: {
                 try { const response = JSON.parse(text); terminal.actionError = response.error ? Kit.Runtime.tr(response.error.code === "panel_unavailable" ? "panel-unavailable" : "action-failed") : ""; }
                 catch (_) { terminal.actionError = Kit.Runtime.tr("unavailable"); }
+                if (terminal.actionError) Kit.Runtime.cue("deny");
             }
         }
         onExited: Qt.callLater(terminal.runNext)
     }
     Kit.Button {
         id: button; anchors.fill: parent; host: terminal.bar
+        sound: ""
         borderVisible: false
         accent: Kit.Runtime.hud; selected: terminal.opened
         chamfer: Kit.Runtime.hud ? Kit.Runtime.px(8) : 0
@@ -248,6 +251,7 @@ Ui.Panel {
                                 model: terminal.state.link || []
                                 Kit.Button {
                                     required property var modelData
+                                    sound: "toggle"
                                     width: (contents.width - Kit.Runtime.px(40)) / 3; height: Kit.Runtime.px(52)
                                     selected: modelData.active
                                     Accessible.name: Kit.Runtime.tr(modelData.id)

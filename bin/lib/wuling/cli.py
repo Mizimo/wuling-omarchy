@@ -6,7 +6,7 @@ import json
 import re
 import shutil
 from . import Error, ROOT, SCHEMA, command, paths
-from . import actions, dispatch, lifecycle, notifications, osd, power, session, settings, status, theme
+from . import actions, arrival, dispatch, lifecycle, notifications, osd, power, session, settings, status, theme
 
 
 def emit(value):
@@ -35,8 +35,8 @@ def doctor():
         version = lifecycle.compatibility()
         add("omarchy", True, version)
     except Error as exc:
-        add("omarchy", False, str(exc), "Use a tested Omarchy release; run Omarchy's official update command.")
-    for executable in ("omarchy", "omarchy-shell", "qs", "fc-match", "fc-cache", "dconf", "python3", "bash", "jq"):
+        add("omarchy", False, str(exc), "Check the installed official omarchy version command.")
+    for executable in ("omarchy", "omarchy-shell", "qs", "fc-match", "fc-cache", "dconf", "python3", "bash", "jq", "pw-play"):
         add("command:" + executable, shutil.which(executable) is not None, shutil.which(executable), "Restore the stock Omarchy dependency using omarchy pkg add.")
     try:
         settings.load()
@@ -58,7 +58,7 @@ def doctor():
     plugins = sorted((ROOT / "plugins").glob("*/manifest.json"))
     if (ROOT / "plugins/notifications/native-modules.json").is_file():
         gate = notifications.compatibility()
-        add("notifications:compatibility", gate["ok"], gate.get("version") or gate.get("reason"),
+        add("notifications:compatibility", gate["ok"], gate.get("contract") or gate.get("reason"),
             "Keep Omarchy's native notifications enabled until WULING supports the installed modules.")
         health = notifications.writer_health()
         add("notifications:writer", health["ok"], health,
@@ -108,7 +108,7 @@ def main(argv=None):
     pwr = sub.add_parser("power", help="Open the native System actions as WULING cards")
     pwr.add_argument("action", choices=["open", "close", "toggle", "snapshot"])
     motion = sub.add_parser("session", help="Preview session motion or execute a confirmed exit")
-    motion.add_argument("action", choices=["preview", "exit", "arm"])
+    motion.add_argument("action", choices=["preview", "exit", "arm", "prepare-arrival"])
     motion.add_argument("value", nargs="?")
     display = sub.add_parser("osd", help="Read OSD device state on demand")
     display.add_argument("action", choices=["device"])
@@ -162,7 +162,11 @@ def main(argv=None):
         elif args.verb == "power":
             emit(power.snapshot() if args.action == "snapshot" else power.toggle(args.action))
         elif args.verb == "session":
-            if args.action == "arm":
+            if args.action == "prepare-arrival":
+                if args.value is not None:
+                    raise Error("session prepare-arrival takes no arguments")
+                emit(arrival.prepare())
+            elif args.action == "arm":
                 if args.value is not None:
                     raise Error("session arm reads its confirmation from stdin")
                 emit(session.arm())

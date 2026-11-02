@@ -4,6 +4,7 @@ FocusScope {
     id: button
     property string text: ""
     property string icon: ""
+    property string sound: "select"
     property bool selected: false
     property bool accent: false
     property bool danger: false
@@ -21,6 +22,10 @@ FocusScope {
     signal clicked()
     signal rightClicked()
     signal middleClicked()
+    onClicked: if (sound) Runtime.cue(sound)
+    onRightClicked: if (sound) Runtime.cue("select")
+    onMiddleClicked: if (sound) Runtime.cue("select")
+    onHoveredChanged: if (hovered) Runtime.cue("hover")
     implicitWidth: Math.max(Runtime.px(30), title.implicitWidth + (icon ? Runtime.px(25) : 0) + Runtime.px(16))
     implicitHeight: Runtime.px(30)
     activeFocusOnTab: true

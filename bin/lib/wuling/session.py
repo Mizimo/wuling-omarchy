@@ -245,9 +245,13 @@ def run(raw):
 
 
 def preview(kind):
-    if kind != "exit":
-        raise Error("This release provides the exit preview; Arrival follows separately")
+    if kind not in ("arrival", "exit"):
+        raise Error("Choose arrival or exit")
     if command(["omarchy-shell", "lock", "isLocked"]) != "false":
         raise Error("Unlock before previewing session motion")
-    actions.route("open", "wuling.power", '{"previewExit":true}')
+    if kind == "arrival":
+        if not dispatch.enabled("wuling.session") or ipc("arrival") != "ready":
+            raise Error("Enable WULING session motion before previewing Arrival")
+    else:
+        actions.route("open", "wuling.power", '{"previewExit":true}')
     return {"schema_version": SCHEMA, "ok": True, "preview": kind}

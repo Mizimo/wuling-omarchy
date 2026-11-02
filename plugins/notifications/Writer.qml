@@ -12,6 +12,7 @@ Item {
     property bool everStarted: false
     property bool hasExited: false
     property var exitCode: null
+    property var lastPid: null
     signal exhausted()
     function health() {
         return {schema_version:1,ok:ready && !state.reason && !state.halted,
@@ -48,6 +49,8 @@ Item {
     Process {
         id:child;command:["wuling","notifications","persist"];stdinEnabled:true
         onStarted: {
+            owner.lastPid=child.processId;
+            console.info("WULING notification writer started: " + owner.lastPid);
             owner.everStarted=true;owner.starting=false;startup.stop();owner.ready=true;
             if(!owner.state.latest)owner.state.reason="";
             owner.flush();
@@ -64,7 +67,7 @@ Item {
         }
         onExited: (code,status) => {
             owner.hasExited=true;owner.exitCode=code;
-            console.warn("WULING notification writer exited: " + code);
+            console.warn("WULING notification writer exited: " + code + " pid=" + owner.lastPid);
             owner.ready=false;
             owner.failed("Notification writer exited (code " + code + ")");
         }

@@ -35,7 +35,7 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   `snapshot` and `activate MODE VALUE` are its internal data/action bridge.
 - `wuling power open|close|toggle`: native System entries as held power cards.
   `snapshot` reads native entries and guards on demand.
-- `wuling session preview exit`: safe animation preview, no system action.
+- `wuling session preview arrival|exit`: safe animation preview, no system action.
   `session exit JSON` is the confirmed-hold worker, not a general shell API.
 - `wuling doctor [--json]`: versions, required commands, owned resources,
   fontconfig matches and shipped plugin validation. Exit zero means all checks
@@ -48,13 +48,18 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 for scripts; `--fastfetch` also opts into the mark in the user's fastfetch
 configuration. Interactive installation asks about fastfetch separately. No
 system font preference, authentication code or built-in binding is changed.
-It installs the bar, Terminal, notifications, OSD, Dispatch, power and session
+It installs the bar, Terminal, notifications, OSD, Dispatch, power, session and sound
 plugins, enables compatible new components, appends
 Terminal at the end of the native right section, and adds Super+Ctrl+G and Super+D in an
-owned Lua block. An effective binding conflict is refused before changes.
+owned Lua block. That block also disables compositor animation only for the
+Arrival layer, effective on next login. An effective binding conflict is
+refused before changes.
 Updates preserve native widget placement and independent plugin disablement.
 Notifications and OSD use Omarchy's clone restoration contract. Notification
 module checks fail closed to the native provider and appear in `doctor`.
+An untested Omarchy version is named in the installation plan alongside the
+tested versions, with the normal consent prompt. Installed module contents,
+not the version string, select the notification contract and DND state path.
 The owned System menu extension directs power routes to WULING cards. Removal
 restores it and deletes WULING's private notification and Dispatch histories.
 Install/removal reload the owned binding and restart the shell officially.

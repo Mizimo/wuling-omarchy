@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"wuling.sound","name":"WULING Sound","version":"0.1.0","kinds":["service"],"keepLoaded":true,"entryPoints":{"service":"Sound.qml"}}

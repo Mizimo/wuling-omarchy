@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "format": "48000 Hz, PCM 16-bit mono",
+  "files": {
+    "open.wav": "70e30fd76573afdb3c570c37a07d1536f385a8dd7497ca653670664c949e16cb",
+    "close.wav": "d13cac1179ca68c1abe50d3cbd132850a4c92ba26c669b0d06a17a4b908153f2",
+    "toggle.wav": "1225da96b99e2246128cb465f07af74e2bbba90806d57faa074405e7ac3fd4ba",
+    "select.wav": "dc7088c051abf98b69c34f17f902328932cb1c7b1d48feb5f1c06ea1bb8f2be0",
+    "deny.wav": "1111fe9638b6ac453a211ea52e92edaaaa18e61bb0975c4865f7d7941d95aec5",
+    "notify.wav": "46c6c38ecda79f8c5ecb9062ddb61fe767f37e6dd2b8890822d71a7d2330afef",
+    "alert.wav": "886d215f3737217f1e9575947b1ac412e139cc0b38f3ebb57d3a3e71edb2b616",
+    "tick.wav": "eba7118b4b5859209223e3e1f7bba441041e7f5688128940f9400b4f4a677f6e",
+    "hover.wav": "3a52e01930fc27bd7591657e3e5b6509a032ed6e029577bffb32d2b4e07b7bdb",
+    "boot.wav": "5604c6c32b47bb5ccf9f67b00d290ae847a8af347ef8180c8369ba50d26e151d",
+    "drop.wav": "13f2bbdc9e774b59e71d1ce0a20a870497cbbeea196610367ac38ead66f80c5d",
+    "seal.wav": "7b1d3ad3386d73f6c2b6549f0f677d9ff50700491edbfdb1c9ea7f9957754c24",
+    "tick-1.wav": "388417914c15c3087bf343b292becb02f255d5c5c581fa637523ff9ebabf1ed2",
+    "tick-2.wav": "3758729c79aea0a38c47e1fd3cb5f7e517d9176f63f9bb3e3e528c4a33c3ae2d",
+    "tick-3.wav": "fc5f8f3904164d0f41dee7d051161e32b6ad450640e04cc13b0d9472e444f2c0",
+    "tick-4.wav": "fa2f7636d63bed87919a74249cf8609ef4603ca51f760bac6ab0374f81b74693",
+    "tick-5.wav": "ccf953692f53c0ee0bc2c39554af823c7e9164634f895834111e1dea7795f5c1",
+    "tick-6.wav": "e9e0ea319d7dff40604ff56cd552d8bbe1e38868cd7ccbaf1db2b58c3ffebe3e",
+    "tick-7.wav": "1c09b6087cca4b02ee921da9c55f6e332e15078802b46fba9d854fdbced2b6df"
+  }
+}

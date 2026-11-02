@@ -1,5 +1,5 @@
 #!/bin/bash
-# omarchy:summary=Preview exit motion without leaving the session
-# omarchy:args=preview exit | exit <confirmed-request-json>
-# omarchy:examples=wuling session preview exit
+# omarchy:summary=Preview Arrival or Exit motion without leaving the session
+# omarchy:args=preview arrival|exit | exit <confirmed-request-json>
+# omarchy:examples=wuling session preview arrival; wuling session preview exit
 exec "$(dirname "$(readlink -f "$0")")/wuling" session "$@"

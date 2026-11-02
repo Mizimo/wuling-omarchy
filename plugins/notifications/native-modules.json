@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "versions": {
+  "contracts": {
     "4.0.6": {
       "NotificationLogic.js": "99e82df6524ee1ee1d52673b2a1496f62b14b220288f186c41fd8deed77a69bd"
     },

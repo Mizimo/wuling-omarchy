@@ -7,6 +7,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "kit" as Kit
+import "kit/Motion.js" as Motion
 
 // WULING owns layout and its drawn cells. Native widgets and their panels are
 // instantiated from the installed registry, with the installed scoped facade.
@@ -50,6 +51,32 @@ Item {
     property var hoveredWindows: []
     readonly property var foregroundWindow: ToplevelManager.activeToplevel
     property string hostname: ""
+    property bool arrivalHeld: false
+    property double arrivalStart: 0
+    property real arrivalElapsed: 0
+    property bool arrivalReduced: false
+    property double arrivalDeadline: 0
+    function arrival(mode, stamp) {
+        if (mode === "hold") {
+            arrivalHeld = true; arrivalStart = 0; arrivalReduced = false;
+            arrivalDeadline = Math.min(Date.now()+3500,Number(stamp));
+            arrivalLimit.interval = Math.max(1, Math.min(3500, Number(stamp) - Date.now()));
+            arrivalLimit.restart();
+        } else if ((mode === "reveal" || mode === "fade") && arrivalHeld) {
+            arrivalReduced = mode === "fade";
+            arrivalStart = Number(stamp); arrivalElapsed = Date.now() - arrivalStart;
+        } else if (mode === "release") {
+            arrivalHeld = false; arrivalStart = 0; arrivalLimit.stop();
+        }
+    }
+    Timer { id: arrivalLimit; onTriggered: host.arrival("release", 0) }
+    FrameAnimation {
+        running: host.arrivalHeld
+        onTriggered: {
+            if(host.arrivalStart)host.arrivalElapsed=Date.now()-host.arrivalStart;
+            if(Date.now()>=host.arrivalDeadline || host.arrivalStart && host.arrivalElapsed>=(host.arrivalReduced?90:300))host.arrival("release",0);
+        }
+    }
     FileView { path: "/etc/hostname"; printErrors: false; onLoaded: host.hostname = text().trim().toUpperCase() }
 
     // Visibility belongs to the replacement host. Native overlay facades read
@@ -184,8 +211,10 @@ Item {
     Timer { id: tipDelay; interval: 400 }
     IpcHandler {
         target: "wuling.bar"
+        function arrival(mode: string, stamp: string): void { host.arrival(mode, stamp); }
         function inspect(): string {
             return JSON.stringify({schema_version: 1, position: host.position, hidden: host.barHidden, transparent: host.transparent,
+                arrival: {held: host.arrivalHeld, start: host.arrivalStart, elapsed: host.arrivalElapsed},
                 appearance: {preset: Kit.Runtime.hud ? "hud" : "field", language: Kit.Runtime.language, labels: Kit.Runtime.setting("labels"), reduced: Kit.Runtime.reduced},
                 fontFamily: host.fontFamily, barSize: host.barSize, commands: host.commands,
                 layout: host.layoutConfig, catalog: host.barWidgetRegistry.availableIds(),
@@ -456,12 +485,18 @@ Item {
             implicitWidth: host.barSize
             implicitHeight: host.barSize
             exclusiveZone: host.barHidden ? 0 : host.barSize
-            color: host.transparent ? "transparent" : host.background
+            color: "transparent"
             WlrLayershell.namespace: "wuling-bar"
             WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
             readonly property real axisLength: host.vertical ? height : width
             readonly property real centerStart: Math.max(0, Math.min(axisLength - center.length, axisLength / 2 - Math.min(center.anchorOffset, center.length)))
+            Item {
+                id: barContent
+                anchors.fill: parent
+                opacity: host.arrivalHeld && !host.arrivalStart ? 0 : host.arrivalHeld && host.arrivalReduced ? Math.max(0, Math.min(1, host.arrivalElapsed / 90)) : 1
+                enabled: !host.arrivalHeld
+                Rectangle { anchors.fill: parent; color: host.transparent ? "transparent" : host.background }
             MouseArea {
                 anchors.fill: parent; z: -1
                 onDoubleClicked: Quickshell.execDetached(["omarchy", "bar", "transparent", host.transparent ? "false" : "true"])
@@ -486,6 +521,32 @@ Item {
                 color: Kit.Runtime.c("line")
             }
             HoverHandler { onHoveredChanged: host.hover(surface, hovered) }
+            }
+            // Allocate the six small textures only while revealing. Source
+            // rectangles cover the bar, never an output-sized render target.
+            Loader {
+                anchors.fill: parent
+                active: host.arrivalHeld && host.arrivalStart > 0 && !host.arrivalReduced
+                sourceComponent: Repeater {
+                    model: 6
+                    ShaderEffectSource {
+                        required property int index
+                        readonly property real start: Math.floor(index * surface.axisLength / 6)
+                        readonly property real end: Math.floor((index + 1) * surface.axisLength / 6)
+                        readonly property real progress: Math.max(0, Math.min(1, (host.arrivalElapsed - index * 20) / 200))
+                        readonly property real ease: Motion.snap(progress)
+                        width: host.vertical ? surface.width : end - start
+                        height: host.vertical ? end - start : surface.height
+                        x: host.vertical ? (host.position === "left" ? -1 : 1) * width * (1 - ease) : start
+                        y: host.vertical ? start : (host.position === "top" ? -1 : 1) * height * (1 - ease)
+                        sourceItem: barContent
+                        sourceRect: Qt.rect(host.vertical ? 0 : start, host.vertical ? start : 0, width, height)
+                        hideSource: true
+                        live: true
+                        smooth: false
+                    }
+                }
+            }
             Component.onDestruction: host.hover(surface, false)
             PopupWindow {
                 id: tip

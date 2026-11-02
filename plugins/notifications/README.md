@@ -6,8 +6,10 @@ IPC target and D-Bus notification server while enabled. There is no extra shell.
 
 The tested boundaries are Omarchy 4.0.6 and 4.5.0-rc2. Rules are imported from
 the installed native JavaScript modules; `native-modules.json` records their
-SHA-256 hashes. Nothing from upstream is bundled. A version, module or QML-load
-failure leaves or restores the native plugin. `wuling doctor` explains a failed
+SHA-256 hashes. The installed modules select the contract, Rules adapter and
+DND state path, independently of the reported Omarchy version. Nothing from
+upstream is bundled. An unknown module contract or a QML-load failure leaves
+or restores the native plugin. `wuling doctor` explains a failed
 module check. Do not edit the hashes to bypass an unreviewed update.
 
 The `notifications` target provides `ping`, `dndState`, `isDnd`, `setDnd`,

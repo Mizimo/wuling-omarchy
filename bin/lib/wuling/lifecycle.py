@@ -13,6 +13,7 @@ OWNER = "org.wuling.desktop"
 PAYLOAD = ("bin", "tokens", "theme", "fonts", "skills", "kit", "plugins", "sounds")
 SKILL_DIRS = (".agents/skills", ".claude/skills", ".codex/skills", ".pi/agent/skills", ".hermes/skills")
 DESKTOP_KEYS = ("color-scheme", "gtk-theme", "icon-theme")
+TESTED_VERSIONS = ("4.0.6", "4.5.0-rc2")
 DESKTOP_VALUES = {
     "color-scheme": ("'prefer-dark'", "'prefer-light'"),
     "gtk-theme": ("'Adwaita-dark'", "'Adwaita'"),
@@ -42,8 +43,9 @@ def compatibility():
     elif re.fullmatch(r"4\.5\.0-?rc2(?:-[0-9.]+)?", version):
         boundary = "4.5.0-rc2"
     else:
-        raise Error(f"Omarchy {version} is not in the tested 4.0.6 / 4.5.0-rc2 compatibility set.")
-    return {"installed": version, "boundary": boundary}
+        boundary = None
+    return {"installed": version, "boundary": boundary, "tested": boundary is not None,
+            "tested_versions": list(TESTED_VERSIONS)}
 
 
 def manifest():
@@ -197,9 +199,10 @@ def install(yes=False, fastfetch=None):
             prior = (previous or {}).get("fastfetch")
             new_text, edit = jsonc.set_member(old_text, "logo", {"type": "kitty-direct", "source": str(paths()["data"] / "current/theme/fastfetch-logo.png"), "width": 16}, prior["edit"] if prior else None)
             fastfetch_edit = {"path": str(fastfetch_path), "edit": edit, "created": prior["created"] if prior else not fastfetch_path.exists()}
-        consent("WULING installation plan\nRequired: Omarchy 4.0.6 or 4.5.0-rc2; installed: " + version["installed"]
+        consent("WULING installation plan\nTested Omarchy versions: " + ", ".join(TESTED_VERSIONS) + "; installed: " + version["installed"]
+                + ("\nThis Omarchy version has not been tested. Public-interface components will be installed; notifications may remain native when their installed modules do not match a known contract. Run wuling doctor after installation." if not version["tested"] else "")
                 + "\nFiles/directories:\n" + "\n".join("  " + str(path) for path, _ in resources)
-                + ("\nBar: WULING (native widgets retained). New keys: Super+Ctrl+G → Field Terminal, Super+D → Dispatch.\nComponents: bar, Terminal, OSD, notifications, Dispatch, power cards and exit motion. Notifications require compatible native modules. The System menu extension opens power cards; no native key changes. Updates preserve independent disablement; official shell restart after install." if prepared else "\nBuilt-ins changed: none. Keys added: none.")
+                + ("\nBar: WULING (native widgets retained). New keys: Super+Ctrl+G → Field Terminal, Super+D → Dispatch.\nComponents: bar, Terminal, OSD, notifications, Dispatch, power cards, Arrival/Exit and sound (essential cues, login music off). Notifications require compatible native modules. The System menu extension opens power cards; no native key changes. Updates preserve independent disablement; official shell restart after install." if prepared else "\nBuilt-ins changed: none. Keys added: none.")
                 + ("\nUnavailable replacements: " + json.dumps(prepared["record"]["unavailable"]) if prepared and prepared["record"].get("unavailable") else "")
                 + "\nDefault theme: wuling; updates keep the current theme. User overrides remain untouched."
                 + ("\nFastfetch: replace only the logo member in " + str(fastfetch_path) if fastfetch else "\nFastfetch: unchanged (opt in with --fastfetch).")

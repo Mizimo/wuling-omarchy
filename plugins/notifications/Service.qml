@@ -11,7 +11,7 @@ Item {
     property bool ready: false
     property bool stopping: false
     property var rules: null
-    property string version: ""
+    property string contract: ""
     property bool doNotDisturb: false
     property var history: []
     property var refs: ({})
@@ -35,7 +35,7 @@ Item {
     property alias live: live
     function indexOf(key) { for (let i=0;i<live.count;i++) if (live.get(i).key === key) return i; return -1; }
     function row(key) { const at=indexOf(key); return at < 0 ? null : JSON.parse(JSON.stringify(live.get(at))); }
-    function showsOn(name) { return version === "4.0.6" || name === targetDisplay; }
+    function showsOn(name) { return contract === "4.0.6" || name === targetDisplay; }
     function presented(name,keys) {
         if(JSON.stringify(presentedOutputs[name] || [])===JSON.stringify(keys))return;
         if(keys.length)presentedOutputs[name]=keys; else delete presentedOutputs[name];
@@ -58,7 +58,7 @@ Item {
             const actions=n ? n.actions : [];
             for (let i=0;i<Math.min(actions.length,16);i++) {
                 const a=actions[i], id=String(a.identifier || ""), label=String(a.text || id);
-                if (!id || id === "default" || version !== "4.0.6" && /^settings$/i.test(id + "") || version !== "4.0.6" && /^settings$/i.test(label)) continue;
+                if (!id || id === "default" || contract !== "4.0.6" && /^settings$/i.test(id + "") || contract !== "4.0.6" && /^settings$/i.test(label)) continue;
                 out.push({id:id.slice(0,256),text:label.slice(0,256)});
             }
         } catch (_) {}
@@ -106,6 +106,7 @@ Item {
         r.held=pointerIn; r.heldUntil=r.held ? Date.now()+30000 : 0;
         r.deadline=0;
         live.insert(0,r); revision++;
+        Kit.Runtime.cue(r.urgency === 2 ? "alert" : "notify");
         if (live.count>100) closeToast(live.get(live.count-1).key,"overflow");
         schedule(); saveSoon();
     }
@@ -177,7 +178,7 @@ Item {
         try { const actions=n ? n.actions : []; for(let i=0;i<Math.min(actions.length,16);i++)if(actions[i].identifier==="default") { if(execute)actions[i].invoke(); return true; } } catch(_) {}
         return false;
     }
-    function clickable(key) { const r=row(key); return r && (!!rules.argv(r.execArgv) || senderDefault(key,false) || !!windowFor(r) || version!=="4.0.6" && rules.destination(r)); }
+    function clickable(key) { const r=row(key); return r && (!!rules.argv(r.execArgv) || senderDefault(key,false) || !!windowFor(r) || contract!=="4.0.6" && rules.destination(r)); }
     function activate(key) {
         const r=row(key); if(!r)return false;
         const argv=rules.argv(r.execArgv);
@@ -185,7 +186,7 @@ Item {
         else if(!senderDefault(key,true)) {
             const win=windowFor(r);
             if(win && /^0x[0-9a-f]+$/i.test(String(win.address)))Hyprland.dispatch('hl.dsp.focus({window = hl.get_window("address:'+win.address+'")})');
-            else if(version!=="4.0.6" && rules.destination(r))rules.navigate(r);
+            else if(contract!=="4.0.6" && rules.destination(r))rules.navigate(r);
             else if(r.app)Quickshell.execDetached(["omarchy-hyprland-focus-app",r.app]);
         }
         stopKeyboard(); closeToast(key,"activated"); return true;
@@ -209,7 +210,7 @@ Item {
         if(count+(click?1:0)>1)startKeyboard(key); else if(click)activate(key); else if(count)runDeed(key,0); else closeToast(key,"dismissed");
         return "ok";
     }
-    function startKeyboard(key) { if(!live.count)return false; keyboardKey=key || live.get(0).key; keyboardOutput=version==="4.0.6"?focusedDisplay:targetDisplay; keyboardMode=true; keyboardIdle.restart(); return true; }
+    function startKeyboard(key) { if(!live.count)return false; keyboardKey=key || live.get(0).key; keyboardOutput=contract==="4.0.6"?focusedDisplay:targetDisplay; keyboardMode=true; keyboardIdle.restart(); return true; }
     function stopKeyboard() { keyboardMode=false; keyboardKey=""; keyboardIdle.stop(); }
     Timer { id:keyboardIdle; interval:10000; onTriggered:daemon.stopKeyboard() }
     function keyPressed(event) {
@@ -282,14 +283,14 @@ Item {
                     const data=JSON.parse(text);
                     if(!data.ok) { daemon.fallback(); return; }
                     daemon.rules=Qt.createQmlObject(data.qml,daemon,"WulingNativeNotificationRules");
-                    daemon.version=data.version; daemon.doNotDisturb=data.state.dnd; daemon.history=data.state.history;
+                    daemon.contract=data.contract; daemon.doNotDisturb=data.state.dnd; daemon.history=data.state.history;
                     const now=Date.now();
                     for(let i=0;i<data.state.live.length;i++) {
-                        if(daemon.version==="4.0.6" && data.state.live[i].deadline>0 && data.state.live[i].deadline<=now) {
+                        if(daemon.contract==="4.0.6" && data.state.live[i].deadline>0 && data.state.live[i].deadline<=now) {
                             daemon.archive(data.state.live[i],"expired"); continue;
                         }
                         const r=daemon.shape(daemon.rules.restored(data.state.live[i]),false);
-                        r.remaining=r.urgency===2?0:daemon.version==="4.0.6"?daemon.duration(r.urgency,r.expireTimeout):20000; r.duration=r.remaining; r.deadline=0;
+                        r.remaining=r.urgency===2?0:daemon.contract==="4.0.6"?daemon.duration(r.urgency,r.expireTimeout):20000; r.duration=r.remaining; r.deadline=0;
                         live.append(r);
                     }
                     if(live.count)daemon.pinnedOutput=daemon.focusedDisplay;

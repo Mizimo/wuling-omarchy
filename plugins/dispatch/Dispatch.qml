@@ -27,16 +27,18 @@ Item {
     readonly property string targetOutput: outputNames.indexOf(outputName)>=0?outputName:outputNames[0] || ""
     function refresh() { if(reader.running)pending=true;else reader.running=true; }
     function open(payload) {
+        if (!opened) Kit.Runtime.cue("open");
         mode="apps";query="";selected=0;feedback="";
         outputName=Hyprland.focusedMonitor?Hyprland.focusedMonitor.name:"";
         opened=true;leaving.stop();appearance=0;buildElapsed=0;entering.restart();build.restart();refresh();
     }
-    function close() { opened=false;entering.stop();build.stop();leaving.restart();reader.running=false;pending=false;query="";feedback=""; }
+    function close() { if(opened)Kit.Runtime.cue("close");opened=false;entering.stop();build.stop();leaving.restart();reader.running=false;pending=false;query="";feedback=""; }
     NumberAnimation { id:entering;target:dispatch;property:"appearance";from:0;to:1;duration:Kit.Runtime.reduced?90:150 }
     NumberAnimation { id:leaving;target:dispatch;property:"appearance";to:0;duration:130;onFinished:if(!dispatch.opened)dispatch.data=({}) }
     NumberAnimation { id:build;target:dispatch;property:"buildElapsed";from:0;to:500;duration:500 }
     function dismiss() { close();if(shell)shell.hide("wuling.dispatch"); }
-    function changeMode(next) { mode=next;selected=0;if(/^[=>?]/.test(query))query="";feedback=""; }
+    function changeMode(next) { if(mode!==next)Kit.Runtime.cue("toggle");mode=next;selected=0;if(/^[=>?]/.test(query))query="";feedback=""; }
+    onSelectedChanged: if(opened)Kit.Runtime.cue("tick")
     function cycle(back) { const i=modes.indexOf(mode);changeMode(modes[(i+(back?modes.length-1:1))%modes.length]); }
     onQueryChanged: {
         const prefix=query[0];if(prefix==="=")mode="calc";else if(prefix===">")mode="run";else if(prefix==="?")mode="ask";
@@ -47,6 +49,7 @@ Item {
         if(action.running)return;
         const value=mode==="calc"?result:rows[index]?String(rows[index].id):null;
         if(value===null || value===undefined)return;
+        Kit.Runtime.cue("select");
         action.mode=mode;action.command=["wuling","dispatch","activate",mode,"--",value];action.running=true;
     }
     function key(event) {
@@ -75,6 +78,7 @@ Item {
             onStreamFinished: {
                 try { const value=JSON.parse(text);if(value.ok) { if(action.mode==="calc")dispatch.feedback=Kit.Runtime.tr("copied");else dispatch.dismiss(); }else dispatch.feedback=Kit.Runtime.tr(value.error && value.error.code==="agent_unavailable"?"agent-unavailable":"failed"); }
                 catch(_) { dispatch.feedback=Kit.Runtime.tr("failed"); }
+                if(dispatch.feedback && dispatch.feedback!==Kit.Runtime.tr("copied"))Kit.Runtime.cue("deny");
             }
         }
     }

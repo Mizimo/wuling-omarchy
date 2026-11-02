@@ -1,4 +1,4 @@
-"""Version gate and bounded private notification state. Never log message text."""
+"""Installed-module gate and bounded private state. Never log message text."""
 from pathlib import Path
 import hashlib
 import fcntl
@@ -25,20 +25,25 @@ CODE_SHAPE = re.compile(r"(?<!\w)(?:[A-Z]-)?(?:\d{4,8}|\d{2,4}[ -]\d{2,5}|[A-Z0-
 
 
 def compatibility():
-    from .lifecycle import compatibility as version_check
     try:
-        version = version_check()["boundary"]
-        contract = json.loads((ROOT / "plugins/notifications/native-modules.json").read_text())["versions"][version]
+        contracts = json.loads((ROOT / "plugins/notifications/native-modules.json").read_text())["contracts"]
         upstream = Path(os.environ.get("OMARCHY_PATH", "/usr/share/omarchy")) / "shell/plugins/notifications"
-        for name, expected in contract.items():
+        hashes = {}
+        for name in {name for contract in contracts.values() for name in contract}:
             file = upstream / name
-            if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest() != expected:
-                raise Error(f"Installed notification module {name} is missing or differs from the tested {version} contract")
-        template = ROOT / "plugins/notifications" / ("Rules450.qml.in" if version == "4.5.0-rc2" else "Rules406.qml.in")
+            hashes[name] = hashlib.sha256(file.read_bytes()).hexdigest() if file.is_file() else None
+        matches = [name for name, contract in contracts.items()
+                   if all(hashes[module] == expected for module, expected in contract.items())]
+        if len(matches) != 1:
+            mismatches = {name: [module for module, expected in contract.items() if hashes[module] != expected]
+                          for name, contract in contracts.items()}
+            raise Error("Installed notification modules do not match one known contract: " + json.dumps(mismatches))
+        contract_name = matches[0]
+        template = ROOT / "plugins/notifications" / {"4.0.6": "Rules406.qml.in", "4.5.0-rc2": "Rules450.qml.in"}[contract_name]
         qml = template.read_text()
-        for name in contract:
+        for name in contracts[contract_name]:
             qml = qml.replace("@" + name + "@", json.dumps((upstream / name).resolve().as_uri()))
-        return {"schema_version": SCHEMA, "ok": True, "version": version, "qml": qml}
+        return {"schema_version": SCHEMA, "ok": True, "contract": contract_name, "qml": qml}
     except (Error, OSError, ValueError, KeyError) as exc:
         return {"schema_version": SCHEMA, "ok": False, "reason": str(exc)}
 
@@ -109,7 +114,7 @@ def normalise(data, now=None):
 def native_dnd(gate):
     if not gate.get("ok"):
         return False
-    relative = {"4.0.6": "notifications.json", "4.5.0-rc2": "notifications/quiet.json"}.get(gate.get("version"))
+    relative = {"4.0.6": "notifications.json", "4.5.0-rc2": "notifications/quiet.json"}.get(gate.get("contract"))
     if not relative:
         return False
     path = paths()["home"] / ".local/state/omarchy" / relative

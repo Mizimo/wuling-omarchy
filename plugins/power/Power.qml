@@ -26,13 +26,14 @@ Item {
     readonly property string targetOutput:outputNames.indexOf(outputName)>=0?outputName:outputNames[0] || ""
     function open(raw) {
         if(committed)return;
+        if(!opened)Kit.Runtime.cue("open");
         let value;try { value=JSON.parse(raw || "{}"); }catch(_) { value=({}); }
         preview=value.previewExit===true;selected=0;error="";rows=[];
         outputName=Hyprland.focusedMonitor?Hyprland.focusedMonitor.name:"";
         opened=true;fadeOut.stop();appearance=0;buildElapsed=0;entering.restart();build.restart();reader.running=true;
         if(!worker.running) { workerReady=false;worker.running=true; }
     }
-    function close() { if(committed)return;cancelHold();opened=false;entering.stop();build.stop();fadeOut.restart();reader.running=false;if(!confirmationSent)worker.running=false; }
+    function close() { if(committed)return;if(opened)Kit.Runtime.cue("close");cancelHold();opened=false;entering.stop();build.stop();fadeOut.restart();reader.running=false;if(!confirmationSent)worker.running=false; }
     property bool confirmationSent:false
     Process {
         id:worker;command:["wuling","session","arm"];stdinEnabled:true
@@ -45,9 +46,11 @@ Item {
     function dismiss() { close();if(shell && !committed)shell.hide("wuling.power"); }
     function cancelHold() { hold.stop();holding=false;holdInput="";holdProgress=0; }
     function choose(index) { if(committed)return;cancelHold();selected=Math.max(0,Math.min(rows.length-1,index)); }
+    onSelectedChanged: if(opened)Kit.Runtime.cue("tick")
     function press(source) {
         const row=rows[selected];if(!row || row.disabled || committed || holding)return;
         if(!row.dangerous) {
+            Kit.Runtime.cue("select");
             Quickshell.execDetached(["bash","-c",row.action]);dismiss();return;
         }
         holding=true;holdInput=source;holdProgress=0;hold.start();
@@ -55,6 +58,7 @@ Item {
     function commit() {
         if(committed || !rows[selected])return;
         const row=rows[selected],started=Date.now();
+        Kit.Runtime.cue("seal");
         committed=true;holding=false;holdInput="";holdProgress=1;exitElapsed=0;
         const request=JSON.stringify({id:row.id,action:row.action,started:started,preview:preview});
         if(worker.running && workerReady) { confirmationSent=true;worker.write(request+"\n"); }

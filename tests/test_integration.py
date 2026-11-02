@@ -1,5 +1,7 @@
 """Native settings and key ownership survive independent user changes."""
 import json
+import io
+from contextlib import redirect_stdout
 from unittest.mock import patch
 from test_foundations import InstallHome
 from wuling import Error, paths
@@ -7,6 +9,43 @@ from wuling import integration, lifecycle
 
 
 class IntegrationTests(InstallHome):
+    def test_arrival_rule_upgrade_and_removal_preserve_surrounding_hyprland_config(self):
+        _, bindings = integration.locations()
+        bindings.parent.mkdir(parents=True, exist_ok=True)
+        bindings.write_text('-- personal before\n')
+        legacy = '\n'.join(line for line in integration.BINDING.splitlines() if 'layer_rule' not in line) + '\n'
+        with patch.object(integration, "BINDING", legacy):
+            lifecycle.install(True)
+        bindings.write_text(bindings.read_text() + '-- personal after\n')
+        lifecycle.install(True)
+        self.assertEqual(bindings.read_text().count('^wuling-session-arrival$'), 1)
+        lifecycle.install(True)
+        lifecycle.uninstall(True)
+        self.assertEqual(bindings.read_text(), '-- personal before\n-- personal after\n')
+
+    def test_untested_version_requires_normal_consent_and_preserves_update_choices(self):
+        original = self.fake_command
+        def untested(argv, **kwargs):
+            return "4.5.0rc3-1" if argv == ["omarchy", "version"] else original(argv, **kwargs)
+        with patch("wuling.lifecycle.command", side_effect=untested), redirect_stdout(io.StringIO()) as output:
+            with patch("builtins.input", return_value="n"), self.assertRaises(Error):
+                lifecycle.install(False, False)
+            self.assertIsNone(lifecycle.manifest())
+            self.assertIn("has not been tested", output.getvalue())
+            self.assertIn("4.0.6, 4.5.0-rc2", output.getvalue())
+            self.assertIn("may remain native", output.getvalue())
+            lifecycle.install(True)
+            shell, _ = integration.locations()
+            data = json.loads(shell.read_text())
+            data.setdefault("disabledPlugins", []).append("wuling.sound")
+            shell.write_text(json.dumps(data))
+            lifecycle.set_config("labels", "false")
+            before = (self.home / ".config/wuling/overrides.toml").read_bytes()
+            lifecycle.install(True)
+            self.assertEqual(json.loads(shell.read_text()), data)
+            self.assertEqual((self.home / ".config/wuling/overrides.toml").read_bytes(), before)
+            self.assertFalse(lifecycle.manifest()["compatibility"]["tested"])
+
     def test_active_other_replacement_is_refused_without_changes(self):
         shell, _ = integration.locations()
         other = self.home / ".config/omarchy/plugins/fixture.osd"

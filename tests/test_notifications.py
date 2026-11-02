@@ -1,6 +1,7 @@
 """Persistent notification data stays bounded, private, and message-only."""
 from pathlib import Path
 import json
+import hashlib
 import os
 import stat
 import subprocess
@@ -10,6 +11,30 @@ from wuling import Error, ROOT, notifications
 
 
 class NotificationStateTests(IsolatedHome):
+    def test_module_contract_ignores_version_and_rejects_changed_or_missing_content(self):
+        root = self.home / "fixture-product"
+        source = root / "plugins/notifications"
+        source.mkdir(parents=True)
+        native = self.home / "native/shell/plugins/notifications"
+        native.mkdir(parents=True)
+        contracts = {"4.0.6": {"Old.js": hashlib.sha256(b"old fixture").hexdigest()},
+                     "4.5.0-rc2": {"New.js": hashlib.sha256(b"new fixture").hexdigest()}}
+        (source / "native-modules.json").write_text(json.dumps({"contracts": contracts}))
+        (source / "Rules406.qml.in").write_text('import @Old.js@ as Old')
+        (source / "Rules450.qml.in").write_text('import @New.js@ as New')
+        with patch.object(notifications, "ROOT", root), patch.dict(os.environ, {"OMARCHY_PATH": str(self.home / "native")}), patch("wuling.lifecycle.command", side_effect=AssertionError("Version command must not select a module contract")):
+            for name, payload, contract in (("Old.js", b"old fixture", "4.0.6"), ("New.js", b"new fixture", "4.5.0-rc2")):
+                file = native / name
+                file.write_bytes(payload)
+                gate = notifications.compatibility()
+                self.assertTrue(gate["ok"])
+                self.assertEqual(gate["contract"], contract)
+                self.assertIn(file.resolve().as_uri(), gate["qml"])
+                file.write_bytes(payload + b" changed")
+                self.assertFalse(notifications.compatibility()["ok"])
+                file.unlink()
+                self.assertFalse(notifications.compatibility()["ok"])
+
     def test_writer_ack_coalescing_recovery_and_finite_budget(self):
         code = (ROOT / "plugins/notifications/WriterState.js").read_text().replace('.pragma library', '')
         subprocess.run(["node", "-e", code + r'''
@@ -58,7 +83,7 @@ assert(!acknowledge(t,ok));
                 native.parent.mkdir(parents=True, exist_ok=True)
                 native.write_text('{"version":3,"dnd":true}\n')
                 before = native.read_bytes()
-                gate = {"ok":True, "version":version}
+                gate = {"ok":True, "contract":version}
                 self.assertTrue(notifications.read(gate)["dnd"])
                 self.assertFalse(notifications.read({"ok":False})["dnd"])
                 notifications.write({"schema_version":1,"dnd":False,"live":[],"history":[]})

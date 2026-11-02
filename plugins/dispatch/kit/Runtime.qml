@@ -35,6 +35,10 @@ Item {
     function icon(name) { return Tokens.icons[name] || ""; }
     function tr(key) { return translated[key] || english[key] || key; }
     function label(key) { const en = english[key] || key; return language === "en" ? en : en + " · " + tr(key); }
+    function cue(name, level) {
+        if(setting("sounds")==="off" || setting("sounds")!=="full" && /^(tick|hover)/.test(name))return;
+        Quickshell.execDetached(["omarchy-shell","-q","wuling.sound","play",name,String(level===undefined?1:level)]);
+    }
     function refresh() { if (resolver.running) pending = true; else resolver.running = true; }
     function rearmOverrides() {
         // A missing file cannot be watched. Watch its parent for first creation
