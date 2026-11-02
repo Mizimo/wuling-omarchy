@@ -1,0 +1,150 @@
+{
+  "inbox": "v171",
+  "eCommit": "1f0b4e4caf050f325d49ca3dab7c61113ac25736",
+  "e1Commit": "ff501b407cd65d6cd81251796fb04b7890157cf2",
+  "toolsCheck": {
+    "E": 74,
+    "E1": 77
+  },
+  "writer": {
+    "406": {
+      "retrySeconds": [
+        1.1725318260000108,
+        5.076052425,
+        30.053346121999994
+      ],
+      "stoppedTeardownSeconds": 1.7534824669999978,
+      "originalRestartSeconds": 1.7603835500000002,
+      "restoredDoctorExit": 0,
+      "failedStartupTransitions": [
+        {
+          "status": "never-started",
+          "recovery_attempts": 1,
+          "retry_ms": 1000,
+          "ever_started": false,
+          "exit_code": null
+        },
+        {
+          "status": "never-started",
+          "recovery_attempts": 2,
+          "retry_ms": 5000,
+          "ever_started": false,
+          "exit_code": null
+        },
+        {
+          "status": "never-started",
+          "recovery_attempts": 3,
+          "retry_ms": 30000,
+          "ever_started": false,
+          "exit_code": null
+        },
+        {
+          "status": "given-up",
+          "recovery_attempts": 3,
+          "retry_ms": 0,
+          "ever_started": false,
+          "exit_code": null
+        }
+      ]
+    },
+    "450": {
+      "retrySeconds": [
+        1.1367235350000016,
+        5.167660523999999,
+        30.09480753400001
+      ],
+      "stoppedTeardownSeconds": 2.873524517000007,
+      "originalRestartSeconds": 2.665467617999994,
+      "restoredDoctorExit": 0,
+      "failedStartupTransitions": [
+        {
+          "status": "never-started",
+          "recovery_attempts": 1,
+          "retry_ms": 1000,
+          "ever_started": false,
+          "exit_code": null
+        },
+        {
+          "status": "never-started",
+          "recovery_attempts": 2,
+          "retry_ms": 5000,
+          "ever_started": false,
+          "exit_code": null
+        },
+        {
+          "status": "never-started",
+          "recovery_attempts": 3,
+          "retry_ms": 30000,
+          "ever_started": false,
+          "exit_code": null
+        },
+        {
+          "status": "given-up",
+          "recovery_attempts": 3,
+          "retry_ms": 0,
+          "ever_started": false,
+          "exit_code": null
+        }
+      ]
+    }
+  },
+  "confirmedWorkerKilledBeforeAction": {
+    "4.0.6": {
+      "actionDelta": 0,
+      "classification": "P2 candidate for adjudication"
+    },
+    "4.5.0-rc2": {
+      "actionDelta": 0,
+      "classification": "P2 candidate for adjudication"
+    }
+  },
+  "realExit": {
+    "testedOn": "4.0.6",
+    "actualActions": [
+      "logout",
+      "reboot",
+      "shutdown"
+    ],
+    "plymouthAppliedOfficially": true,
+    "sddmMarkShiftPx": -44,
+    "rawGroundRgb": [
+      14,
+      18,
+      17
+    ],
+    "correctedCaptureMaxGapSeconds": 0.017
+  },
+  "native": {
+    "updatedFrom": "03df1dda26aeac14a4e50fecb3f9dc1311a01e65",
+    "updatedTo": "ff501b407cd65d6cd81251796fb04b7890157cf2",
+    "doctor": true,
+    "unlocked": true,
+    "workspaceRestored": 1,
+    "ownerMetadataUnchanged": true,
+    "settingsAndBackgroundUnchanged": true,
+    "powerCancelRoutes": 7,
+    "requestScanCalls": 0,
+    "dispatchOwnFixtureLaunchedAndRemoved": true,
+    "previewOnly": true,
+    "realBootOrLoginOnHardwareTested": false,
+    "writerHealthySamples": 184,
+    "writerPidCount": 1,
+    "resourceContext": {
+      "policy": "v171, reasonable memory/no steady growth/idle CPU near zero; measurement already completed before cancellation was read",
+      "idleSeconds": 900,
+      "terminalOpenSeconds": 300,
+      "openCloseCycles": 20,
+      "idleShellPlusWriterPssMiB": 280.7685546875,
+      "idleShellCpuOneCorePercent": 0.05333343569056666,
+      "closedFdMinMax": [
+        137,
+        137
+      ],
+      "closedThreadsMinMax": [
+        25,
+        25
+      ],
+      "steadyGrowthEstablished": false
+    }
+  }
+}
