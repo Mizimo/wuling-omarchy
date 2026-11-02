@@ -1,0 +1,302 @@
+"""On-demand, bounded Terminal data. Never starts an agent collector or daemon."""
+
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from pathlib import Path
+import json
+import math
+import os
+import re
+import signal
+import subprocess
+import time
+from . import SCHEMA, paths
+
+SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
+PROC = Path("/proc")
+SYS = Path("/sys")
+
+
+def text(path, limit=65536):
+    try:
+        with path.open() as stream:
+            return stream.read(limit)
+    except (OSError, UnicodeError):
+        return ""
+
+
+def record(path):
+    try:
+        value = json.loads(text(path, 1024 * 1024))
+        return value if isinstance(value, dict) else {}
+    except ValueError:
+        return {}
+
+
+def number(value, low=0, high=None):
+    if isinstance(value, bool):
+        return None
+    try:
+        result = float(value)
+        return min(high, max(low, result)) if high is not None and math.isfinite(result) else max(low, result) if math.isfinite(result) else None
+    except (ValueError, TypeError):
+        return None
+
+
+def label(value, limit=160):
+    return "".join(c for c in str(value or "") if c >= " " and c != "\x7f")[:limit]
+
+
+def probe(argv, timeout=3):
+    """Read commands have a deadline, including their subprocess descendants.
+
+    Only selected fields reach stdout. Never echo a command's stderr, account
+    record, network peer list or service response into a shell log.
+    """
+    try:
+        with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                              text=True, start_new_session=True,
+                              env={**os.environ, "LC_ALL": "C.UTF-8"}) as child:
+            try:
+                output, _ = child.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                os.killpg(child.pid, signal.SIGKILL)
+                child.communicate()
+                return None
+            return output.strip() if child.returncode == 0 else None
+    except (OSError, UnicodeError):
+        return None
+
+
+def probe_json(argv):
+    try:
+        data = json.loads(probe(argv) or "null")
+        return data if isinstance(data, dict) else {}
+    except ValueError:
+        return {}
+
+
+def clock():
+    now = datetime.now().astimezone()
+    uptime = text(PROC / "uptime").split()
+    return {"iso": now.isoformat(), "epoch_ms": round(now.timestamp() * 1000),
+            "time": now.strftime("%H:%M:%S"), "date": now.strftime("%Y-%m-%d"),
+            "weekday": now.isoweekday(), "zone": now.tzname(),
+            "uptime_seconds": number(uptime[0]) if uptime else None}
+
+
+def agent_usage():
+    # Omarchy owns both scheduling and credentials. Read only its display
+    # records, projecting the handful of fields this compact surface needs.
+    folder = paths()["state"].parent / "omarchy/agents/usage"
+    config = record(paths()["home"] / ".config/omarchy/shell.json")
+    if "omarchy.agents" in config.get("disabledPlugins", []):
+        return []
+    providers = {}
+    for entries in config.get("bar", {}).get("layout", {}).values():
+        if isinstance(entries, list):
+            for entry in entries:
+                if isinstance(entry, dict) and entry.get("id") == "omarchy.agents":
+                    providers = entry.get("providers", {})
+    result = []
+    for path in sorted(folder.glob("*.json"))[:64]:
+        data = record(path)
+        identity = data.get("id", "")
+        if not isinstance(identity, str) or not re.fullmatch(r"[a-zA-Z0-9._-]{1,64}", identity):
+            continue
+        if isinstance(providers, dict) and isinstance(providers.get(identity), dict) and providers[identity].get("enabled") is False:
+            continue
+        limits = []
+        raw_limits = data.get("limits", [])
+        for limit in raw_limits[:12] if isinstance(raw_limits, list) else []:
+            if not isinstance(limit, dict):
+                continue
+            fraction = number(limit.get("percent"), low=-1, high=1)
+            if fraction is None or fraction < 0:
+                continue
+            resets = label(limit.get("resetsAt"), 64)
+            try:
+                reset_at = datetime.fromisoformat(resets.replace("Z", "+00:00")).timestamp()
+            except (ValueError, OverflowError):
+                reset_at = None
+            if reset_at is not None and reset_at <= time.time():
+                fraction, resets = 0, ""
+            limits.append({"label": label(limit.get("label")), "title": label(limit.get("title")),
+                           "fraction": fraction, "resets_at": resets})
+        used = any((number(data.get(key)) or 0) > 0 for key in
+                   ("totalPrompts", "totalSessions", "todayPrompts", "todaySessions", "activeDays"))
+        if not limits and not used and not isinstance(data.get("balance"), dict):
+            continue
+        result.append({"id": identity, "name": label(data.get("name") or identity),
+                       "plan": label(data.get("tierLabel")), "limits": limits})
+    return result
+
+
+def links():
+    # No SSIDs, addresses or peer identities are needed in these toggles.
+    def wifi():
+        devices = probe(["nmcli", "-t", "-f", "TYPE", "device", "status"])
+        if devices and "wifi" in devices.splitlines():
+            state = probe(["nmcli", "radio", "wifi"])
+            return {"id": "wifi", "active": state == "enabled", "state": state,
+                    "panel": "omarchy.network", "action": "wifi"}
+    def bluetooth():
+        if any((SYS / "class/bluetooth").glob("hci*")):
+            state = probe(["omarchy-bluetooth-power", "is-on"])
+            return {"id": "bluetooth", "active": state is not None,
+                    "panel": "omarchy.bluetooth", "action": "bluetooth"}
+    def tailscale():
+        data = probe_json(["tailscale", "status", "--json"])
+        if data.get("BackendState"):
+            return {"id": "tailscale", "active": data["BackendState"] == "Running",
+                    "state": label(data["BackendState"]), "panel": "omarchy.tailscale", "action": "tailscale"}
+    def dnd():
+        state = probe(["omarchy-shell", "notifications", "isDnd"])
+        if state in ("on", "off"):
+            return {"id": "dnd", "active": state == "on", "panel": "notifications", "action": "dnd"}
+    def night():
+        data = probe_json(["omarchy-toggle-nightlight", "--status"])
+        if data.get("temperature") is not None:
+            return {"id": "night", "active": data.get("enabled") is True,
+                    "panel": "omarchy.monitor", "action": "night"}
+    def power():
+        state = probe(["powerprofilesctl", "get"])
+        if state in ("power-saver", "balanced", "performance"):
+            return {"id": "power", "active": state != "balanced", "state": state,
+                    "panel": "omarchy.power", "action": "power"}
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        return [value for value in pool.map(lambda fn: fn(), (wifi, bluetooth, tailscale, dnd, night, power)) if value]
+
+
+def volume():
+    sink = probe(["omarchy-audio-output-sink"])
+    if not sink:
+        return None
+    raw = probe(["pactl", "get-sink-volume", sink])
+    match = re.search(r"(\d+)%", raw or "")
+    if not match:
+        return None
+    return {"percent": min(100, int(match[1])),
+            "muted": probe(["pactl", "get-sink-mute", sink]) == "Mute: yes"}
+
+
+def levels():
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        audio = pool.submit(volume)
+        display = pool.submit(probe, ["omarchy-brightness-display"])
+        raw = display.result()
+        return {"volume": audio.result(), "brightness": number(raw, high=100)}
+
+
+def media():
+    data = probe_json(["omarchy-shell", "media", "status"])
+    if data.get("hasPlayer") is not True or data.get("playing") is not True:
+        return None
+    return {key: label(data.get(key)) for key in ("identity", "title", "artist", "album")} | {
+        "playing": True, "can_next": data.get("canGoNext") is True,
+        "can_previous": data.get("canGoPrevious") is True,
+        "can_toggle": data.get("canTogglePlaying") is True}
+
+
+class Telemetry:
+    def __init__(self):
+        self.previous = None
+        self.history = {key: [] for key in ("cpu", "memory", "temperature")}
+
+    def read(self):
+        cpu = text(PROC / "stat").splitlines()
+        ticks = [int(n) for n in cpu[0].split()[1:9]] if cpu and cpu[0].startswith("cpu ") else []
+        current = (sum(ticks), sum(ticks[3:5])) if len(ticks) >= 5 else None
+        used = None
+        if current and self.previous:
+            total, idle = (a - b for a, b in zip(current, self.previous))
+            if total > 0 and idle >= 0:
+                used = max(0, min(100, 100 * (total - idle) / total))
+        self.previous = current
+        memory = dict(re.findall(r"^(\w+):\s+(\d+) kB$", text(PROC / "meminfo"), re.M))
+        total = int(memory.get("MemTotal", 0)) * 1024
+        available = int(memory.get("MemAvailable", 0)) * 1024
+        memory_used = max(0, total - available) if "MemAvailable" in memory else None
+        temperatures = []
+        for device in sorted((SYS / "class/hwmon").glob("hwmon*")):
+            if text(device / "name").strip() not in ("coretemp", "k10temp", "zenpower", "cpu_thermal"):
+                continue
+            for sensor in device.glob("temp*_input"):
+                raw = number(text(sensor).strip(), low=-273)
+                if raw is not None and 0 < raw < 150000:
+                    temperatures.append(raw / 1000)
+        temperature = max(temperatures) if temperatures else None
+        samples = {"cpu": used, "memory": 100 * memory_used / total if total and memory_used is not None else None,
+                   "temperature": temperature}
+        for key, sample in samples.items():
+            self.history[key] = (self.history[key] + [sample])[-40:]
+        return {"cpu_percent": used, "memory_used": memory_used, "memory_total": total or None,
+                "temperature_c": temperature, "history": dict(self.history)}
+
+
+def comms():
+    # The notification service arrives in phase D. Its future file is not
+    # guessed or acted upon here; no second history source is created.
+    return {"available": False, "items": []}
+
+
+class Collector:
+    def __init__(self, sections=None):
+        self.sections = set(SECTIONS if sections is None else sections)
+        self.telemetry = Telemetry()
+        self.readers = {"link": links, "levels": levels, "signal": media, "agent": agent_usage, "comms": comms}
+        self.pool = ThreadPoolExecutor(max_workers=5)
+        self.pending = {}
+        self.due = {}
+        self.latest = {}
+
+    def read(self, wait=False):
+        now = time.monotonic()
+        for name, reader in self.readers.items():
+            if name not in self.sections:
+                continue
+            if name not in self.pending and now >= self.due.get(name, 0):
+                self.pending[name] = self.pool.submit(reader)
+            future = self.pending.get(name)
+            if future and (wait or future.done()):
+                try:
+                    self.latest[name] = future.result()
+                except (OSError, ValueError, TypeError, AttributeError):
+                    self.latest[name] = None
+                del self.pending[name]
+                self.due[name] = now + (2 if name in ("levels", "signal") else 5)
+        if "clock" in self.sections:
+            self.latest["clock"] = clock()
+        if "telemetry" in self.sections:
+            self.latest["telemetry"] = self.telemetry.read()
+        return {"schema_version": SCHEMA, "phase": "C", "sampled_at": datetime.now().astimezone().isoformat(),
+                "capabilities": {"status_collection": True, "agent_collection": False},
+                "pending": sorted(self.pending), **self.latest}
+
+    def close(self):
+        self.pool.shutdown(wait=True, cancel_futures=True)
+
+
+def collect(sections=None):
+    collector = Collector(sections)
+    try:
+        return collector.read(wait=True)
+    finally:
+        collector.close()
+
+
+def watch(sections=None):
+    def stop(signum, frame):
+        raise KeyboardInterrupt
+    original = signal.signal(signal.SIGTERM, stop)
+    collector = Collector(sections)
+    try:
+        while True:
+            start = time.monotonic()
+            print(json.dumps(collector.read(), ensure_ascii=False, separators=(",", ":")), flush=True)
+            time.sleep(max(.01, 1 - (time.monotonic() - start)))
+    except (BrokenPipeError, KeyboardInterrupt):
+        pass
+    finally:
+        collector.close()
+        signal.signal(signal.SIGTERM, original)

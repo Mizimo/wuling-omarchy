@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import json
+import os
 import re
 import tomllib
 from . import Error, ROOT, SCHEMA, paths
@@ -105,7 +106,13 @@ def resolve(name=None, overrides=None):
         origins[key] = "overrides.toml"
     def tagged(items, label):
         return {key: {"value": value, "origin": label} for key, value in items.items()}
-    return {"schema_version": SCHEMA, "theme": name, "preset": spec["preset"], "palette": spec["palette"] if known else "external",
+    language = values["language"]
+    if language == "auto":
+        native_language = paths()["home"] / ".config/omarchy/language"
+        language = native_language.read_text().strip() if native_language.is_file() else os.environ.get("LANG", "en")
+    language = language.replace("_", "-")
+    language = "zh-TW" if language.startswith(("zh-TW", "zh-HK", "zh-Hant")) else "zh-CN" if language.startswith("zh") else "en"
+    return {"schema_version": SCHEMA, "theme": name, "preset": spec["preset"], "palette": spec["palette"] if known else "external", "language": language,
             "settings": {key: {"value": value, "origin": origins[key]} for key, value in values.items()},
             "colors": tagged(colours, origin), "type": tagged(source["type"], "tokens"),
             "geometry": tagged({**source["geometry"], **source["presets"][spec["preset"]]}, f"preset:{spec['preset']}"),

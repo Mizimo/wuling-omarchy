@@ -1,0 +1,6 @@
+#!/bin/bash
+# omarchy:summary=Open or close the Field Terminal on the focused output
+# omarchy:args=<open|close|toggle>
+# omarchy:examples=wuling terminal toggle
+set -euo pipefail
+exec "$(dirname "$(readlink -f "$0")")/wuling" terminal "$@"

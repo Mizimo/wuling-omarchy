@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "wuling.terminal",
+  "name": "WULING Terminal",
+  "version": "0.1.0",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Terminal.qml"
+  },
+  "barWidget": {
+    "displayName": "Field Terminal",
+    "description": "System state and native controls",
+    "category": "System",
+    "allowMultiple": false
+  }
+}

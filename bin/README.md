@@ -12,8 +12,20 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   Booleans are `true`/`false`; sections accept a quoted space-separated list or
   a JSON array. Menu selection regenerates installed WULING themes and
   reapplies the active one while preserving the selected background. An empty `login_music` disables the optional file.
-- `wuling status --json`: component availability; phase B explicitly reports
-  `status_collection: false` instead of inventing live data.
+- `wuling status --json [--sections SECTION ...]`: an on-demand snapshot of
+  `clock`, `link`, `levels`, `signal`, `agent`, `telemetry` and `comms`. Unknown
+  hardware yields null or no tile. CPU percentage needs two samples; the first
+  is null. `--watch` produces one JSON line a second until terminated. The
+  caller must stop it when its surface closes. Slow native probes are bounded,
+  concurrent and never overlap themselves. No daemon or cache file is created.
+  Agent usage reads Omarchy's existing display records; WULING never starts a
+  collector or reads credentials. Media selection and controls remain native.
+- `wuling action NAME [VALUE]`: fixed native actions used by the Terminal.
+  Volume and brightness accept 0–100 or signed adjustments; they use the same
+  native OSD as keys. `panel NAME` opens the matching native panel. The three
+  dangerous foot actions open Omarchy's System menu until phase E replaces
+  that route; this command never performs logout, reboot or poweroff directly.
+- `wuling terminal open|close|toggle`: the Field Terminal on the focused output.
 - `wuling doctor [--json]`: versions, required commands, owned resources,
   fontconfig matches and shipped plugin validation. Exit zero means all checks
   passed. A font match proves availability, not correct graphical rendering.
@@ -25,6 +37,11 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 for scripts; `--fastfetch` also opts into the mark in the user's fastfetch
 configuration. Interactive installation asks about fastfetch separately. No
 system font preference, authentication code or built-in binding is changed.
+It installs and enables the bar and Terminal plugins, appends
+Terminal at the end of the native right section, and adds Super+Ctrl+G in an
+owned Lua block. An effective binding conflict is refused before changes.
+Updates preserve native widget placement and independent plugin disablement.
+Install/removal reload the owned binding and restart the shell officially.
 
 Release code lives under the user's XDG data directory, state and the private
 ownership manifest under the XDG state directory. Settings use the XDG config
@@ -38,6 +55,10 @@ If the process died inside Omarchy's external theme command before it could
 record its effects, the installer preserves the journal and asks for inspection
 and restoration of the recorded previous theme. Re-running installation then
 finishes recovery. Do not delete the journal or force an ownership conflict.
+Font backups live outside fontconfig's search tree: hidden directories within
+the font tree are still discoverable. A dedicated font mount on a different
+filesystem from WULING's state is refused safely before changing fonts, since
+rollback uses an atomic rename.
 
 Boot unlock is deliberately separate: after installing a theme, the user may
 run Omarchy's official `omarchy plymouth set-by-theme wuling` with its requested

@@ -27,6 +27,11 @@ class IsolatedHome(unittest.TestCase):
 
 
 class SettingsTests(IsolatedHome):
+    def test_local_setting_does_not_scan_unrelated_configuration(self):
+        with patch("wuling.lifecycle.config_snapshot", side_effect=AssertionError("unexpected native snapshot")):
+            lifecycle.set_config("language", "zh-Hant")
+        self.assertEqual(settings.load()["language"], "zh-Hant")
+
     def test_bad_tokens_fail_before_generation(self):
         source = settings.tokens()
         source["type"]["sizes"]["body"] = -1
@@ -72,6 +77,22 @@ class SettingsTests(IsolatedHome):
 
 
 class OwnershipTests(IsolatedHome):
+    def test_font_backup_is_outside_discovery_and_still_rolls_back(self):
+        fonts = self.home / ".local/share/fonts/wuling"
+        fonts.mkdir(parents=True)
+        (fonts / "face.ttf").write_bytes(b"old")
+        source = self.home / "new-fonts"
+        source.mkdir()
+        (source / "face.ttf").write_bytes(b"new")
+        with self.assertRaises(RuntimeError):
+            with owned.Transaction() as tx:
+                tx.replace(fonts, source=source, backup_root=paths()["state"] / "font-backups")
+                self.assertEqual(list(fonts.parent.rglob("*.ttf")), [fonts / "face.ttf"])
+                self.assertEqual((fonts / "face.ttf").read_bytes(), b"new")
+                raise RuntimeError("injected activation failure")
+        self.assertEqual((fonts / "face.ttf").read_bytes(), b"old")
+        self.assertFalse(paths()["state"].exists())
+
     def test_exception_rolls_back_all_resources(self):
         file = self.home / "shared/file"
         file.parent.mkdir()
@@ -165,7 +186,7 @@ class OwnershipTests(IsolatedHome):
         self.assertIn(["dconf", "write", "/org/gnome/desktop/interface/icon-theme", "'UserChanged'"], calls)
 
 
-class InstallTests(IsolatedHome):
+class InstallHome(IsolatedHome):
     def setUp(self):
         super().setUp()
         paths()["current"].mkdir(parents=True)
@@ -173,6 +194,9 @@ class InstallTests(IsolatedHome):
         (self.home / ".agents/skills").mkdir(parents=True)
         (self.home / ".config/Code/User").mkdir(parents=True)
         (self.home / ".config/Code/User/settings.json").write_text('{"workbench.colorTheme":"tokyo-night","editor.fontSize":14}\n')
+        native = self.home / ".config/omarchy/shell.json"
+        native.parent.mkdir(parents=True, exist_ok=True)
+        native.write_text('{"bar":{"layout":{"left":[],"center":[],"right":[]}},"plugins":[]}\n')
         self.command_patch = patch("wuling.lifecycle.command", side_effect=self.fake_command)
         self.command_patch.start()
         self.euid_patch = patch("wuling.lifecycle.os.geteuid", return_value=1000)
@@ -186,12 +210,16 @@ class InstallTests(IsolatedHome):
     def fake_command(self, argv, **kwargs):
         if argv == ["omarchy", "version"]:
             return "4.0.6-1"
+        if argv == ["hyprctl", "-j", "binds"]:
+            return "[]"
         if argv[:3] == ["omarchy", "theme", "set"]:
             (paths()["current"] / "theme.name").write_text(argv[3] + "\n")
             path = self.home / ".config/Code/User/settings.json"
             path.write_text(theme_effects.replace_member(path.read_text(), json.dumps(argv[3])))
         return ""
 
+
+class InstallTests(InstallHome):
     def test_repeated_install_remove_preserves_user_state(self):
         before = lifecycle.config_snapshot()
         lifecycle.install(True)

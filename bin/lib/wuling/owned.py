@@ -105,11 +105,15 @@ class Transaction:
             self.flush()
             p.mkdir()
 
-    def replace(self, path, source=None, *, data=None, link=None, delete=False, mode=0o644):
+    def replace(self, path, source=None, *, data=None, link=None, delete=False, mode=0o644, backup_root=None):
         path = Path(path)
         self.mkdir(path.parent)
         suffix = self.data["id"] + "-" + str(len(self.data["operations"]))
-        backup = path.parent / (".wuling-old-" + suffix)
+        backup_parent = Path(backup_root) if backup_root else path.parent
+        self.mkdir(backup_parent)
+        if path.parent.stat().st_dev != backup_parent.stat().st_dev:
+            raise Error("The font backup and installation must be on the same filesystem; no font files changed")
+        backup = backup_parent / (".wuling-old-" + suffix)
         staged = path.parent / (".wuling-new-" + suffix)
         op = {"path": str(path), "backup": str(backup), "staged": str(staged), "before": stamp(path), "after": None}
         self.data["operations"].append(op)
@@ -153,14 +157,14 @@ class Transaction:
             from .lifecycle import restore_external
             restore_external(self.data["theme_restore"])
         self.path.unlink(missing_ok=True)
-        if self.data.get("created_state"):
-            try:
-                self.root.rmdir()
-            except OSError:
-                pass
         for name in reversed(self.data["directories"]):
             try:
                 Path(name).rmdir()
+            except OSError:
+                pass
+        if self.data.get("created_state"):
+            try:
+                self.root.rmdir()
             except OSError:
                 pass
 

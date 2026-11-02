@@ -218,11 +218,10 @@
     "field": {
       "bar_height": 30,
       "clock_size": 21,
-      "terminal_clock_size": 40,
+      "terminal_clock_size": 54,
       "osd_width": 316,
       "osd_height": 46,
-      "panel_border": "line",
-      "focus_brackets": false
+      "panel_border": "line"
     },
     "hud": {
       "bar_height": 32,
@@ -230,8 +229,7 @@
       "terminal_clock_size": 56,
       "osd_width": 380,
       "osd_height": 56,
-      "panel_border": "accent-ink",
-      "focus_brackets": true
+      "panel_border": "accent-ink"
     }
   },
   "themes": {

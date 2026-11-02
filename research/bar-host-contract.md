@@ -81,3 +81,18 @@ for native-like drag parity; this is a planning estimate, not a measured task.
 Without drag, official `omarchy bar move ... --section/--before/--after` and
 `omarchy bar position ...` remain usable and were exercised. Hardening the
 non-drag host and its compatibility fixtures is roughly another **2–4 days**.
+
+## Phase C correction
+
+The native loader does **not** inject `barHidden`. The replacement owns this
+property, reads the native `bar-off` toggle flag, and implements the existing
+`omarchy.bar syncHidden` IPC nudge used by the official toggle command. Native
+overlay facades read the replacement's property. This corrects the opening
+A-2 description; the production host watches the toggle directory and uses
+one coalesced probe, with no periodic polling.
+
+The phase C implementation and its completed VM matrix are recorded in
+[phase-c.md](phase-c.md). The production host supplies section scrolling,
+shortcut anchor reveal, delayed tooltips, hidden-state dismissal, stable
+singleton placement and native keyboard-panel handoff. Physical-device and
+resource-budget acceptance remain separate from the VM contract checks.

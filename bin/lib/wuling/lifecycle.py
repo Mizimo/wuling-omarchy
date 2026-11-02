@@ -7,7 +7,7 @@ import re
 import shutil
 import tempfile
 from . import Error, ROOT, command, paths, read_json
-from . import jsonc, owned, settings, theme, theme_effects
+from . import integration, jsonc, owned, settings, theme, theme_effects
 
 OWNER = "org.wuling.desktop"
 PAYLOAD = ("bin", "tokens", "theme", "fonts", "skills", "kit", "plugins", "sounds")
@@ -135,6 +135,9 @@ def plan_install(previous=None):
     resources = [(release, "release")]
     resources.extend((p["themes"] / name, "theme:" + name) for name in settings.tokens()["themes"])
     resources.extend(((p["home"] / ".local/share/fonts/wuling", "fonts"), (p["home"] / ".local/bin/wuling", "command")))
+    for source in integration.installed_sources():
+        identity = json.loads(source.read_text())["id"]
+        resources.append((p["home"] / ".config/omarchy/plugins" / identity, "plugin:" + source.parent.name))
     for directory in SKILL_DIRS:
         parent = p["home"] / directory
         if parent.is_dir():
@@ -178,6 +181,9 @@ def install(yes=False, fastfetch=None):
             except EOFError:
                 fastfetch = False
         resources = plan_install(previous)
+        prepared = integration.prepare(previous, command) if integration.installed_sources() else None
+        for source in integration.installed_sources():
+            command(["omarchy", "plugin", "validate", str(source.parent)])
         overrides = settings.load()
         original = (previous or {}).get("original_theme") or theme.active_name()
         if not original:
@@ -193,7 +199,7 @@ def install(yes=False, fastfetch=None):
             fastfetch_edit = {"path": str(fastfetch_path), "edit": edit, "created": prior["created"] if prior else not fastfetch_path.exists()}
         consent("WULING installation plan\nRequired: Omarchy 4.0.6 or 4.5.0-rc2; installed: " + version["installed"]
                 + "\nFiles/directories:\n" + "\n".join("  " + str(path) for path, _ in resources)
-                + "\nBuilt-ins changed: none. Keys added: none (theme phase)."
+                + ("\nBar: WULING (native widgets retained). New key: Super+Ctrl+G → Field Terminal.\nEnable: wuling.bar, wuling.terminal; official shell restart after install." if prepared else "\nBuilt-ins changed: none. Keys added: none.")
                 + "\nDefault theme: wuling; updates keep the current theme. User overrides remain untouched."
                 + ("\nFastfetch: replace only the logo member in " + str(fastfetch_path) if fastfetch else "\nFastfetch: unchanged (opt in with --fastfetch).")
                 + "\nBoot unlock: optional official operation, not performed by this installer.", yes)
@@ -206,6 +212,8 @@ def install(yes=False, fastfetch=None):
         record["desktop"] = (previous or {}).get("desktop", desktop_before)
         if fastfetch_edit:
             record["fastfetch"] = fastfetch_edit
+        if prepared:
+            record["integration"] = prepared["record"]
         with tempfile.TemporaryDirectory(prefix="wuling-stage-") as directory:
             staging = Path(directory)
             prepare_payload(staging / "release")
@@ -222,18 +230,29 @@ def install(yes=False, fastfetch=None):
                         elif kind.startswith("theme:"):
                             tx.replace(path, source=staging / kind.split(":", 1)[1])
                         elif kind == "fonts":
-                            tx.replace(path, source=ROOT / "fonts")
+                            # Fontconfig scans hidden directories too. A sibling
+                            # rollback copy becomes a second discoverable font;
+                            # removing it after shell startup invalidates Qt's
+                            # live font choices. Keep it outside the font tree.
+                            if owned.stamp(path) != owned.stamp(ROOT / "fonts"):
+                                tx.replace(path, source=ROOT / "fonts", backup_root=paths()["state"] / "font-backups")
                         elif kind == "command":
                             tx.replace(path, link=paths()["data"] / "current/bin/wuling")
                         elif kind == "skill":
                             tx.replace(path, link=paths()["data"] / "current/skills/wuling")
+                        elif kind.startswith("plugin:"):
+                            tx.replace(path, source=ROOT / "plugins" / kind.split(":", 1)[1])
                         record["resources"][str(path)] = {"kind": kind, "stamp": owned.stamp(path)}
                     if fastfetch_edit:
                         tx.replace(fastfetch_path, data=new_text)
+                    if prepared:
+                        integration.write(tx, prepared)
                     selected = active_before if previous else "wuling"
                     apply_in_transaction(tx, selected, preserve_background=bool(previous))
                     after = config_snapshot()
                     for key, value in effects(before, after).items():
+                        if prepared and integration.is_owned_config(key):
+                            continue
                         if key == "dconf/user":
                             continue
                         if key == "fastfetch/config.jsonc" and fastfetch_edit:
@@ -245,11 +264,17 @@ def install(yes=False, fastfetch=None):
                     record["directories"] = list(dict.fromkeys(record["directories"] + tx.data["directories"]))
                     save_manifest(tx, record)
                     command(["fc-cache", "-f", str(Path.home() / ".local/share/fonts/wuling")])
+                    if prepared:
+                        command(["hyprctl", "reload"])
+                        command(["omarchy", "restart", "shell"])
             except Exception:
                 # File changes are rolled back by Transaction. Reapply the prior
                 # native theme after rollback so the running shell matches disk.
                 if active_before and theme.active_name() != active_before:
                     apply_theme(active_before)
+                if prepared:
+                    command(["hyprctl", "reload"])
+                    command(["omarchy", "restart", "shell"])
                 raise
         print("WULING installed. Use wuling doctor to inspect the installation.")
 
@@ -266,7 +291,8 @@ def uninstall(yes=False):
             (removable if same_resource(Path(name), entry["stamp"]) else preserved).append(name)
         consent("WULING removal plan\nRemove unchanged owned resources:\n" + "\n".join("  " + name for name in removable)
                 + "\nPreserve user overrides and edited resources:\n" + "\n".join("  " + name for name in preserved)
-                + "\nRestore previous theme if a WULING theme is active. No keys or built-ins changed in this phase.", yes)
+                + "\nRestore previous theme and unchanged owned native entries; retain edited configuration."
+                + ("\nRestart the shell officially to release plugin IPC and reload the remaining keybindings." if record.get("integration") else ""), yes)
         with owned.Transaction() as tx:
             config_current = config_snapshot()
             if theme.active_name() in settings.tokens()["themes"]:
@@ -276,6 +302,8 @@ def uninstall(yes=False):
             # Official theme restoration handles native output first. Restore
             # remaining unchanged effects, never a user's independently edited file.
             kept_effects = restore_effects(tx, record.get("theme_effects", {}), config_current)
+            if record.get("integration"):
+                preserved.extend(integration.remove(tx, record["integration"]))
             if record.get("fastfetch"):
                 slot = record["fastfetch"]
                 path = Path(slot["path"])
@@ -303,6 +331,9 @@ def uninstall(yes=False):
             except OSError:
                 pass
         command(["fc-cache", "-f", str(Path.home() / ".local/share/fonts")])
+        if record.get("integration"):
+            command(["hyprctl", "reload"])
+            command(["omarchy", "restart", "shell"])
         print("WULING removed. User-owned configuration is preserved.")
         print("Native outputs outside the rollback list remain under Omarchy: theme-set hooks, editor extensions, agent palettes, Obsidian vault themes, Fcitx theme assets and browser policy. The previous theme was reapplied where applicable; these paths were not snapshotted or restored by WULING.")
         if preserved or kept_effects:
@@ -324,7 +355,7 @@ def set_config(key, raw):
                 entry = record["resources"].get(str(target))
                 if not entry or not same_resource(target, entry["stamp"]):
                     raise Error(f"Installed theme was edited or removed: {target}; no settings changed")
-        before = config_snapshot()
+        before = config_snapshot() if key == "menu.selected" and record is not None else {}
         with tempfile.TemporaryDirectory(prefix="wuling-config-") as directory, owned.Transaction() as tx:
             tx.replace(path, data=text, mode=0o600)
             if key == "menu.selected" and record is not None:
@@ -343,6 +374,8 @@ def set_config(key, raw):
                     apply_in_transaction(tx, theme.active_name(), preserve_background=True)
                 for name, effect in effects(before, config_snapshot()).items():
                     if name.startswith("wuling/") or name in ("wuling", "dconf/user"):
+                        continue
+                    if record.get("integration") and integration.is_owned_config(name):
                         continue
                     prior = record["theme_effects"].get(name)
                     if prior and prior["after"] == effect["before"]:

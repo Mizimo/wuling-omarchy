@@ -6,7 +6,7 @@ import json
 import re
 import shutil
 from . import Error, ROOT, SCHEMA, command, paths
-from . import lifecycle, settings, theme
+from . import actions, lifecycle, settings, status, theme
 
 
 def emit(value):
@@ -25,13 +25,6 @@ def commands():
             raise Error(f"Missing command metadata: {path.name}")
         rows.append({"command": "wuling " + path.name.removeprefix("wuling-").replace("-", " "), **meta})
     return {"schema_version": SCHEMA, "commands": rows}
-
-
-def status():
-    record = lifecycle.manifest()
-    return {"schema_version": SCHEMA, "phase": "B", "installed": record is not None,
-            "theme": theme.active_name(), "components": {}, "telemetry": None, "agents": [],
-            "capabilities": {"theme": True, "status_collection": False}}
 
 
 def doctor():
@@ -92,7 +85,15 @@ def main(argv=None):
     cfg.add_argument("key", nargs="?")
     cfg.add_argument("value", nargs="?")
     cfg.add_argument("--json", action="store_true")
-    sub.add_parser("status", help="Read component availability").add_argument("--json", action="store_true")
+    state = sub.add_parser("status", help="Read live Terminal state on demand")
+    state.add_argument("--json", action="store_true")
+    state.add_argument("--watch", action="store_true", help="JSON lines once a second; stop when the surface closes")
+    state.add_argument("--sections", nargs="+", choices=status.SECTIONS)
+    action = sub.add_parser("action", help="Run a named native Terminal action")
+    action.add_argument("name", choices=actions.NAMES)
+    action.add_argument("value", nargs="?")
+    term = sub.add_parser("terminal", help="Open or close the Field Terminal")
+    term.add_argument("action", choices=["open", "close", "toggle"])
     sub.add_parser("doctor", help="Check versions, files, fonts and plugins").add_argument("--json", action="store_true")
     sub.add_parser("uninstall", help="Plan and remove unchanged owned resources").add_argument("--yes", action="store_true")
     args = parser.parse_args(argv)
@@ -117,7 +118,14 @@ def main(argv=None):
                     raise Error("Usage: wuling config set <key> <value>")
                 emit(lifecycle.set_config(args.key, args.value))
         elif args.verb == "status":
-            emit(status())
+            if args.watch:
+                status.watch(args.sections)
+            else:
+                emit(status.collect(args.sections))
+        elif args.verb == "action":
+            emit(actions.run(args.name, args.value))
+        elif args.verb == "terminal":
+            emit(actions.terminal(args.action))
         elif args.verb == "doctor":
             result = doctor()
             emit(result)

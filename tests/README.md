@@ -10,7 +10,9 @@ VM acceptance uses a clean supported Omarchy checkpoint and the actual
 and raw results outside git. For phase B:
 
 1. Install, run doctor, install again, remove twice using the checkout command.
-   The configuration inventory must return exactly to its baseline.
+   Compare the configuration inventory and logical dconf values with the
+   baseline; native dconf binary serialization is not restored. The audited
+   theme-effect boundary is described in `research/theme-effect-scope.md`.
 2. Repeat with a pre-existing conflicting name, an edited installed theme,
    user overrides and the optional fastfetch mark. Keep user changes intact.
 3. Apply all four themes. Use real keyboard input to inspect menus and panels;
@@ -27,3 +29,26 @@ and raw results outside git. For phase B:
 
 Run this on both 4.0.6 and 4.5.0-rc2. Physical hardware and the optional next
 boot's Plymouth screen require the separate verifier/owner workflow in BRIEF.
+
+For phase C also exercise the registered-widget host contract with actual
+mouse/keyboard input. Cover left/right/middle clicks, wheel, tooltips, all native
+panel shortcuts, Escape, outside clicks, Tab in both directions and handoff to
+and from Terminal. Test four edges, both resolutions, fractional scale, two
+outputs and hotplug. Deliberately overflow sections and repeat a single-instance
+id. Official bar move/set/position/transparency and shell-hidden transitions
+must preserve native behavior. Test each plugin disabled, Terminal in the
+native bar and a deliberately broken replacement bar's native fallback.
+
+Use synthetic agent usage and media fixtures. Check native DND/volume state
+after real Terminal input and stop the status process on close.
+Run fresh/repeated installation, removal, binding-conflict and interrupted
+activation controls. Font lookup alone is insufficient: inspect icons and
+clock faces after a font update, after shell restart and after theme changes.
+Keep captures and raw projected state outside git. Hardware budget results
+are supplied by the verifier, not inferred from a virtual GPU.
+
+`tests/vm-theme-effects.py --disposable-vm` automates the concurrent native-theme
+barrier, repeated installation/removal, permission failure and SIGKILL recovery.
+It requires a clean, logged-in disposable VM without WULING installed. It stores
+raw inventories in that VM's private cache. With phase C present it also covers
+the installed plugin resources, shared config and binding reloads.

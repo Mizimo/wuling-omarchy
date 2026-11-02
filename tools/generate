@@ -51,6 +51,19 @@ def generate(out):
     style = out / "kit/generated"
     style.mkdir(parents=True, exist_ok=True)
     (style / "tokens.json").write_text(json.dumps(source, ensure_ascii=False, indent=2) + "\n")
+    icons = json.loads((ROOT / "tokens/icons.json").read_text())["icons"]
+    (style / "Tokens.js").write_text(".pragma library\n// Generated from tokens/.\nvar data = " + json.dumps(source, ensure_ascii=False) + ";\nvar icons = " + json.dumps(icons, ensure_ascii=False) + ";\n")
+    kit_files = [path for path in (ROOT / "kit").iterdir() if path.is_file() and (path.suffix == ".qml" or path.name == "qmldir")]
+    for manifest in sorted((ROOT / "plugins").glob("*/manifest.json")):
+        target = out / "plugins" / manifest.parent.name / "kit"
+        if target.exists():
+            shutil.rmtree(target)
+        target.mkdir(parents=True)
+        for path in kit_files:
+            shutil.copyfile(path, target / path.name)
+        shutil.copytree(style, target / "generated")
+        hashes = {str(path.relative_to(target)): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(target.rglob("*")) if path.is_file()}
+        (target / "manifest.json").write_text(json.dumps({"schema_version": 1, "files": hashes}, indent=2) + "\n")
     shutil.copyfile(ROOT / "design/assets/fastfetch-logo.png", out / "theme/fastfetch-logo.png")
     return diagnostics
 
@@ -89,6 +102,10 @@ def main():
                     actual = ROOT / path.relative_to(out)
                     if not actual.is_file() or actual.read_bytes() != path.read_bytes():
                         raise Error(f"Generated file differs: {path.relative_to(out)}")
+            for generated in (out / "plugins").glob("*/kit"):
+                actual = ROOT / generated.relative_to(out)
+                if {str(p.relative_to(actual)) for p in actual.rglob("*") if p.is_file()} != {str(p.relative_to(generated)) for p in generated.rglob("*") if p.is_file()}:
+                    raise Error(f"Extra generated kit files: {actual.relative_to(ROOT)}")
         manifest = ROOT / "tokens/images.json"
         if not manifest.exists() or json.loads(manifest.read_text()) != image_manifest():
             raise Error("Image manifest differs; inspect changed images before refreshing it")
