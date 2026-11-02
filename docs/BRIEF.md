@@ -109,7 +109,7 @@ are exactly as with the plugin off. On kujira `wuling session preview exit` only
 
 Arrival (DESIGN §8.9), `plugins/sound`, login music (off by default), localisation complete. **Acceptance:** Arrival once per session, never on
 a shell restart, theme switch, update, unlock or resume, nor on a first install or a first enable on a running desktop; skip by key and click, a held key ignored; a lock request during it; several outputs;
-a cold shader cache, frame by frame from outside the VM, with no frame of wallpaper or bar before the ink (the earlier experiment had a much smaller overlay); gone within 3.5 s; afterwards its windows, timers and images are released and a second preview adds no more than 2 MB. What one Arrival leaves behind (fonts and caches that later surfaces reuse) is reported, and counts toward the idle budget. Real logins in a VM; on kujira `wuling session preview arrival` only. Cue overlap bounded, tests on a private null sink with no physical sound. A 24-hour soak on kujira with PSS, CPU and handles flat. An Omarchy update survives, overrides intact. Partial
+a cold shader cache, frame by frame from outside the VM, with no frame of wallpaper or bar before the ink (the earlier experiment had a much smaller overlay); gone within 3.5 s; afterwards its windows and timers are gone, and repeated previews don't keep growing. Real logins in a VM; on kujira `wuling session preview arrival` only. Cue overlap bounded, tests on a private null sink with no physical sound. A 24-hour soak on kujira with no steady growth in PSS, CPU or handles, logging the notification writer's PID and exits. An Omarchy update survives, overrides intact. Partial
 enable/disable of every part. **Final report to the owner.**
 
 ## Verifying

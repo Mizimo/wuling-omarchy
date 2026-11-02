@@ -2,6 +2,12 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-02 — memory only has to be reasonable
+
+Told that Arrival leaves about 12 MiB behind and that the design lead had relaxed a 2 MB limit, the owner: "這個記憶體佔用不需要這麼嚴格，合理範圍就可以了".
+
+**No tight memory limits.** What matters is no steady growth and CPU near zero at idle. A few MiB is neither a finding nor a reason to change an architecture.
+
 ## 2026-11-02 — kujira is not rebooted
 
 Asked when to reboot kujira to see the boot screen, the owner chose "kujira 不用重開". Its disk is encrypted, so a reboot needs someone at the machine.

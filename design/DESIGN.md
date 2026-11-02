@@ -305,7 +305,7 @@ installer asks.
 ### 8.9 Session motion — `wuling.session`
 
 The two animations the earlier WULING was liked for. `design/mockups/arrival-*.png` and `closing-*.png` show the look. Both are full-screen
-overlays built only while they play. They leave nothing behind (within 2 MB of a run without them, measured), and neither ever delays or
+overlays built only while they play. They leave nothing running behind them, and neither ever delays or
 blocks what the user asked for. Switching the plugin off leaves Omarchy's own start and exit. No 3D: the earlier 3D login world belonged to a
 greeter and a lock screen, which stay Omarchy's here.
 
@@ -391,5 +391,5 @@ Both new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to overwrit
 ## 11. Budget
 
 Baseline on kujira (i5-6300U, 7.5 GiB, 1366×768): `omarchy-shell` 304 MiB PSS, 0.04 % of a core at idle. With every
-WULING part on: **at most +40 MiB idle, under 0.2 % CPU, no growth across open/close cycles.** Measure every phase the
-same way as `review/phase0/`.
+WULING part on, **memory only has to stay in a reasonable range** (DECISIONS, 2026-11-02): no steady growth over time or across open and close cycles, and CPU
+near zero at idle. A few MiB either way is not a finding and not worth a design change; around +40 MiB idle is where it deserves a look. Measure at milestones, the same way as `review/phase0/`.
