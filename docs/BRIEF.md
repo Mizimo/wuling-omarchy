@@ -101,7 +101,9 @@ duplicate handlers. Both versions.
 no agent configured. Power: every route, holds and cancels **without completing reboot, shutdown or logout on kujira**; locked and unlocked;
 removal restores Omarchy's System. Exit: the action runs exactly once, at the designed moment, and still runs when the overlay is made to fail;
 an action that doesn't end the session gives the desktop back after 10 s. Real logout, reboot and shutdown in a VM, seen through to the next screen:
-the desktop must not reappear after the ink, and whatever shows in between is reported. On kujira `wuling session preview exit` only.
+the desktop must not reappear after the ink, and whatever shows in between is reported. With `wuling.osd` on, Omarchy's exit OSD never shows on the ink, and the
+OSD works again after the give-back or when the `wuling.session` plugin is gone mid-sequence; a preview leaves the OSD alone; Omarchy's action and its environment
+are exactly as with the plugin off. On kujira `wuling session preview exit` only.
 
 ### F — Arrival, sound and soak
 

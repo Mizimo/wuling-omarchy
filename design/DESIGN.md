@@ -190,7 +190,7 @@ under Omarchy's own bar too. Key: **Super+Ctrl+G**. 372 px wide, full height min
 | # | Section | Shows | Source | Input |
 |---|---|---|---|---|
 | 02 | Terminal | Clock with seconds, date, zone, uptime | System | — |
-| 03 | Link | Tiles: Wi-Fi, Bluetooth, Tailscale, DND, Night, Power profile. A tile with no hardware or service hides | Quickshell modules, Omarchy commands | Left: toggle. Right: Omarchy's matching panel |
+| 03 | Link | Tiles: Wi-Fi, Bluetooth, Tailscale, DND, Night, Power profile. A tile with no hardware or service hides | Quickshell modules, Omarchy commands | Left: toggle. Right: Omarchy's matching panel; where Omarchy has none mounted (Tailscale's exists only as its bar widget) the panel stays open and one line says so |
 | 04 | Levels | Volume, brightness, segmented | PipeWire, `omarchy-brightness-display` | Drag, wheel. Same OSD as the keys |
 | — | Signal | Now playing. Hidden when nothing plays | MPRIS | Play/pause, previous, next |
 | 05 | Agent | Per agent: plan, session and week meters, time to reset. Row: open the default agent. Hidden when no agent has usage | `~/.local/state/omarchy/agents/usage/*.json` | Row: `omarchy-agent --pick`. Agent: Omarchy's agents panel |
@@ -347,8 +347,12 @@ in §8.5. Times run from the end of the hold.
   other Omarchy themes the mark is the plugin's own copy in the palette's text colour.
 - **The action does not depend on the animation.** Its timer is separate. If the overlay fails to load, or `session.exit` is off, the action runs
   when the hold completes. Omarchy gives about 2 s to close windows before the session really ends, which happens under the ink.
-- **Nothing gets stuck.** The overlay sits above everything, including the OSD Omarchy raises for these actions, and ignores input from the stamp on. If
-  the session is still alive 10 s after the action, something refused: the overlay fades out and a notification says so.
+- **Nothing gets stuck.** The overlay sits above whatever is on screen and ignores input from the stamp on. If the session is still alive 10 s after the
+  action, something refused: the overlay fades out, the OSD works again and a notification says so.
+- **Nothing lands on the ink.** A surface that maps later draws over it, because Hyprland keeps no other order within a layer. So `wuling.osd` shows nothing
+  while the sequence runs, which keeps the OSD Omarchy raises for these actions off the ink; nothing is wrapped around Omarchy's action to do it, and
+  the hold lapses by itself if `wuling.session` is gone. With Omarchy's own OSD in use (`wuling.osd` off) that card does sit on the ink, and so does a toast
+  arriving in those seconds, Omarchy's "failed" notification included. We leave both.
 - Searching "reboot" in Omarchy's menu, or running Omarchy's command directly, takes Omarchy's own path with no animation.
 - **Reduced motion:** the stamp, then a 120 ms fade to the ground, then the action.
 
