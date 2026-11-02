@@ -23,8 +23,7 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 - `wuling action NAME [VALUE]`: fixed native actions used by the Terminal.
   Volume and brightness accept 0–100 or signed adjustments; they use the same
   OSD route as keys. `panel NAME` opens the matching native panel. The three
-  dangerous foot actions open Omarchy's System menu until phase E replaces
-  that route; this command never performs logout, reboot or poweroff directly.
+  dangerous foot actions open the System route (WULING power cards when enabled); this command never performs logout, reboot or poweroff directly.
 - `wuling terminal open|close|toggle`: the Field Terminal on the focused output.
 - `wuling notifications compatibility|state|boot|terminals|open-history|fallback`:
   internal notification bridge and diagnostics. `compatibility` checks the
@@ -32,6 +31,12 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   writes private state; its acknowledgements never contain message text.
   `state` contains private messages: do not include its output in public reports.
 - `wuling osd device output|input`: on-demand audio device label for the OSD.
+- `wuling dispatch open|close|toggle`: own launcher on the focused output.
+  `snapshot` and `activate MODE VALUE` are its internal data/action bridge.
+- `wuling power open|close|toggle`: native System entries as held power cards.
+  `snapshot` reads native entries and guards on demand.
+- `wuling session preview exit`: safe animation preview, no system action.
+  `session exit JSON` is the confirmed-hold worker, not a general shell API.
 - `wuling doctor [--json]`: versions, required commands, owned resources,
   fontconfig matches and shipped plugin validation. Exit zero means all checks
   passed. A font match proves availability, not correct graphical rendering.
@@ -43,14 +48,15 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 for scripts; `--fastfetch` also opts into the mark in the user's fastfetch
 configuration. Interactive installation asks about fastfetch separately. No
 system font preference, authentication code or built-in binding is changed.
-It installs the bar, Terminal, notifications and OSD plugins, enables compatible
-new components, appends
-Terminal at the end of the native right section, and adds Super+Ctrl+G in an
+It installs the bar, Terminal, notifications, OSD, Dispatch, power and session
+plugins, enables compatible new components, appends
+Terminal at the end of the native right section, and adds Super+Ctrl+G and Super+D in an
 owned Lua block. An effective binding conflict is refused before changes.
 Updates preserve native widget placement and independent plugin disablement.
 Notifications and OSD use Omarchy's clone restoration contract. Notification
 module checks fail closed to the native provider and appear in `doctor`.
-Removal deletes WULING's private notification history.
+The owned System menu extension directs power routes to WULING cards. Removal
+restores it and deletes WULING's private notification and Dispatch histories.
 Install/removal reload the owned binding and restart the shell officially.
 
 Release code lives under the user's XDG data directory, state and the private
@@ -73,3 +79,9 @@ rollback uses an atomic rename.
 Boot unlock is deliberately separate: after installing a theme, the user may
 run Omarchy's official `omarchy plymouth set-by-theme wuling` with its requested
 privileges. The WULING installer does not run that operation.
+
+Panel commands reject native `unknown` responses with nonzero status and
+`error.code = "panel_unavailable"`. The native hide/toggle methods return no
+value, so their targets are checked through the public registry and live IPC
+before invocation. This includes Terminal, Dispatch and Power; exit status
+alone is never treated as delivery.

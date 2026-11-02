@@ -12,6 +12,27 @@ from wuling import actions, status
 
 
 class StatusTests(IsolatedHome):
+    def test_night_is_available_without_a_running_service(self):
+        with patch.object(status, "probe", return_value=None), patch.object(status, "probe_json", return_value={"temperature": None}), patch.object(status.shutil, "which", return_value="installed"):
+            night = next(row for row in status.links() if row["id"] == "night")
+            self.assertFalse(night["active"])
+        with patch.object(status, "probe", return_value=None), patch.object(status, "probe_json", return_value={}), patch.object(status.shutil, "which", return_value=None):
+            self.assertFalse(any(row["id"] == "night" for row in status.links()))
+
+    def test_default_agent_name_does_not_require_usage(self):
+        config = paths()["home"] / ".config/omarchy/defaults/agent"
+        config.parent.mkdir(parents=True)
+        self.assertEqual(status.default_agent_name(), "")
+        config.write_text("example\n")
+        self.assertEqual(status.default_agent_name(), "example")
+        folder = paths()["state"].parent / "omarchy/agents/usage"
+        folder.mkdir(parents=True)
+        (folder / "example.json").write_text('{"id":"example","name":"Example Agent"}')
+        self.assertEqual(status.agent_usage(), [])
+        self.assertEqual(status.default_agent_name(), "Example Agent")
+        config.write_text("../not-an-agent")
+        self.assertEqual(status.default_agent_name(), "")
+
     def test_agent_projection_omits_accounts_and_expired_limits(self):
         folder = paths()["state"].parent / "omarchy/agents/usage"
         folder.mkdir(parents=True)

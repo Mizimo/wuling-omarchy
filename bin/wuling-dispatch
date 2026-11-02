@@ -1,0 +1,5 @@
+#!/bin/bash
+# omarchy:summary=Open Dispatch, inspect its data, or activate a selected result
+# omarchy:args=<open|close|toggle|snapshot|activate> [apps|clip|run|calc|ask] [value]
+# omarchy:examples=wuling dispatch toggle | wuling dispatch snapshot
+exec "$(dirname "$(readlink -f "$0")")/wuling" dispatch "$@"

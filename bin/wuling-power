@@ -1,0 +1,5 @@
+#!/bin/bash
+# omarchy:summary=Open or close WULING's native System action cards
+# omarchy:args=<open|close|toggle|snapshot>
+# omarchy:examples=wuling power toggle | wuling power snapshot
+exec "$(dirname "$(readlink -f "$0")")/wuling" power "$@"

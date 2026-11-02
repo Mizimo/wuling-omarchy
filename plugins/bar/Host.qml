@@ -281,7 +281,7 @@ Item {
             if ("moduleName" in widget) widget.moduleName = widgetId;
             if ("settings" in widget) {
                 const values = typeof entry === "string" ? {} : JSON.parse(JSON.stringify(entry));
-                if (widgetId === "omarchy.clock" && !values.format) values.format = "HH:mm";
+                if (widgetId === "omarchy.clock" && (!values.format || values.format === "dddd HH:mm")) values.format = "HH:mm";
                 widget.settings = values;
             }
         }
@@ -302,7 +302,7 @@ Item {
             }
             Column {
                 visible: slot.showDate; anchors.verticalCenter: parent.verticalCenter
-                Kit.Label { text: slot.showDate ? Qt.formatDateTime(slot.widget.displayDate, "ddd") : ""; font.pixelSize: Kit.Runtime.px(8); color: customLabel.color }
+                Kit.Label { text: { if(!slot.showDate)return "";const day=(slot.widget.displayDate.getDay()+6)%7;return ["MON","TUE","WED","THU","FRI","SAT","SUN"][day]+(Kit.Runtime.language==="en"?"":" "+Kit.Runtime.tr("weekday-"+(day+1))); } font.pixelSize: Kit.Runtime.px(8); color: customLabel.color }
                 Kit.Label { text: slot.showDate ? Qt.formatDateTime(slot.widget.displayDate, "MM.dd") : ""; font.pixelSize: Kit.Runtime.px(10); color: customLabel.color }
             }
         }

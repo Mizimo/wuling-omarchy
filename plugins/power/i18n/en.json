@@ -1,0 +1,14 @@
+{
+  "screensaver": "Screensaver",
+  "lock": "Lock",
+  "suspend": "Suspend",
+  "hibernate": "Hibernate",
+  "logout": "Logout",
+  "reboot": "Reboot",
+  "shutdown": "Shutdown",
+  "select": "SELECT",
+  "hold": "HOLD",
+  "abort": "ABORT",
+  "native-entries": "SAME ENTRIES AS OMARCHY · SYSTEM",
+  "unavailable": "System actions are unavailable"
+}

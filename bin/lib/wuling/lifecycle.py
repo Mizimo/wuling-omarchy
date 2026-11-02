@@ -199,7 +199,7 @@ def install(yes=False, fastfetch=None):
             fastfetch_edit = {"path": str(fastfetch_path), "edit": edit, "created": prior["created"] if prior else not fastfetch_path.exists()}
         consent("WULING installation plan\nRequired: Omarchy 4.0.6 or 4.5.0-rc2; installed: " + version["installed"]
                 + "\nFiles/directories:\n" + "\n".join("  " + str(path) for path, _ in resources)
-                + ("\nBar: WULING (native widgets retained). New key: Super+Ctrl+G → Field Terminal.\nNew components: bar, Terminal, OSD, and notifications when its native-module check passes. Updates preserve independent disablement; official shell restart after install." if prepared else "\nBuilt-ins changed: none. Keys added: none.")
+                + ("\nBar: WULING (native widgets retained). New keys: Super+Ctrl+G → Field Terminal, Super+D → Dispatch.\nComponents: bar, Terminal, OSD, notifications, Dispatch, power cards and exit motion. Notifications require compatible native modules. The System menu extension opens power cards; no native key changes. Updates preserve independent disablement; official shell restart after install." if prepared else "\nBuilt-ins changed: none. Keys added: none.")
                 + ("\nUnavailable replacements: " + json.dumps(prepared["record"]["unavailable"]) if prepared and prepared["record"].get("unavailable") else "")
                 + "\nDefault theme: wuling; updates keep the current theme. User overrides remain untouched."
                 + ("\nFastfetch: replace only the logo member in " + str(fastfetch_path) if fastfetch else "\nFastfetch: unchanged (opt in with --fastfetch).")
@@ -285,7 +285,8 @@ def uninstall(yes=False):
         owned.recover()
         record = manifest()
         if record is None:
-            from . import notifications
+            from . import dispatch, notifications
+            dispatch.cleanup()
             notifications.cleanup_state()
             print("WULING is not installed; nothing changed.")
             return
@@ -337,7 +338,8 @@ def uninstall(yes=False):
         if record.get("integration"):
             command(["hyprctl", "reload"])
             command(["omarchy", "restart", "shell"])
-        from . import notifications
+        from . import dispatch, notifications
+        dispatch.cleanup()
         notifications.cleanup_state(installed=True)
         print("WULING removed. User-owned configuration is preserved.")
         print("Native outputs outside the rollback list remain under Omarchy: theme-set hooks, editor extensions, agent palettes, Obsidian vault themes, Fcitx theme assets and browser policy. The previous theme was reapplied where applicable; these paths were not snapshotted or restored by WULING.")

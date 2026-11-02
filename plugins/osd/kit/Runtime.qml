@@ -25,6 +25,7 @@ Item {
     readonly property string mono: Tokens.data.type.mono
     readonly property string sans: Tokens.data.type.sans
     readonly property string display: Tokens.data.type.display
+    readonly property string serif: Tokens.data.type.cjk_serif
     readonly property string iconFont: Tokens.data.type.icon
     function c(role) { return resolved.colors && resolved.colors[role] ? resolved.colors[role].value : Tokens.data.palettes.mist[role] || "transparent"; }
     function g(role) { return (resolved.geometry && resolved.geometry[role] ? resolved.geometry[role].value : Tokens.data.presets.field[role] === undefined ? Tokens.data.geometry[role] : Tokens.data.presets.field[role]) * scale; }

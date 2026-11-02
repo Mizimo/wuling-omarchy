@@ -197,6 +197,10 @@ class InstallHome(IsolatedHome):
         native = self.home / ".config/omarchy/shell.json"
         native.parent.mkdir(parents=True, exist_ok=True)
         native.write_text('{"bar":{"layout":{"left":[],"center":[],"right":[]}},"plugins":[]}\n')
+        native_root = self.home / "native"
+        (native_root / "default/omarchy").mkdir(parents=True)
+        (native_root / "default/omarchy/omarchy-menu.jsonc").write_text('{"system":{"icon":"power","label":"System","aliases":["power-menu"]}}')
+        os.environ["OMARCHY_PATH"] = str(native_root)
         self.command_patch = patch("wuling.lifecycle.command", side_effect=self.fake_command)
         self.command_patch.start()
         self.euid_patch = patch("wuling.lifecycle.os.geteuid", return_value=1000)

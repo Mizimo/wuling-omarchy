@@ -9,6 +9,21 @@ from wuling import Error, notifications
 
 
 class NotificationStateTests(IsolatedHome):
+    def test_first_dnd_uses_compatible_native_state_without_writing_it(self):
+        for version, relative in (("4.0.6", "notifications.json"), ("4.5.0-rc2", "notifications/quiet.json")):
+            with self.subTest(version=version):
+                native = self.home / ".local/state/omarchy" / relative
+                native.parent.mkdir(parents=True, exist_ok=True)
+                native.write_text('{"version":3,"dnd":true}\n')
+                before = native.read_bytes()
+                gate = {"ok":True, "version":version}
+                self.assertTrue(notifications.read(gate)["dnd"])
+                self.assertFalse(notifications.read({"ok":False})["dnd"])
+                notifications.write({"schema_version":1,"dnd":False,"live":[],"history":[]})
+                self.assertFalse(notifications.read(gate)["dnd"])
+                self.assertEqual(native.read_bytes(), before)
+                notifications.filename().unlink()
+
     def state(self, rows):
         return {"schema_version":1,"dnd":False,"live":rows,"history":rows}
 

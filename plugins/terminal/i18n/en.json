@@ -47,5 +47,8 @@
   "weekday-7": "Sun",
   "count-unit": "",
   "show-all": "Show all notifications",
-  "more-count": "more"
+  "more-count": "more",
+  "panel-unavailable": "This panel is unavailable in the current bar.",
+  "action-failed": "The action is unavailable. Try again.",
+  "connected": "Connected"
 }

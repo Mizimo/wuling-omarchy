@@ -46,3 +46,7 @@ Use `omarchy plugin disable wuling.notifications` to return to native
 notifications, and `omarchy plugin enable wuling.notifications` to enable it
 again. Original native disablement is preserved. Updates preserve independent
 plugin choices. Other WULING components remain independent.
+
+On first use without WULING state, DND is seeded once from the compatible
+native stored state, read only. Disabling WULING restores Omarchy's own last
+stored value; WULING never writes the native notification files.

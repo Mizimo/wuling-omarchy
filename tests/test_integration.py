@@ -103,6 +103,18 @@ class IntegrationTests(InstallHome):
         self.assertEqual(lifecycle.config_snapshot(), before)
         self.assertFalse((paths()["data"] / "current").exists())
 
+    def test_existing_dispatch_key_is_refused_before_writes(self):
+        before = lifecycle.config_snapshot()
+        real = self.fake_command
+        def native(argv):
+            if argv == ["hyprctl", "-j", "binds"]:
+                return '[{"modmask":64,"key":"D","arg":"custom-command"}]'
+            return real(argv)
+        with patch("wuling.lifecycle.command", side_effect=native), self.assertRaises(Error):
+            lifecycle.install(True)
+        self.assertEqual(lifecycle.config_snapshot(), before)
+        self.assertFalse((paths()["data"] / "current").exists())
+
     def test_update_preserves_disabled_plugin_and_removal_keeps_native_edits(self):
         lifecycle.install(True)
         shell, bindings = integration.locations()

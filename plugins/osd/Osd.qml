@@ -35,6 +35,13 @@ Item {
         deviceProbe.running = true;
     }
     function open(payload) {
+        // An on-demand, bounded lease: no connection to the session plugin,
+        // file watcher or idle polling. A dead worker cannot hide future OSDs.
+        exitLease.reload();
+        try {
+            const lease=JSON.parse(exitLease.text()),remaining=lease.until-Date.now();
+            if(lease.owner==="wuling.session" && remaining>0 && remaining<=11500) { close();return; }
+        } catch (_) {}
         const next = Model.state(payload);
         if (!next) return;
         const refreshDevice = !opened || Model.kind(next.icon) !== deviceKind;
@@ -46,6 +53,10 @@ Item {
         if (state.duration > 0) expiry.restart(); else expiry.stop();
     }
     function close() { opened = false; expiry.stop(); deviceProbe.running = false; probePending = false; deviceName = ""; }
+    FileView {
+        id:exitLease;path:(Quickshell.env("XDG_RUNTIME_DIR") || "/nonexistent")+"/wuling/exit-osd.json"
+        preload:false;blockAllReads:true;printErrors:false;watchChanges:false
+    }
     Connections { target: Kit.Runtime; function onHudChanged() { osd.readDevice(); } }
     Process {
         id: deviceProbe

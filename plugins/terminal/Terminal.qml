@@ -13,6 +13,8 @@ Ui.Panel {
     property var state: ({})
     property var actionQueue: []
     property string actionError: ""
+    property bool restartingCollector: false
+    property var collectingSections: []
     property string hostname: ""
     property bool logExpanded: false
     property bool revealLog: false
@@ -20,6 +22,21 @@ Ui.Panel {
     property var logRows: []
     FileView { path: "/etc/hostname"; printErrors: false; onLoaded: terminal.hostname = text().trim().toUpperCase() }
     readonly property var sections: Kit.Runtime.setting("terminal.sections")
+    onSectionsChanged: restartCollector()
+    function restartCollector() {
+        if (!opened) return;
+        restartingCollector = true;
+        collector.running = false;
+        state = ({});
+        if (!collector.running) Qt.callLater(startCollector);
+    }
+    function startCollector() {
+        if (collector.running || !opened || !sections.length) return;
+        collectingSections = sections.slice();
+        restartingCollector = false;
+        collector.command = ["wuling", "status", "--watch", "--sections"].concat(collectingSections);
+        collector.running = true;
+    }
     readonly property var shown: sections.filter(key => key !== "agent" || (state.agent || []).length > 0)
         .filter(key => key !== "signal" || !!state.signal)
         .filter(key => key !== "link" || (state.link || []).length > 0)
@@ -63,6 +80,8 @@ Ui.Panel {
     }
     function tileValue(tile) {
         const word = tile.active ? "On" : "Off";
+        if(tile.id === "wifi" && tile.network)return tile.network;
+        if(tile.id === "tailscale" && tile.active)return Kit.Runtime.tr("connected");
         if (tile.id === "power") {
             const value = ({balanced:"Balanced", performance:"Performance", "power-saver":"Saver"})[tile.state] || tile.state;
             return Kit.Runtime.language === "en" ? value : Kit.Runtime.tr(tile.state) + " " + value;
@@ -72,8 +91,8 @@ Ui.Panel {
     }
     function foot(action) { close(); act(action); }
     onOpenedChanged: {
-        if (!opened) { state = ({}); logExpanded = false; revealLog = false; }
-        else actionError = "";
+        if (!opened) { collector.running = false; restartingCollector = false; state = ({}); logExpanded = false; revealLog = false; }
+        else { actionError = ""; startCollector(); }
         reportGeometry();
     }
     onScreenNameChanged: reportGeometry()
@@ -86,17 +105,16 @@ Ui.Panel {
     }
     Process {
         id: collector
-        command: ["wuling", "status", "--watch", "--sections"].concat(terminal.sections)
-        running: terminal.opened && terminal.sections.length > 0
+        onExited: if (terminal.restartingCollector) Qt.callLater(terminal.startCollector)
         stdout: SplitParser {
-            onRead: line => { try { const data = JSON.parse(line); if (terminal.opened && data.schema_version === 1) terminal.state = data; } catch (_) {} }
+            onRead: line => { try { const data = JSON.parse(line); if (terminal.opened && !terminal.restartingCollector && JSON.stringify(terminal.collectingSections)===JSON.stringify(terminal.sections) && data.schema_version === 1) terminal.state = data; } catch (_) {} }
         }
     }
     Process {
         id: actionProcess
         stdout: StdioCollector {
             onStreamFinished: {
-                try { const response = JSON.parse(text); terminal.actionError = response.error ? response.error.message : ""; }
+                try { const response = JSON.parse(text); terminal.actionError = response.error ? Kit.Runtime.tr(response.error.code === "panel_unavailable" ? "panel-unavailable" : "action-failed") : ""; }
                 catch (_) { terminal.actionError = Kit.Runtime.tr("unavailable"); }
             }
         }
@@ -267,6 +285,14 @@ Ui.Panel {
                     }
                     Part {
                         sectionKey: "agent"
+                        id:agentPart
+                        function shortLabel(value) { return String(value || "").replace(/\s*\([^)]*\)/g, "").trim().toUpperCase(); }
+                        FontMetrics { id:agentLabelMetrics;font.family:Kit.Runtime.mono;font.pixelSize:Kit.Runtime.px(7.5);font.weight:Font.Medium;font.letterSpacing:Kit.Runtime.px(1.05) }
+                        property real labelWidth: {
+                            let widest=0;
+                            for(const agent of terminal.state.agent || [])for(const limit of agent.limits) { widest=Math.max(widest,agentLabelMetrics.advanceWidth(shortLabel(limit.title || limit.label))); }
+                            return Math.min(Kit.Runtime.px(66),Math.ceil(widest)+1);
+                        }
                         Repeater {
                             model: terminal.state.agent || []
                             Kit.Button {
@@ -276,19 +302,25 @@ Ui.Panel {
                                 onClicked: terminal.act("agent")
                                 onRightClicked: terminal.act("panel", "agent")
                                 Column {
-                                    x: Kit.Runtime.px(4); y: Kit.Runtime.px(6); width: Kit.Runtime.px(74)
-                                    Kit.Label { width: parent.width; text: modelData.name; color: parent.parent.foreground; font.family: Kit.Runtime.sans }
+                                    x: Kit.Runtime.px(4); y: Kit.Runtime.px(6); width: Kit.Runtime.px(86)
+                                    Kit.Label { width: parent.width; text: modelData.name; color: parent.parent.foreground; font.family: Kit.Runtime.sans; font.pixelSize:Kit.Runtime.px(10) }
                                     Kit.Label { width: parent.width; text: modelData.plan; color: parent.parent.foreground; font.pixelSize: Kit.Runtime.px(8) }
                                 }
                                 Column {
-                                    id: meters; x: Kit.Runtime.px(76); width: parent.width - x; y: Kit.Runtime.px(8); spacing: Kit.Runtime.px(4)
+                                    id: meters; x: Kit.Runtime.px(94); width: parent.width - x; y: Kit.Runtime.px(8); spacing: Kit.Runtime.px(4)
                                     Repeater {
                                         model: modelData.limits
                                         Row {
                                             required property var modelData
                                             width: meters.width; height: Kit.Runtime.px(12); spacing: Kit.Runtime.px(6)
-                                            Kit.Label { width: Kit.Runtime.px(44); height: parent.height; font.pixelSize: Kit.Runtime.px(7.5); text: modelData.title || modelData.label; color: Kit.Runtime.c("mist-4") }
-                                            Rectangle { anchors.verticalCenter: parent.verticalCenter; width: Math.max(0, meters.width - Kit.Runtime.px(132)); height: Kit.Runtime.px(4); color: Kit.Runtime.c("ink-5"); Rectangle { width: parent.width * modelData.fraction; height: parent.height; color: Kit.Runtime.c("jade") } }
+                                            Kit.Micro {
+                                                width:agentPart.labelWidth;height:parent.height;pixels:7.5
+                                                text:agentPart.shortLabel(modelData.title || modelData.label);color:Kit.Runtime.c("mist-4")
+                                                // Keep long micro labels inside the capped column without
+                                                // reducing their type size. Still elide genuinely long names.
+                                                font.letterSpacing:Math.max(Kit.Runtime.px(.5),Kit.Runtime.px(1.05)-Math.max(0,agentLabelMetrics.advanceWidth(text)+1-width)/Math.max(1,text.length))
+                                            }
+                                            Rectangle { anchors.verticalCenter: parent.verticalCenter; width: Math.max(0, meters.width - agentPart.labelWidth - Kit.Runtime.px(88)); height: Kit.Runtime.px(4); color: Kit.Runtime.c("ink-5"); Rectangle { width: parent.width * modelData.fraction; height: parent.height; color: Kit.Runtime.c("jade") } }
                                             Kit.Label { width: Kit.Runtime.px(30); height: parent.height; horizontalAlignment: Text.AlignRight; font.pixelSize: Kit.Runtime.px(10); text: Math.round(modelData.fraction * 100) + "%" }
                                             Kit.Label { width: Kit.Runtime.px(40); height: parent.height; horizontalAlignment: Text.AlignRight; font.pixelSize: Kit.Runtime.px(8); color: Kit.Runtime.c("mist-5"); text: { const now = terminal.state.clock ? terminal.state.clock.epoch_ms : Date.now(); const minutes = Math.max(0, Math.ceil((Date.parse(modelData.resets_at) - now) / 60000)); return minutes ? Math.floor(minutes / 60) + "h " + minutes % 60 + "m" : ""; } }
                                         }
@@ -296,7 +328,11 @@ Ui.Panel {
                                 }
                             }
                         }
-                        Kit.Button { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); height: Kit.Runtime.px(26); text: Kit.Runtime.tr("ask-agent"); icon: "smart_toy"; onClicked: terminal.act("agent") }
+                        Item {
+                            x:Kit.Runtime.px(14);width:parent.width-Kit.Runtime.px(28);height:Kit.Runtime.px(26)
+                            Kit.Button { anchors.left:parent.left;height:parent.height;text:Kit.Runtime.tr("ask-agent");icon:"smart_toy";onClicked:terminal.act("agent") }
+                            Kit.Micro { anchors.right:parent.right;anchors.verticalCenter:parent.verticalCenter;text:String(terminal.state.default_agent || "").toUpperCase() }
+                        }
                     }
                     Part {
                         sectionKey: "telemetry"
@@ -343,6 +379,13 @@ Ui.Panel {
                         }
                     }
                 }
+            }
+            Rectangle {
+                anchors.left:scroll.left;anchors.right:scroll.right;anchors.bottom:scroll.bottom;height:Kit.Runtime.px(14)
+                visible:scroll.contentHeight-scroll.contentY-scroll.height>.5
+                readonly property color ground:Kit.Runtime.c("ink-2")
+                gradient:Gradient { GradientStop { position:0;color:Qt.rgba(bodyFade.ground.r,bodyFade.ground.g,bodyFade.ground.b,0) } GradientStop { position:1;color:bodyFade.ground } }
+                id:bodyFade
             }
             Kit.Label { id: errorLabel; anchors.bottom: foot.top; width: parent.width; height: text ? Kit.Runtime.px(30) : 0; text: terminal.actionError; color: Kit.Runtime.c("vermilion"); wrapMode: Text.Wrap; font.pixelSize: Kit.Runtime.px(10) }
             Row {

@@ -47,5 +47,8 @@
   "weekday-7": "週日",
   "count-unit": "則",
   "show-all": "展開所有通知",
-  "more-count": "則"
+  "more-count": "則",
+  "panel-unavailable": "目前的工作列沒有這個面板。",
+  "action-failed": "目前無法執行此動作，請再試一次。",
+  "connected": "已連線"
 }

@@ -1,5 +1,6 @@
 """Small argv-only bridge to native behaviour. No credentials or policy here."""
 
+import json
 import re
 from . import Error, SCHEMA, command
 from . import status
@@ -21,6 +22,37 @@ FIXED = {
 PANELS = {"wifi": "omarchy.network", "bluetooth": "omarchy.bluetooth", "tailscale": "omarchy.tailscale",
           "night": "omarchy.monitor", "power": "omarchy.power", "audio": "omarchy.audio", "agent": "omarchy.agents"}
 NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel")
+
+
+class PanelUnavailable(Error):
+    code = "panel_unavailable"
+
+
+def route(action, target, payload="{}"):
+    try:
+        return checked_route(action, target, payload)
+    except (Error, ValueError) as exc:
+        raise PanelUnavailable("The requested panel is unavailable in the current shell") from exc
+
+
+def checked_route(action, target, payload):
+    method = {"open": "summon", "close": "hide", "toggle": "toggle"}[action]
+    # summon reports delivery. hide/toggle are void on both supported native
+    # versions: validate their live target first, rather than treating empty
+    # stdout as evidence that a missing widget was reached.
+    if method != "summon":
+        entries = json.loads(command(["omarchy-shell", "shell", "listPlugins"]))
+        if not any(row.get("id") == target and row.get("enabled") for row in entries):
+            raise PanelUnavailable("The requested panel is unavailable in the current shell")
+        if target == "wuling.terminal":
+            monitors = json.loads(command(["hyprctl", "-j", "monitors"]))
+            focused = next((row["name"] for row in monitors if row.get("focused")), "")
+            json.loads(command(["omarchy-shell", target + "." + focused, "geometry"]))
+        else:
+            json.loads(command(["omarchy-shell", target, "state"]))
+    result = command(["omarchy-shell", "shell", method, target, *([] if method == "hide" else [payload])])
+    if result not in ({"ok"} if method == "summon" else {"", "ok"}):
+        raise PanelUnavailable("The requested panel is unavailable in the current shell")
 
 
 def plan(name, value=None):
@@ -71,6 +103,8 @@ def plan(name, value=None):
 def run(name, value=None):
     argv = plan(name, value)
     result = command(argv)
+    if name == "panel" and value in PANELS and result != "ok":
+        raise PanelUnavailable("The requested native panel is unavailable in the current bar")
     if result == "unhandled":
         raise Error("The native service cannot perform this action now")
     # Do not forward arbitrary native output to a QML log.
@@ -80,9 +114,5 @@ def run(name, value=None):
 def terminal(action):
     if action not in ("open", "close", "toggle"):
         raise Error("Unknown Terminal action")
-    method = {"open": "summon", "close": "hide", "toggle": "toggle"}[action]
-    argv = ["omarchy-shell", "shell", method, "wuling.terminal"]
-    if method != "hide":
-        argv.append("{}")
-    command(argv)
+    route(action, "wuling.terminal")
     return {"schema_version": SCHEMA, "action": action, "ok": True}

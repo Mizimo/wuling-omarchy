@@ -47,5 +47,8 @@
   "weekday-7": "周日",
   "count-unit": "则",
   "show-all": "展开所有通知",
-  "more-count": "则"
+  "more-count": "则",
+  "panel-unavailable": "当前任务栏没有这个面板。",
+  "action-failed": "当前无法执行此操作，请重试。",
+  "connected": "已连接"
 }

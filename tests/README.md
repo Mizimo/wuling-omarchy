@@ -47,6 +47,24 @@ clock faces after a font update, after shell restart and after theme changes.
 Keep captures and raw projected state outside git. Hardware budget results
 are supplied by the verifier, not inferred from a virtual GPU.
 
+For phase E, use harmless desktop-entry, clipboard and System-action fixtures
+to exercise all five Dispatch modes and real key/pointer holds and cancels.
+Keep native System actions out of those fixtures: test actual logout, reboot
+and shutdown only in the disposable VM, recording from outside it through the
+next screen. On a real desktop use `wuling session preview exit` only.
+Measure the independent worker's action timestamp relative to hold completion,
+including reduced motion, a deliberately failed visual load and disabled
+motion. An official shell restart is necessary after replacing QML with a
+failure fixture; disable/enable alone can reuse compiled components.
+
+Verify ten-second give-back, OSD lease expiry with a missing session plugin,
+preview isolation, native fallback and independent component disablement across
+updates. Remove twice, check private histories disappear and native System is
+restored, then repeat with an edited System label to verify preservation.
+Check first-install DND using the version's native state, without writing that
+state from WULING. Synthetic agent records exercise long names and labels;
+network names must not be copied into fixtures or diagnostic logs.
+
 `tests/vm-theme-effects.py --disposable-vm` automates the concurrent native-theme
 barrier, repeated installation/removal, permission failure and SIGKILL recovery.
 It requires a clean, logged-in disposable VM without WULING installed. It stores

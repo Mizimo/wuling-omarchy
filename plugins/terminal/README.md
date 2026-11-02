@@ -37,3 +37,18 @@ The manifest declares the native `right` default section for re-enablement.
 Per-output `wuling.terminal.<output>` IPC exposes `geometry` and `history` to
 the notification plugin. Geometry comes from the panel instance's public
 `cardOrigin` and content dimensions; no private child is traversed.
+
+Changes to `terminal.sections` restart the open collector with the new selection;
+an empty selection stops collection. A native panel absent from the bar returns
+`panel_unavailable`; the Terminal stays open with a translated explanation.
+
+Native boundary on both supported versions: clicking the clock while Terminal
+is open closes Terminal on the first click; the second opens the calendar.
+The same behavior occurs under Omarchy's own bar. WULING does not alter it.
+
+Wi-Fi reads only active connection metadata to show its connected name; it
+never initiates a scan. Network names belong on the local panel, not in logs or
+fixtures. Night is available when the native toggle and hyprsunset are installed;
+a stopped service reads Off and the same native toggle starts it on demand.
+Agent labels omit parenthetical details and share a measured column capped at
+66 design pixels. The default-agent tag reads only native display metadata.

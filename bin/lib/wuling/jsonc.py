@@ -6,6 +6,27 @@ from . import Error
 TOKEN = re.compile(r'"(?:\\.|[^"\\])*"|//[^\n]*|/\*.*?\*/|[{}\[\]:,]|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null|\s+', re.S)
 
 
+def loads(text):
+    """Read JSONC without treating comment/comma characters in strings as syntax."""
+    tokens = []
+    position = 0
+    for match in TOKEN.finditer(text):
+        if match.start() != position:
+            raise Error("Unsupported JSONC syntax")
+        position = match.end()
+        value = match.group()
+        if not value.isspace() and not value.startswith(("//", "/*")):
+            tokens.append(value)
+    if position != len(text):
+        raise Error("Unsupported JSONC syntax")
+    normal = "".join(value for i, value in enumerate(tokens)
+                     if not (value == "," and i + 1 < len(tokens) and tokens[i + 1] in ("}", "]")))
+    try:
+        return json.loads(normal)
+    except ValueError as exc:
+        raise Error(f"Invalid JSONC: {exc}") from exc
+
+
 def members(text):
     matches = list(TOKEN.finditer(text))
     position = 0
@@ -19,11 +40,7 @@ def members(text):
             tokens.append(token)
     if position != len(text) or not tokens or tokens[0].group() != "{" or tokens[-1].group() != "}":
         raise Error("Expected a JSONC object")
-    normal = "".join(t.group() for t in tokens)
-    try:
-        json.loads(re.sub(r",(?=[}\]])", "", normal))
-    except ValueError as exc:
-        raise Error(f"Invalid JSONC: {exc}") from exc
+    loads(text)
     result = {}
     index = 1
     while index < len(tokens) - 1:

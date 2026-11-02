@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"wuling.power","name":"WULING Termination Protocol","version":"0.1.0","kinds":["overlay"],"keepLoaded":true,"entryPoints":{"overlay":"Power.qml"}}

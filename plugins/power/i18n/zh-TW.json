@@ -1,0 +1,14 @@
+{
+  "screensaver": "螢幕保護",
+  "lock": "鎖定",
+  "suspend": "睡眠",
+  "hibernate": "休眠",
+  "logout": "登出",
+  "reboot": "重新啟動",
+  "shutdown": "關機",
+  "select": "選擇",
+  "hold": "長按確認",
+  "abort": "取消",
+  "native-entries": "OMARCHY · SYSTEM 原生項目",
+  "unavailable": "系統動作無法讀取"
+}

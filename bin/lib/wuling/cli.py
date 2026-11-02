@@ -6,7 +6,7 @@ import json
 import re
 import shutil
 from . import Error, ROOT, SCHEMA, command, paths
-from . import actions, lifecycle, notifications, osd, settings, status, theme
+from . import actions, dispatch, lifecycle, notifications, osd, power, session, settings, status, theme
 
 
 def emit(value):
@@ -98,6 +98,15 @@ def main(argv=None):
     action.add_argument("value", nargs="?")
     term = sub.add_parser("terminal", help="Open or close the Field Terminal")
     term.add_argument("action", choices=["open", "close", "toggle"])
+    launch = sub.add_parser("dispatch", help="Open Dispatch or read its on-demand data")
+    launch.add_argument("action", choices=["open", "close", "toggle", "snapshot", "activate"])
+    launch.add_argument("mode", nargs="?", choices=["apps", "clip", "run", "calc", "ask"])
+    launch.add_argument("value", nargs="?")
+    pwr = sub.add_parser("power", help="Open the native System actions as WULING cards")
+    pwr.add_argument("action", choices=["open", "close", "toggle", "snapshot"])
+    motion = sub.add_parser("session", help="Preview session motion or execute a confirmed exit")
+    motion.add_argument("action", choices=["preview", "exit", "arm"])
+    motion.add_argument("value", nargs="?")
     display = sub.add_parser("osd", help="Read OSD device state on demand")
     display.add_argument("action", choices=["device"])
     display.add_argument("kind", choices=["input", "output"])
@@ -135,6 +144,29 @@ def main(argv=None):
             emit(actions.run(args.name, args.value))
         elif args.verb == "terminal":
             emit(actions.terminal(args.action))
+        elif args.verb == "dispatch":
+            if args.action == "snapshot":
+                if args.mode or args.value:
+                    raise Error("dispatch snapshot takes no arguments")
+                emit(dispatch.snapshot())
+            elif args.action == "activate":
+                emit(dispatch.activate(args.mode, args.value))
+            else:
+                if args.mode or args.value:
+                    raise Error("Dispatch open/close/toggle takes no arguments")
+                actions.route(args.action, "wuling.dispatch")
+                emit({"schema_version": SCHEMA, "ok": True, "action": args.action})
+        elif args.verb == "power":
+            emit(power.snapshot() if args.action == "snapshot" else power.toggle(args.action))
+        elif args.verb == "session":
+            if args.action == "arm":
+                if args.value is not None:
+                    raise Error("session arm reads its confirmation from stdin")
+                emit(session.arm())
+            else:
+                if args.value is None:
+                    raise Error("session preview/exit requires a value")
+                emit(session.preview(args.value) if args.action == "preview" else session.run(args.value))
         elif args.verb == "osd":
             emit(osd.device(args.kind))
         elif args.verb == "notifications":
@@ -159,6 +191,6 @@ def main(argv=None):
         elif args.verb == "uninstall":
             lifecycle.uninstall(args.yes)
     except (Error, OSError, ValueError) as exc:
-        emit({"schema_version": SCHEMA, "error": {"code": "wuling_error", "message": str(exc)}})
+        emit({"schema_version": SCHEMA, "error": {"code": getattr(exc, "code", "wuling_error"), "message": str(exc)}})
         return 1
     return 0

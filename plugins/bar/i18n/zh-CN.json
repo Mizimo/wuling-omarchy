@@ -36,5 +36,12 @@
   "unavailable": "无法使用",
   "menu": "Omarchy 菜单",
   "identity": "武陵",
-  "workspace": "工作区"
+  "workspace": "工作区",
+  "weekday-1": "周一",
+  "weekday-2": "周二",
+  "weekday-3": "周三",
+  "weekday-4": "周四",
+  "weekday-5": "周五",
+  "weekday-6": "周六",
+  "weekday-7": "周日"
 }

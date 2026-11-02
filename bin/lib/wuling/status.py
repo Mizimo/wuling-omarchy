@@ -8,6 +8,7 @@ import math
 import os
 import re
 import signal
+import shutil
 import subprocess
 import time
 from . import Error, SCHEMA, paths
@@ -98,6 +99,7 @@ def agent_usage():
             for entry in entries:
                 if isinstance(entry, dict) and entry.get("id") == "omarchy.agents":
                     providers = entry.get("providers", {})
+    default = text(paths()["home"] / ".config/omarchy/defaults/agent").strip()
     result = []
     for path in sorted(folder.glob("*.json"))[:64]:
         data = record(path)
@@ -127,19 +129,34 @@ def agent_usage():
                    ("totalPrompts", "totalSessions", "todayPrompts", "todaySessions", "activeDays"))
         if not limits and not used and not isinstance(data.get("balance"), dict):
             continue
-        result.append({"id": identity, "name": label(data.get("name") or identity),
+        result.append({"id": identity, "name": label(data.get("name") or identity), "default": identity == default,
                        "plan": label(data.get("tierLabel")), "limits": limits})
     return result
 
 
+def default_agent_name():
+    identity = text(paths()["home"] / ".config/omarchy/defaults/agent", 128).strip()
+    if not re.fullmatch(r"[a-zA-Z0-9._-]{1,64}", identity):
+        return ""
+    data = record(paths()["state"].parent / "omarchy/agents/usage" / (identity + ".json"))
+    return label(data.get("name") or identity)
+
+
 def links():
-    # No SSIDs, addresses or peer identities are needed in these toggles.
+    # Active connection metadata only: never scan or log network names.
     def wifi():
         devices = probe(["nmcli", "-t", "-f", "TYPE", "device", "status"])
         if devices and "wifi" in devices.splitlines():
             state = probe(["nmcli", "radio", "wifi"])
+            network = ""
+            active = probe(["nmcli", "-t", "-f", "UUID,TYPE", "connection", "show", "--active"])
+            for line in (active or "").splitlines():
+                identifier, _, kind = line.partition(":")
+                if kind in ("802-11-wireless", "wifi") and re.fullmatch(r"[0-9a-fA-F-]{36}", identifier):
+                    network = label(probe(["nmcli", "-g", "802-11-wireless.ssid", "connection", "show", "uuid", identifier]))
+                    break
             return {"id": "wifi", "active": state == "enabled", "state": state,
-                    "panel": "omarchy.network", "action": "wifi"}
+                    "network": network, "panel": "omarchy.network", "action": "wifi"}
     def bluetooth():
         if any((SYS / "class/bluetooth").glob("hci*")):
             state = probe(["omarchy-bluetooth-power", "is-on"])
@@ -155,9 +172,9 @@ def links():
         if state in ("on", "off"):
             return {"id": "dnd", "active": state == "on", "panel": "notifications", "action": "dnd"}
     def night():
-        data = probe_json(["omarchy-toggle-nightlight", "--status"])
-        if data.get("temperature") is not None:
-            return {"id": "night", "active": data.get("enabled") is True,
+        if shutil.which("omarchy-toggle-nightlight") and shutil.which("hyprsunset"):
+            data = probe_json(["omarchy-toggle-nightlight", "--status"])
+            return {"id": "night", "active": data.get("temperature") is not None and data.get("enabled") is True,
                     "panel": "omarchy.monitor", "action": "night"}
     def power():
         state = probe(["powerprofilesctl", "get"])
@@ -268,6 +285,8 @@ class Collector:
             if future and (wait or future.done()):
                 try:
                     self.latest[name] = future.result()
+                    if name == "agent":
+                        self.latest["default_agent"] = default_agent_name()
                 except (OSError, ValueError, TypeError, AttributeError):
                     self.latest[name] = None
                 del self.pending[name]

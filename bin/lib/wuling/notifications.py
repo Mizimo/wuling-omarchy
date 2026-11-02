@@ -105,12 +105,28 @@ def normalise(data, now=None):
             "live": rows("live", 16384), "history": rows("history", 4096)}
 
 
-def read():
+def native_dnd(gate):
+    if not gate.get("ok"):
+        return False
+    relative = {"4.0.6": "notifications.json", "4.5.0-rc2": "notifications/quiet.json"}.get(gate.get("version"))
+    if not relative:
+        return False
+    path = paths()["home"] / ".local/state/omarchy" / relative
+    try:
+        if path.stat().st_size > 262144:
+            return False
+        raw = json.loads(path.read_text())
+        return isinstance(raw, dict) and raw.get("dnd") is True
+    except (OSError, ValueError):
+        return False
+
+
+def read(gate=None):
     path = filename()
     if path.is_symlink():
         raise Error("Notification state is a symlink; refusing to follow it")
     if not path.exists():
-        return {"schema_version": SCHEMA, "dnd": False, "live": [], "history": []}
+        return {"schema_version": SCHEMA, "dnd": native_dnd(gate or compatibility()), "live": [], "history": []}
     if path.stat().st_size > MAX_INPUT:
         raise Error("Notification state exceeds its size limit")
     return normalise(json.loads(path.read_text()))
@@ -207,7 +223,7 @@ def terminals():
 def boot():
     gate = compatibility()
     if gate["ok"]:
-        gate["state"] = read()
+        gate["state"] = read(gate)
     return gate
 
 

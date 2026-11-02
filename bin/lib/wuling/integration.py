@@ -5,10 +5,26 @@ from pathlib import Path
 import json
 import os
 from . import Error, ROOT, paths
-from . import owned
+from . import jsonc, owned
 
-IDS = ("wuling.bar", "wuling.terminal", "wuling.osd", "wuling.notifications")
-BINDING = 'o.bind("SUPER + CTRL + G", "Field Terminal", "wuling terminal toggle")\n'
+IDS = ("wuling.bar", "wuling.terminal", "wuling.osd", "wuling.notifications", "wuling.dispatch", "wuling.power", "wuling.session")
+BINDINGS = ((68, "G", 42, "Field Terminal", "wuling terminal toggle"),
+            (64, "D", 32, "Dispatch", "wuling dispatch toggle"))
+BINDING = ('o.bind("SUPER + CTRL + G", "Field Terminal", "wuling terminal toggle")\n'
+           'o.bind("SUPER + D", "Dispatch", "wuling dispatch toggle")\n')
+
+
+def add_independent(data, record):
+    adopted = record.setdefault("independent", [])
+    for path in installed_sources():
+        manifest = json.loads(path.read_text())
+        identifier = manifest["id"]
+        if identifier not in ("wuling.dispatch", "wuling.power", "wuling.session") or identifier in adopted:
+            continue
+        if any(identity(row) == identifier for row in data.get("plugins", [])) or identifier in data.get("disabledPlugins", []):
+            raise Error(f"Native configuration already mentions unowned {identifier}")
+        data.setdefault("plugins", []).append({"id": identifier})
+        adopted.append(identifier)
 
 
 def installed_sources():
@@ -93,6 +109,13 @@ def prepare(previous, execute):
     if shell.is_symlink() or bindings.is_symlink():
         raise Error("Native shell or bindings is a symlink; leave it under its existing manager")
     prior = (previous or {}).get("integration")
+    def with_menu(result):
+        if any(p.parent.name == "power" for p in installed_sources()):
+            from . import power
+            text, menu = power.prepare_extension(prior.get("menu") if prior else None)
+            result["menu_text"] = text
+            result["record"]["menu"] = menu
+        return result
     if shell.exists():
         before = shell.read_text()
     else:
@@ -110,19 +133,20 @@ def prepare(previous, execute):
             raise ValueError()
     except ValueError as exc:
         raise Error("Cannot inspect active keybindings; install from the Omarchy session") from exc
-    owned_matches = 0
+    owned_matches = {}
     for entry in effective:
-        if entry.get("modmask") != 68 or entry.get("submap", ""):
-            continue
-        if str(entry.get("key", "")).upper() != "G" and entry.get("keycode") != 42:
-            continue
-        if prior and (entry.get("arg") == "wuling terminal toggle" or
-                      entry.get("dispatcher") == "__lua" and entry.get("description") == "Field Terminal"):
-            owned_matches += 1
-            if owned_matches > 1:
-                raise Error("Super+Ctrl+G has duplicate bindings; resolve them before updating")
-            continue
-        raise Error("Super+Ctrl+G is already bound; no files changed")
+        for mask, key, code, title, action in BINDINGS:
+            if entry.get("modmask") != mask or entry.get("submap", ""):
+                continue
+            if str(entry.get("key", "")).upper() != key and entry.get("keycode") != code:
+                continue
+            if prior and action in prior["bindings"]["written"] and (entry.get("arg") == action or
+                          entry.get("dispatcher") == "__lua" and entry.get("description") == title):
+                owned_matches[key] = owned_matches.get(key, 0) + 1
+                if owned_matches[key] > 1:
+                    raise Error(f"{title} has duplicate bindings; resolve them before updating")
+                continue
+            raise Error(f"The {title} key is already bound; no files changed")
     written = owned.block(old_bindings, "bindings", BINDING, prior["bindings"]["written"] if prior else None)
     if prior:
         # Preserve deliberate enable/disable and layout choices. Only components
@@ -130,8 +154,10 @@ def prepare(previous, execute):
         record = deepcopy(prior)
         changed = deepcopy(data)
         add_replacements(changed, record)
-        return {"shell_text": before if changed == data else json.dumps(changed, ensure_ascii=False, indent=2) + "\n",
-                "bindings_text": written, "record": record}
+        add_independent(changed, record)
+        record["bindings"]["written"] = ("\n" if prior["bindings"]["written"].startswith("\n") else "") + owned.block("", "bindings", BINDING)
+        return with_menu({"shell_text": before if changed == data else json.dumps(changed, ensure_ascii=False, indent=2) + "\n",
+                          "bindings_text": written, "record": record})
     entries = list(data.get("plugins", []))
     for group in data.get("bar", {}).get("layout", {}).values():
         entries.extend(group)
@@ -144,17 +170,22 @@ def prepare(previous, execute):
     record = {"shell": {"before": before, "installed": deepcopy(changed), "created": not shell.exists()},
               "bindings": {"written": written[len(old_bindings):], "created": not bindings.exists()}}
     add_replacements(changed, record)
-    return {"shell_text": json.dumps(changed, ensure_ascii=False, indent=2) + "\n", "bindings_text": written,
-            "record": record}
+    add_independent(changed, record)
+    return with_menu({"shell_text": json.dumps(changed, ensure_ascii=False, indent=2) + "\n", "bindings_text": written,
+                      "record": record})
 
 
 def write(tx, prepared):
     shell, bindings = locations()
     for path, data in ((shell, prepared["shell_text"]), (bindings, prepared["bindings_text"])):
         tx.replace(path, data=data, mode=path.stat().st_mode & 0o777 if path.exists() else 0o644)
+    if "menu_text" in prepared:
+        from .power import extension_path
+        path = extension_path()
+        tx.replace(path, data=prepared["menu_text"], mode=path.stat().st_mode & 0o777 if path.exists() else 0o644)
 
 
-def remove_shell(text, record, replacements=None):
+def remove_shell(text, record, replacements=None, independent=None):
     data = parse(text)
     # Omarchy's own commands reformat JSON. Compare owned values semantically,
     # then remove only those entries; an unrelated setting is never reverted.
@@ -190,6 +221,16 @@ def remove_shell(text, record, replacements=None):
         for key in ("cloneSourceRestores", "disabledPlugins"):
             if key in result and not result[key]:
                 result.pop(key)
+    for identifier in independent or []:
+        result["plugins"] = [item for item in result.get("plugins", []) if retain(item, identifier)]
+        disabled = result.setdefault("disabledPlugins", [])
+        if any(identity(row) == identifier for row in result["plugins"]):
+            if identifier not in disabled:
+                disabled.append(identifier)
+        elif identifier in disabled:
+            disabled.remove(identifier)
+        if not disabled:
+            result.pop("disabledPlugins", None)
     # A native disable can already have removed our entries. Restore exact
     # original bytes only if all remaining values equal the baseline.
     return (record["before"] if result == before else json.dumps(result, ensure_ascii=False, indent=2) + "\n"), preserved
@@ -197,6 +238,35 @@ def remove_shell(text, record, replacements=None):
 
 def remove(tx, record):
     preserved = []
+    if record.get("menu"):
+        from .power import extension_path
+        path = extension_path()
+        if path.exists():
+            try:
+                if path.is_symlink():
+                    raise Error("User replaced menu configuration with a symlink")
+                text = path.read_text()
+                try:
+                    restored = jsonc.remove_member(text, record["menu"]["edit"])
+                except Error:
+                    current = jsonc.loads(text).get("system")
+                    if not isinstance(current, dict) or current.get("action") != "wuling power toggle":
+                        raise
+                    # Keep edited labels/icons but do not leave our command
+                    # pointing to an uninstalled executable.
+                    current.pop("action")
+                    before = record["menu"]["edit"].get("before")
+                    old = jsonc.loads('{"system":' + before + '}').get("system", {}) if before else {}
+                    if old.get("action"):
+                        current["action"] = old["action"]
+                    restored, _ = jsonc.set_member(text, "system", current)
+                    preserved.append(str(path) + " (edited System fields)")
+                if record["menu"]["created"] and restored == "{}\n":
+                    tx.replace(path, delete=True)
+                else:
+                    tx.replace(path, data=restored, mode=path.stat().st_mode & 0o777)
+            except (Error, OSError):
+                preserved.append(str(path))
     shell, bindings = locations()
     for path, key in ((shell, "shell"), (bindings, "bindings")):
         try:
@@ -205,7 +275,7 @@ def remove(tx, record):
             if not path.exists():
                 continue
             if key == "shell":
-                restored, kept = remove_shell(path.read_text(), record[key], record.get("replacements"))
+                restored, kept = remove_shell(path.read_text(), record[key], record.get("replacements"), record.get("independent"))
                 preserved.extend(kept)
                 delete = record[key]["created"] and restored == record[key]["before"]
             else:
@@ -218,4 +288,4 @@ def remove(tx, record):
 
 
 def is_owned_config(path):
-    return path in ("omarchy/shell.json", "hypr/bindings.lua") or path.startswith("omarchy/plugins/wuling.") or path == "omarchy/plugins"
+    return path in ("omarchy/shell.json", "hypr/bindings.lua", "omarchy/extensions/omarchy-menu.jsonc") or path.startswith("omarchy/plugins/wuling.") or path == "omarchy/plugins"
