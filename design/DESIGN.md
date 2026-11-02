@@ -217,7 +217,8 @@ scripts and keys reach it unchanged.
   verification code. Ephemeral ones (`transient` hint, `notify-send`, `omarchy-action`) silenced by DND are not recorded.
 - **Toast:** 340 px, header (`Comms · 通訊`, app, time, close), art, summary, body, actions, a life line. Stacks from the
   top right, newest on top, on the outputs Omarchy uses: every output on 4.0.6; on 4.5 the focused one, where the stack stays until it
-  empties. While the Terminal is open on that output, toasts sit to its left.
+  empties. Toasts keep that place unless the open Terminal's panel covers it. Then they sit to the panel's left; if 340 px doesn't fit there, to its right;
+  if neither fits, they stay and overlap. They never shrink.
 - **A flat stack, no decks.** What doesn't fit waits behind a one-line `+N` tail and moves up as space frees; at most 100 live, as Omarchy. With the
   pointer on the stack, lifetimes pause and new toasts wait, at most 30 s, so nothing moves under the pointer. Toasts on screen survive a shell
   restart, with Omarchy's grace.
