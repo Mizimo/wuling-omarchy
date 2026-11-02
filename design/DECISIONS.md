@@ -2,6 +2,14 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-02 — login and logout animations
+
+The owner: "之前niri版本的登入登出動畫都很好看", and when asked: "兩段都加（我們什麼時候決定不要動畫了？）".
+
+**Both are in**: Arrival when a session starts, and an exit sequence for logout, reboot and shutdown (DESIGN §8.9). The owner never decided
+against them. They had asked to keep them on 2026-10-31; on 2026-11-01 Arrival was left unticked in a list of things to keep, in an answer that
+also asked to rebuild as a new project, and the design lead wrote that down as "not doing" without asking. The exit sequence was never raised.
+
 ## 2026-11-02 — boot unlock and backgrounds
 
 Looking at the report's screens, the owner: "開機解鎖畫面改成終末地工業的，默認壁紙換一個，這個太醜了".
@@ -80,8 +88,8 @@ reshaping for years. Concretely, after Omarchy 4.0.6 (`AGENTS.md`, `agents/skill
   Both are compared in the design report through keyboard-operable web prototypes. Only the chosen one is built.
 - **Theme only:** lock screen, polkit dialog, Omarchy's menus and panels, apps, and the boot unlock screen (through
   Omarchy's own Plymouth-from-theme command).
-- **Not doing:** a boot animation, an overview, desktop widgets, our own lock screen or polkit agent, copies of
-  Omarchy code.
+- **Not doing:** an overview, desktop widgets, our own lock screen or polkit agent, copies of Omarchy code. (This line
+  also said "a boot animation" until 2026-11-02: see that entry.)
 - **Three visual directions** in the design report — *as before*, *more restrained*, *stronger Endfield* — judged
   first on how well they serve daily use.
 - **Design gate.** The owner approves the design report before any component is implemented.

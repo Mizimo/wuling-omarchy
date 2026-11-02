@@ -1,5 +1,5 @@
 // WULING for Omarchy — mockup builder. One page, every screen:
-//   mock.html?screen=empty|desk|terminal|comms|power|agents&dir=field|hud&theme=mist|paper   (terminal also takes &media=1)
+//   mock.html?screen=empty|desk|terminal|comms|power|agents|arrival|closing&dir=field|hud&theme=mist|paper   (terminal also takes &media=1)
 // The bar always draws Omarchy's default layout (config/omarchy/shell.json, 4.0.6):
 //   left  [omarchy.menu, omarchy.workspaces]
 //   center[omarchy.indicators, omarchy.clock (anchor), omarchy.keyboard-layout, omarchy.weather, omarchy.system-update]
@@ -197,8 +197,32 @@ function power() {
     <div class="hints micro"><span>←→ Select</span><span><b>Hold ↵</b> Confirm 0.8s</span><span><b>Esc</b> Abort</span><span class="rt">Same entries as Omarchy · System</span></div></div>`);
 }
 
+// ------------------------------------------------------------------ session start: Arrival, frozen at about 60 %, and the exit's last frame
+function arrival() {
+  const cells = Array.from({ length: 20 }, (_, i) => `<i class="${i < 12 ? 'on' : ''}"></i>`).join('');
+  const reg = (x) => `<span class="reg" style="${x}"></span>`;
+  S(`<div class="arr">${reg('left:26px;top:26px')}${reg('right:26px;top:26px')}${reg('left:26px;bottom:26px')}${reg('right:26px;bottom:26px')}
+    <div class="micro corner" style="left:46px;bottom:28px">00:00:02.41</div><div class="micro corner" style="right:46px;bottom:28px">EF-WL / KUJIRA</div>
+    <div class="wrap"><div class="row"><span class="micro" style="color:var(--paper-2)"><span class="sq"></span>System boot</span><span class="micro">Field terminal &nbsp; v0.1</span></div>
+    <div class="ttl">KUJIRA — <span class="k">武陵</span> FIELD TERMINAL</div>
+    <div class="sub"><span class="en">ENDFIELD INDUSTRIES · TALOS-II</span><span class="micro" style="color:var(--paper-2)">終末地工業 · 武陵外勤終端</span></div>
+    <div class="rule"></div>
+    <div class="log">[<span class="ok"> OK </span>] compositor ........ Hyprland 0.56.2     <span class="w">eDP-1 1366×768@60</span>
+[<span class="ok"> OK </span>] shell ............. omarchy-shell 4.0.6
+[<span class="ok"> OK </span>] link .............. wlp3s0 · online
+[<span class="ok"> OK </span>] power ............. BAT0 100% · BAT1 87% · AC
+[ .. ] operator .......... operator</div>
+    <div class="prog">${cells}</div>
+    <div class="row" style="margin-top:12px"><span class="micro">Welcome back, Endministrator · 歡迎回來，管理員</span><span class="micro" style="color:var(--yellow)">60%</span></div></div></div>`);
+}
+function closing() {
+  S(`<div class="closing"><img src="../assets/unlock-${THEME}.png" width="353" height="340" alt=""></div>`);
+}
+
 // ------------------------------------------------------------------ compose
 document.addEventListener('DOMContentLoaded', () => {
+  if (SCREEN === 'arrival') { document.documentElement.classList.remove('paper'); arrival(); document.body.dataset.ready = '1'; return; }   // always MIST: the desktop's theme begins with the wave
+  if (SCREEN === 'closing') { closing(); document.body.dataset.ready = '1'; return; }
   const dimmed = SCREEN === 'power' || SCREEN === 'proto';
   S(`<div class="screen ${dimmed ? 'dim' : ''}"></div>`);
   if (SCREEN === 'empty') bar({ title: false, ws: ['active', '', '', '', ''] });

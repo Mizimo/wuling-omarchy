@@ -62,6 +62,8 @@ contour lines. No painted landscapes. Every theme carries all three, so Omarchy'
 | `terminal.sections` | any of `clock link levels signal agent telemetry comms` | all |
 | `sounds` | `essential`, `full`, `off` | `essential` |
 | `motion` | `full`, `reduced` | `full` |
+| `session.arrival` | `true`, `false`: the animation when a session starts (§8.9) | `true` |
+| `session.exit` | `true`, `false`: the animation for logout, reboot and shutdown (§8.9) | `true` |
 | `language` | `auto`, `en`, `zh-Hant`, `zh-Hans` | `auto` |
 | `login_music` | a path | unset |
 
@@ -132,13 +134,13 @@ Respect a `motion = "reduced"` setting: every entry becomes a 90 ms fade.
 ## 6. Sound
 
 The cue set from the earlier WULING: short, dry, industrial and water, synthesised, ours. `open`, `close`, `toggle`,
-`select`, `deny`, `notify`, `alert`, `tick` and `hover`.
+`select`, `deny`, `notify`, `alert`, `tick`, `hover`, and for §8.9 `boot`, `drop` and `seal`.
 
 - Played with `pw-play` from a small service, bounded overlap, never Qt Multimedia in the shell.
 - Master at 60 % of system volume. `sounds = "essential"` (default: no `hover`, no `tick`), `"full"` or `"off"`.
 - Do Not Disturb silences notifications. Omarchy's own menu has no events to hook and stays silent.
 - **Login music** is off by default. The user supplies the file (`login_music` in overrides); it never enters the repo.
-  One-shot at session start, skipped when muted or in DND.
+  One-shot at session start, as Arrival's arming ends, skipped when muted or in DND.
 
 ## 7. Copy and language
 
@@ -242,6 +244,7 @@ restores Omarchy's. See `research/spikes/system-route/`.
   Enter or the pointer; release cancels. Esc closes. Other entries run at once.
 - **Locked:** `wuling power toggle` asks `omarchy-shell lock isLocked` first and opens nothing while locked, so no menu
   waits behind the lock. This is not a security boundary.
+- **After the hold** comes the exit sequence (§8.9), then Omarchy's action. With that switched off, the action runs when the hold completes.
 - Searching "reboot" in Omarchy's menu still finds Omarchy's own entry and runs it without a hold. That is Omarchy's
   behaviour and stays.
 
@@ -279,6 +282,63 @@ pair always sits low. The mark is 300 px tall, and 40 px of empty space below it
 **fastfetch.** The vertical 武陵 mark (`design/assets/fastfetch-logo.png`) is in the user's own config, not the theme: the
 installer asks.
 
+### 8.9 Session motion — `wuling.session`
+
+The two animations the earlier WULING was liked for. `design/mockups/arrival-*.png` and `closing-*.png` show the look. Both are full-screen
+overlays built only while they play. They leave nothing behind (within 2 MB of a run without them, measured), and neither ever delays or
+blocks what the user asked for. Switching the plugin off leaves Omarchy's own start and exit. No 3D: the earlier 3D login world belonged to a
+greeter and a lock screen, which stay Omarchy's here.
+
+**Arrival, once per login session.** The marker is in `$XDG_RUNTIME_DIR/wuling/`, keyed by the session id, so a shell restart, theme switch,
+update, unlock or resume never replays it. Times run from the overlay's first presented frame. Always MIST until the wave.
+
+| When | What |
+|---|---|
+| 0 | Ink-0. Registration marks scale in from 1.6 (160 ms, 30 ms apart); the run timer starts; `EF-WL / <HOSTNAME>` and `■ SYSTEM BOOT` decode; the ■ blinks |
+| Arming ends, 0.4–1.0 s | When the bar has its first frame on every output, the background is drawn and settings are read, or at 1.0 s. The wave's shader is warmed in this time: a cold cache stalled 6–10 refreshes on kujira in the earlier build. Everything below counts from here (A). `boot` cue, login music |
+| A | Title types: `<HOSTNAME> — 武陵 FIELD TERMINAL`, 28 ms a step, CJK one step, yellow caret. Too wide: steps down to 36 px, then elides the middle of the hostname. Progress, 20 segments, fills over 1.9 s beside a percentage ticker |
+| A + 0.6 | Subtitle resolves and decodes; A + 0.68 the rule draws from the left |
+| A + 0.72 | Log lines resolve 110 ms apart, each with a `tick` a little higher than the last: compositor, shell, link, power (omitted with no battery), operator. Real values read before the overlay starts; a value not ready in 300 ms shows `—` with `[ -- ]`, never an invented one. The link line names the interface and `online`, not an address: people film their desktops |
+| A + 1.3 | Operator's `[ .. ]` turns `[ OK ]` |
+| A + 1.4 | The ink leaves in 16 × 9 cells, a wave from the top (threshold .55 · row + .35 · hash, cells at the threshold ghost with a yellow tint and outline), 420 ms, `open` at half level: the real desktop appears under the log, with an ink scrim keeping the left column readable (.82 at the edge, .62 at 46 %, .08 at 78 %). PAPER turns the overlay to PAPER in the same 420 ms |
+| A + 1.45 | `WELCOME BACK, ENDMINISTRATOR · 歡迎回來，管理員` decodes |
+| A + 2.0 | The overlay wipes top to bottom behind a yellow scan line, 300 ms snap. `wuling.bar` slices in at + 20 ms (6 slices, 200 ms, `drop`) |
+| By 3.5 s | Everything is gone and destroyed, whatever else happened. A watchdog enforces this |
+
+- **Skip:** any key or click jumps to the wipe. It holds exclusive keyboard focus, so the skipping key reaches no app; a key already held when
+  it appeared does not count. Hyprland's and Omarchy's global keys keep working.
+- **Lock:** a lock request removes it at once.
+- **Outputs:** the focused one runs the whole sequence; others show frame, title and progress in step; all wipe together.
+- **No desktop before its first frame**, if Omarchy allows it. The shell draws background, bar and this overlay in one process, so check the
+  order on both versions. If the desktop can show first, start with a 120 ms cut to ink, and report it.
+- **Layout:** scales with the output's logical height, 768 being 1.0. The column stays 1126 design pixels wide and centred, so 21:9 gets wider
+  margins, not a wider log.
+- **Language:** as §7. In English the Chinese halves don't show; 武陵 stays.
+- **Reduced motion:** no typing, no wave, no wipe: the final frame holds 600 ms, then a 120 ms fade.
+
+**Exit, for Logout, Reboot and Shutdown in the power menu**, once the hold completes. Lock, Suspend, Hibernate and Screensaver run at once, as
+in §8.5. Times run from the end of the hold.
+
+| When | What |
+|---|---|
+| 0 | The card presses and pulses; a 34 px vermilion 終 stamp, from the menu's title 終止協議, lands at the card's lower right, scale 1.4 to 1 in 60 ms, `seal` |
+| 120 ms | The menu de-resolves, 160 ms: scaleY 1 to .5 to .02 about the centre line, contrast up, fading |
+| 280 ms | The theme's `background` colour covers every output in cells from the top: the same 16 × 9 wave as Arrival's, 280 ms. No screenshot is needed: the cells draw over the live desktop |
+| 560 ms | **Omarchy's action runs, once.** The mark fades in, 200 ms, and the overlay stays until the session ends |
+
+- **It ends where the next screen begins.** The mark is the theme's `unlock.png` at its native pixels, in the centre: where Omarchy's boot screen
+  draws it, in the same colour, on reboot and shutdown too, once `omarchy plymouth set-by-theme` has been run. After a logout, Omarchy's login screen has
+  the same image about 44 px higher, above its password field. A blank moment from a mode change or the firmware may come between, and isn't ours. In
+  other Omarchy themes the mark is the plugin's own copy in the palette's text colour.
+- **The action does not depend on the animation.** Its timer is separate. If the overlay fails to load, or `session.exit` is off, the action runs
+  when the hold completes. Omarchy gives about 2 s to close windows before the session really ends, which happens under the ink.
+- **Nothing gets stuck.** The overlay sits above everything, including the OSD Omarchy raises for these actions, and ignores input from the stamp on. If
+  the session is still alive 10 s after the action, something refused: the overlay fades out and a notification says so.
+- Searching "reboot" in Omarchy's menu, or running Omarchy's command directly, takes Omarchy's own path with no animation.
+- **Reduced motion:** the stamp, then a 120 ms fade to the ground, then the action.
+
+`wuling session preview arrival|exit` plays either one and runs nothing, so they can be judged and tuned on a machine that must not log out.
+
 ## 9. Keys
 
 | Key | Does | Whose |
@@ -297,7 +357,7 @@ Both new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to overwrit
 - **Resolutions:** 1366×768 to 4K, fractional scale; sizes scale with Omarchy's `[font] base-size`.
 - **Screen shapes:** Omarchy's background only fills by cropping. Backgrounds are 3840×2160 and keep their text inside the area that
   16:9, 16:10, 3:2 and 21:9 all show (`design/src/wallpaper.py`). `design/render.sh bg` rebuilds them.
-- **Monitors:** a bar per output. Terminal, power menu, Dispatch and OSD on the focused output. Handle hotplug.
+- **Monitors:** a bar per output. Terminal, power menu, Dispatch and OSD on the focused output. Arrival and the exit on all. Handle hotplug.
 - **Languages:** zh-Hant, zh-Hans, en. English documentation.
 - **Versions:** Omarchy 4.0.6 (stable) now. Keep the 4.5 differences behind one small boundary (the table in
   `research/omarchy-shell-api.md` §17): six bar sections, notification methods, `style.*` → `appearance.*`, `background`

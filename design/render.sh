@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 CHROME=${CHROME:-$(ls -d ~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome 2>/dev/null | tail -1)}
 [[ -x $CHROME ]] || { echo "no Chromium found; set CHROME" >&2; exit 1; }
 bg=0; [[ ${1:-} == bg ]] && { bg=1; shift; }
-screens=("$@"); (( ${#screens[@]} || bg )) || screens=(empty desk terminal comms power agents)
+screens=("$@"); (( ${#screens[@]} || bg )) || screens=(empty desk terminal comms power agents arrival closing)
 mkdir -p mockups
 shot() { # screen dir theme
   local out="mockups/$1-$2$([[ $3 == paper ]] && echo -paper).png"

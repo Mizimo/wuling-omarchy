@@ -252,3 +252,22 @@ html, body { width: 1366px; height: 768px; overflow: hidden; background: var(--i
 
 /* the fastfetch logo is drawn light-on-ink; PAPER's terminal shows its inverse (a PAPER logo file ships with the theme) */
 :root.paper .fflogo { filter: invert(1) hue-rotate(180deg) saturate(1.4); }
+
+/* ---------- SESSION: Arrival and the exit's last frame (DESIGN 8.9) ---------- */
+.arr { position: absolute; inset: 0; background: var(--ink-0); }
+.arr .corner { position: absolute; }
+.arr .wrap { position: absolute; left: 120px; right: 120px; top: 190px; }
+.arr .row { display: flex; justify-content: space-between; }
+.arr .sq { display: inline-block; width: 6px; height: 6px; background: var(--yellow); margin-right: 8px; vertical-align: 1px; }
+.arr .ttl { font: 600 52px/1 var(--font-mono); letter-spacing: .02em; color: var(--paper-1); margin-top: 26px; white-space: nowrap; }
+.arr .ttl .k { font-family: var(--font-cjk-serif); font-weight: 900; }
+.arr .sub { display: flex; justify-content: space-between; margin-top: 18px; }
+.arr .sub .en { font: 500 13px/1 var(--font-mono); letter-spacing: .32em; color: var(--paper-2); }
+.arr .rule { height: 1px; background: var(--line); margin-top: 18px; }
+.arr .log { margin-top: 44px; font: 400 11px/19px var(--font-mono); color: var(--mist-4); letter-spacing: .06em; white-space: pre; }
+.arr .log .ok { color: var(--jade); } .arr .log .w { color: var(--paper-1); }
+.arr .prog { margin-top: 26px; display: flex; gap: 3px; }
+.arr .prog i { width: 18px; height: 6px; background: var(--ink-4); }
+.arr .prog i.on { background: var(--yellow); }
+.closing { position: absolute; inset: 0; background: var(--ink-2); display: flex; align-items: center; justify-content: center; }
+
