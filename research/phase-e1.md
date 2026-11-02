@@ -1,11 +1,13 @@
 # E.1 — notification writer recovery and visual corrections
 
-Implemented against inbox v423 and DESIGN `ad9be9e`. The recovery defects are
+Implemented against inbox v423 and DESIGN `ad9be9e`, with the v424 startup
+follow-up below. The recovery defects are
 fixed and tested on both supported VMs. **The historical spontaneous writer
 exit on kujira remains unexplained:** the specified sequence did not reproduce
 it. This report does not treat forced termination as an explanation of that
 incident. The design lead has been asked for the verifier's contemporaneous
-evidence; neither workstation was accessed.
+evidence; neither workstation was accessed. Inbox v424 accepts this as pending
+and asks that startup failures also be distinguishable in health.
 
 ## Persistence
 
@@ -55,6 +57,28 @@ Why an empty historical qslog is insufficient: the
 closes a child's stderr channel when no parser is attached, and the old WULING
 exit handler emitted no diagnostic. This explains missing observability, not
 the cause of the exit. The candidate now records exit code and exposes health.
+
+The lead's v424 follow-up narrows the historical observation to startup: that
+shell never changed the state file, so the writer either failed to start or
+disappeared within its initial roughly four seconds. The lead found no kernel
+OOM/segfault, coredump or relevant user-journal entry, and confirmed the
+verifier's workstation scripts did not kill a writer or use a diagnostic copy.
+The lead independently repeated the sequence eight times on kujira, all
+healthy; combined with the VM repetitions, 26 attempts did not reproduce it.
+These are the lead's observations, not our workstation measurements.
+
+The v424 follow-up adds `runningChanged` detection in addition to the startup
+deadline. Both VMs were tested with an intentionally missing executable in
+the installed plugin's diagnostic copy: FailedToStart emitted runningChanged,
+never started, and never emitted exited. Health preserved a null exit code,
+reported `never-started` during retries, then `given-up` after all three.
+Elapsed from the first observed failure to exhaustion was about 36 seconds,
+so detection did not wait for the five-second fallback on each attempt. The
+plugin file was restored byte-for-byte, officially restarted, and returned to
+`running` with its current PID. Evidence: `e1-startup-vm{406,450}-r2.log`.
+The first fixture edited the inactive payload copy instead of the registered
+plugin; it stayed healthy and timed out. That negative control and its cleanup
+remain in the original logs, not counted as a FailedToStart test.
 
 `e1-writer-baseline-*` and `e1-writer-repeat-*` contain the original runs.
 `e1-writer-candidate-vm406-r2.log` and `e1-writer-candidate-vm450.log` contain

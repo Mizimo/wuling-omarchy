@@ -43,6 +43,11 @@ A writer that survives that window starts a fresh budget on its next failure.
 `wuling doctor` reads `wuling.notifications writer` and reports a degraded,
 missing or stopped writer. Exhaustion produces one low-priority warning per
 compositor session. Teardown kills its child without waiting or flushing.
+Health distinguishes `never-started`, `starting`, `running`, `exited` and
+`given-up`, with `ever_started`, the current PID, and a nullable exit code.
+FailedToStart is detected through `runningChanged`; a five-second startup
+deadline also covers a missing transition. Startup failures share the same
+three recovery attempts as exits and failed acknowledgements.
 Notification objects and their signal callbacks belong to the service, never
 to delegates or model rows, and are explicitly disconnected on release.
 
