@@ -97,7 +97,6 @@ duplicate handlers. Both versions.
 ### E — Dispatch and power menu
 
 `plugins/dispatch`, `plugins/power`, `plugins/session` with the exit sequence (DESIGN §8.9), the bindings block, the menu extension entry.
-Also try Arrival's first frame on both versions early in this phase: whether the desktop can show before it decides how Arrival starts.
 **Acceptance:** every mode on real input, launching a terminal app and an app with field codes, clipboard paste, `omarchy agent prompt` with
 no agent configured. Power: every route, holds and cancels **without completing reboot, shutdown or logout on kujira**; locked and unlocked;
 removal restores Omarchy's System. Exit: the action runs exactly once, at the designed moment, and still runs when the overlay is made to fail;
@@ -108,7 +107,7 @@ the desktop must not reappear after the ink, and whatever shows in between is re
 
 Arrival (DESIGN §8.9), `plugins/sound`, login music (off by default), localisation complete. **Acceptance:** Arrival once per session, never on
 a shell restart, theme switch, update, unlock or resume; skip by key and click, a held key ignored; a lock request during it; several outputs;
-a cold shader cache; gone within 3.5 s; within 2 MB of a run without it. Real logins in a VM; on kujira `wuling session preview arrival`, and the
+a cold shader cache, frame by frame from outside the VM, with no frame of wallpaper or bar before the ink (the earlier experiment had a much smaller overlay); gone within 3.5 s; within 2 MB of a run without it. Real logins in a VM; on kujira `wuling session preview arrival`, and the
 real one at the owner-approved reboot. Cue overlap bounded, tests on a private null sink with no physical sound. A 24-hour soak on kujira with PSS, CPU and handles flat. An Omarchy update survives, overrides intact. Partial
 enable/disable of every part. **Final report to the owner.**
 
