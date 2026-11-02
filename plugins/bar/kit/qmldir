@@ -3,6 +3,7 @@ Button 1.0 Button.qml
 Hazard 1.0 Hazard.qml
 Icon 1.0 Icon.qml
 Label 1.0 Label.qml
+Micro 1.0 Micro.qml
 Level 1.0 Level.qml
 Section 1.0 Section.qml
 Spark 1.0 Spark.qml

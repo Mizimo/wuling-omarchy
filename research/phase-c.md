@@ -94,17 +94,24 @@ unrelated files were left untouched. A new same-login install/remove control
 then returned the full configuration inventory and logical dconf values to
 its own baseline on both versions (`same-login-cleanup-vm{406,450}.log`).
 
-One 4.5 capture after a fresh login and native text-size change to 16 showed
-missing Terminal text, including the large clock and header. This was not
-reproduced by repeating the setting: three later captures across roughly ten
-seconds and a close/reopen showed complete text. Fontconfig selected the
-installed WULING font paths. The final four-edge/fractional-scale captures
-also showed complete content. The cause is not established; do not attribute
-it to Qt, virgl or the product without further evidence. Keep
-`shots/vm450-font-scale-16.png` as the incomplete capture and
-`shots/vm450-scale-reopen.png` plus `scale-observe-450.log` as the later
-controls. The independent verifier should explicitly repeat the cold-login
-text-size change, including on real hardware.
+The original observation after a fresh 4.5 login and native text-size change
+to 16 was missing Terminal text, including the large clock and header. **The
+frame was overwritten; only the contemporaneous observation remains.** The
+previous report incorrectly cited `shots/vm450-font-scale-16.png` as the bad
+frame. That file is complete: its clock reads 08:25:03 and its host mtime is
+00:25:03, matching `font-steady-vm450.log`, not the 00:15 run in
+`font-scale-450.log`. No surviving bad frame has been identified.
+
+The 00:15 candidate already contained the font-backup fix: the retained
+`c-before-hotfix/bin/lib/wuling/lifecycle.py` (00:02:32) uses the dedicated
+`font-backups` directory, and the subsequent install completed at 00:12:28.
+These host times are 2026-11-02 PST. This does not establish a cause for the
+observation. Do not attribute it to Qt, virgl or the product. Three later
+timestamped captures across roughly ten seconds, `shots/vm450-scale-reopen.png`,
+and the final edge/fractional-scale captures show complete text;
+`scale-observe-450.log` records those controls. The independent verifier should
+repeat the cold-login text-size change, including on real hardware. New
+capture helpers use unique run IDs and frame timestamps and refuse overwrite.
 
 ## Design decisions and remaining phases
 

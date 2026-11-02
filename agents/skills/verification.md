@@ -18,3 +18,8 @@ versions, limits and paths. Do not erase user edits to obtain an empty diff.
 Privacy checking supplements review; it cannot establish that an arbitrary
 image contains no private content. Inspect every new public image and use
 only synthetic account, machine and notification data.
+
+Give every capture an immutable filename containing a unique run ID and frame
+timestamp. Never overwrite an earlier frame during a repeat run. Record the
+capture path with that run's observations; if a frame was lost, say so rather
+than citing a later capture as evidence of the earlier observation.

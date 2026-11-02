@@ -33,6 +33,15 @@ Ui.Panel {
         if (actionProcess.running || !actionQueue.length) return;
         actionProcess.command = actionQueue[0]; actionQueue = actionQueue.slice(1); actionProcess.running = true;
     }
+    function tileValue(tile) {
+        const word = tile.active ? "On" : "Off";
+        if (tile.id === "power") {
+            const value = ({balanced:"Balanced", performance:"Performance", "power-saver":"Saver"})[tile.state] || tile.state;
+            return Kit.Runtime.language === "en" ? value : Kit.Runtime.tr(tile.state) + " " + value;
+        }
+        if (Kit.Runtime.language === "en") return word;
+        return ["dnd", "night"].indexOf(tile.id) >= 0 ? Kit.Runtime.tr(tile.id) + " " + word : word + " " + Kit.Runtime.tr(tile.active ? "on" : "off");
+    }
     function foot(action) { close(); act(action); }
     onOpenedChanged: {
         if (!opened) state = ({});
@@ -122,7 +131,9 @@ Ui.Panel {
                 boundsBehavior: Flickable.StopAtBounds
                 Column {
                     id: contents; width: scroll.width
-                    component Part: Column {
+                    component Part: Item {
+                        default property alias contentData: sectionContent.data
+                        implicitHeight: layout.height + Kit.Runtime.px(10) + 1
                         id: part
                         property string sectionKey: ""
                         property bool revealed: false
@@ -138,30 +149,36 @@ Ui.Panel {
                         Connections { target: terminal; function onOpenedChanged() { part.reveal(); } }
                         Timer { id: entry; interval: Kit.Runtime.reduced ? 0 : 150 + Math.min(12, Math.max(0, terminal.shown.indexOf(part.sectionKey))) * (Kit.Runtime.hud ? 60 : 20); onTriggered: part.revealed = true }
                         Behavior on opacity { NumberAnimation { duration: 90 } }
-                        Item {
-                            width: part.width; height: 0; z: 1
-                            Rectangle { visible: part.sectionKey !== "comms"; width: parent.width; height: 1; y: part.height - 1; color: Kit.Runtime.c("line") }
-                            Rectangle {
-                                visible: Kit.Runtime.hud && !Kit.Runtime.reduced && sweep.running
-                                width: parent.width; height: 1; color: Kit.Runtime.c("accent-ink")
-                                property real progress: 0
-                                y: progress * part.height
-                                NumberAnimation on progress { id: sweep; from: 0; to: 1; duration: 160; running: part.revealed && terminal.opened }
-                            }
+                        property Column layout: Column {
+                            parent: part; width: part.width
+                            Kit.Section { width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey); detail: part.sectionKey === "clock" ? Quickshell.env("USER") : "" }
+                            Column { id: sectionContent; width: parent.width; topPadding: Kit.Runtime.px(8) }
                         }
-                        Kit.Section { width: parent.width; number: terminal.number(parent.sectionKey); title: Kit.Runtime.label(parent.sectionKey) }
+                        property Rectangle divider: Rectangle {
+                            parent: part; anchors.bottom: parent.bottom; width: parent.width; height: 1
+                            visible: terminal.shown[terminal.shown.length - 1] !== part.sectionKey
+                            color: Kit.Runtime.c("line")
+                        }
+                        property Rectangle scan: Rectangle {
+                            parent: part
+                            visible: Kit.Runtime.hud && !Kit.Runtime.reduced && sweep.running
+                            width: parent.width; height: 1; color: Kit.Runtime.c("accent-ink")
+                            property real progress: 0
+                            y: progress * part.height
+                            NumberAnimation on progress { id: sweep; from: 0; to: 1; duration: 160; running: part.revealed && terminal.opened }
+                        }
                     }
                     Part {
                         sectionKey: "clock"
                         Item {
-                            width: parent.width; height: Kit.Runtime.g("terminal_clock_size") + Kit.Runtime.px(8)
-                            Kit.Label { id: hours; x: Kit.Runtime.px(14); anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(6); text: terminal.state.clock ? terminal.state.clock.time.slice(0, 5) : "—:—"; font.family: Kit.Runtime.display; font.weight: Font.DemiBold; font.pixelSize: Kit.Runtime.g("terminal_clock_size"); color: Kit.Runtime.c("paper-1") }
-                            Kit.Label { x: hours.x + hours.width + Kit.Runtime.px(5); anchors.bottom: hours.bottom; anchors.bottomMargin: Kit.Runtime.px(4); text: terminal.state.clock ? terminal.state.clock.time.slice(5) : ""; font.family: Kit.Runtime.display; font.pixelSize: Kit.Runtime.px(18); color: Kit.Runtime.c("accent-ink") }
+                            width: parent.width; height: Kit.Runtime.g("terminal_clock_size") * .9 + Kit.Runtime.px(2)
+                            Kit.Label { id: hours; x: Kit.Runtime.px(14); anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(2); height: Kit.Runtime.g("terminal_clock_size") * .9; text: terminal.state.clock ? terminal.state.clock.time.slice(0, 5) : "—:—"; font.family: Kit.Runtime.display; font.weight: Font.DemiBold; font.pixelSize: Kit.Runtime.g("terminal_clock_size"); color: Kit.Runtime.c("paper-1") }
+                            Kit.Label { x: hours.x + hours.width + Kit.Runtime.px(5); anchors.bottom: hours.bottom; anchors.bottomMargin: Kit.Runtime.px(4); text: terminal.state.clock ? terminal.state.clock.time.slice(5) : ""; font.family: Kit.Runtime.display; font.pixelSize: Kit.Runtime.px(18); font.weight: Font.DemiBold; height: Kit.Runtime.px(18); color: Kit.Runtime.c("accent-ink") }
                             Column {
-                                anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(14); anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(10); spacing: Kit.Runtime.px(4)
-                                Kit.Label { anchors.right: parent.right; text: terminal.state.clock ? terminal.state.clock.date : ""; font.pixelSize: Kit.Runtime.px(12) }
-                                Kit.Label { anchors.right: parent.right; text: terminal.state.clock ? terminal.state.clock.zone : ""; font.pixelSize: Kit.Runtime.px(9); color: Kit.Runtime.c("mist-4") }
-                                Kit.Label { anchors.right: parent.right; text: { const n = terminal.state.clock ? terminal.state.clock.uptime_seconds : 0; return Kit.Runtime.tr("uptime") + " " + Math.floor(n / 3600) + "h " + Math.floor(n / 60) % 60 + "m"; } font.pixelSize: Kit.Runtime.px(8); color: Kit.Runtime.c("mist-5") }
+                                anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(14); anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(2); spacing: Kit.Runtime.px(4)
+                                Kit.Micro { anchors.right: parent.right; text: { const c = terminal.state.clock; if (!c) return ""; const day = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][c.weekday - 1]; return c.date.slice(0, 4) + " · " + day + (Kit.Runtime.language === "en" ? "" : " " + Kit.Runtime.tr("weekday-" + c.weekday)); } }
+                                Kit.Label { anchors.right: parent.right; height: Kit.Runtime.px(14.4); text: terminal.state.clock ? terminal.state.clock.date.slice(5).replace("-", ".") + " · " + terminal.state.clock.zone : ""; font.pixelSize: Kit.Runtime.px(12); font.weight: Font.DemiBold; font.letterSpacing: Kit.Runtime.px(.72); color: Kit.Runtime.c("paper-1") }
+                                Kit.Micro { anchors.right: parent.right; text: { const n = terminal.state.clock ? terminal.state.clock.uptime_seconds : 0; return "UPTIME " + Math.floor(n / 3600) + "H " + Math.floor(n / 60) % 60 + "M"; } }
                             }
                         }
                     }
@@ -179,18 +196,16 @@ Ui.Panel {
                                     onClicked: terminal.act(modelData.action)
                                     onRightClicked: terminal.act("panel", modelData.id)
                                     Kit.Icon { x: Kit.Runtime.px(8); y: Kit.Runtime.px(7); name: ({wifi:"wifi",bluetooth:"bluetooth",tailscale:"hub",dnd:"do_not_disturb_on",night:"bedtime",power:"speed"})[parent.modelData.id]; color: parent.foreground; font.pixelSize: Kit.Runtime.px(15) }
-                                    Kit.Label { anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(7); y: Kit.Runtime.px(7); text: Kit.Runtime.tr(parent.modelData.id); color: parent.foreground; font.pixelSize: Kit.Runtime.px(8) }
-                                    Kit.Label { x: Kit.Runtime.px(8); y: Kit.Runtime.px(31); width: parent.width - Kit.Runtime.px(16); text: parent.modelData.id === "power" ? Kit.Runtime.tr(parent.modelData.state) : Kit.Runtime.tr(parent.modelData.active ? "on" : "off"); color: parent.foreground; font.family: Kit.Runtime.sans }
+                                    Kit.Micro { anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(8); y: Kit.Runtime.px(10); text: ({wifi:"WI-FI", bluetooth:"BT", tailscale:"TAILNET", dnd:"DND", night:"NIGHT", power:"POWER"})[parent.modelData.id]; color: parent.foreground; pixels: 7.5 }
+                                    Kit.Label { x: Kit.Runtime.px(8); y: Kit.Runtime.px(31); width: parent.width - Kit.Runtime.px(16); text: terminal.tileValue(parent.modelData); color: parent.foreground; font.family: Kit.Runtime.sans }
                                 }
                             }
                         }
-                        Item { width: 1; height: Kit.Runtime.px(10) }
                     }
                     Part {
                         sectionKey: "levels"
                         Kit.Level { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); visible: !!terminal.state.levels && !!terminal.state.levels.volume; name: Kit.Runtime.tr("volume"); icon: terminal.state.levels && terminal.state.levels.volume && terminal.state.levels.volume.muted ? "volume_off" : "volume_up"; value: terminal.state.levels && terminal.state.levels.volume ? terminal.state.levels.volume.percent : 0; onAdjusted: percent => terminal.act("volume", Math.round(percent)) }
                         Kit.Level { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); visible: !!terminal.state.levels && terminal.state.levels.brightness !== null; name: Kit.Runtime.tr("brightness"); icon: "brightness_6"; fill: Kit.Runtime.c("paper-2"); value: terminal.state.levels && terminal.state.levels.brightness !== null ? terminal.state.levels.brightness : 0; onAdjusted: percent => terminal.act("brightness", Math.round(percent)) }
-                        Item { width: 1; height: Kit.Runtime.px(8) }
                     }
                     Part {
                         sectionKey: "signal"
@@ -242,7 +257,6 @@ Ui.Panel {
                             }
                         }
                         Kit.Button { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); height: Kit.Runtime.px(26); text: Kit.Runtime.tr("ask-agent"); icon: "smart_toy"; onClicked: terminal.act("agent") }
-                        Item { width: 1; height: Kit.Runtime.px(8) }
                     }
                     Part {
                         sectionKey: "telemetry"
@@ -253,13 +267,16 @@ Ui.Panel {
                                 Column {
                                     required property string modelData
                                     width: (contents.width - Kit.Runtime.px(48)) / 3; spacing: Kit.Runtime.px(4)
-                                    Kit.Label { text: Kit.Runtime.tr(modelData).toUpperCase(); font.pixelSize: Kit.Runtime.px(8); color: Kit.Runtime.c("mist-5") }
-                                    Kit.Label { font.family: Kit.Runtime.display; font.pixelSize: Kit.Runtime.px(16); font.weight: Font.DemiBold; text: { const t = terminal.state.telemetry; if (!t) return "—"; const value = modelData === "cpu" ? t.cpu_percent : modelData === "memory" ? t.memory_used / 1073741824 : t.temperature_c; return value === null ? "—" : value.toFixed(modelData === "memory" ? 1 : 0) + (modelData === "cpu" ? "%" : modelData === "memory" ? " / " + (t.memory_total / 1073741824).toFixed(1) + "G" : "°"); } }
-                                    Kit.Spark { width: parent.width; height: Kit.Runtime.px(16); samples: terminal.state.telemetry ? terminal.state.telemetry.history[modelData] : []; ink: Kit.Runtime.c(modelData === "cpu" ? "accent-ink" : modelData === "memory" ? "paper-2" : "jade") }
+                                    Kit.Micro { text: ({cpu:"CPU", memory:"MEM", temperature:"TEMP"})[modelData] + (Kit.Runtime.language === "en" ? "" : " " + Kit.Runtime.tr(modelData)) }
+                                    Row {
+                                        height: Kit.Runtime.px(16); spacing: Kit.Runtime.px(3)
+                                        Kit.Label { height: parent.height; font.family: Kit.Runtime.display; font.pixelSize: Kit.Runtime.px(16); font.weight: Font.DemiBold; color: Kit.Runtime.c("paper-1"); text: { const t = terminal.state.telemetry; if (!t) return "—"; const value = modelData === "cpu" ? t.cpu_percent : modelData === "memory" ? t.memory_used / 1073741824 : t.temperature_c; return value === null ? "—" : value.toFixed(modelData === "memory" ? 1 : 0) + (modelData === "cpu" ? "%" : modelData === "memory" ? "" : "°"); } }
+                                        Kit.Label { visible: modelData === "memory" && !!terminal.state.telemetry; anchors.bottom: parent.bottom; height: Kit.Runtime.px(9); font.pixelSize: Kit.Runtime.px(9); font.weight: Font.Medium; color: Kit.Runtime.c("mist-4"); text: terminal.state.telemetry ? "/ " + (terminal.state.telemetry.memory_total / 1073741824).toFixed(1) + "G" : "" }
+                                    }
+                                    Kit.Spark { width: Math.min(parent.width, Kit.Runtime.px(96)); height: Kit.Runtime.px(16); samples: terminal.state.telemetry ? terminal.state.telemetry.history[modelData] : []; ink: Kit.Runtime.c(modelData === "cpu" ? "accent-ink" : modelData === "memory" ? "paper-2" : "jade") }
                                 }
                             }
                         }
-                        Item { width: 1; height: Kit.Runtime.px(10) }
                     }
                     Part {
                         sectionKey: "comms"
@@ -271,7 +288,7 @@ Ui.Panel {
             Row {
                 id: foot; anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(12); x: Kit.Runtime.px(22); spacing: Kit.Runtime.px(6)
                 Repeater {
-                    model: [{key:"lock",icon:"lock",action:"lock"},{key:"sleep",icon:"bedtime",action:"sleep"},{key:"exit",icon:"logout",action:"power-menu"},{key:"reboot",icon:"restart_alt",action:"power-menu"},{key:"off",icon:"power_settings_new",action:"power-menu"}]
+                    model: [{key:"lock",icon:"lock",action:"lock"},{key:"sleep",icon:"bedtime",action:"sleep"},{key:"exit",icon:"logout",action:"power-menu"},{key:"reboot",icon:"restart_alt",action:"power-menu"},{key:"shutdown",icon:"power_settings_new",action:"power-menu"}]
                     Kit.Button {
                         required property var modelData
                         width: (body.width - Kit.Runtime.px(60)) / 5; height: Kit.Runtime.px(40)
@@ -279,7 +296,7 @@ Ui.Panel {
                         Accessible.name: Kit.Runtime.tr(modelData.key)
                         onClicked: terminal.foot(modelData.action)
                         Kit.Icon { anchors.horizontalCenter: parent.horizontalCenter; y: Kit.Runtime.px(6); name: parent.modelData.icon; font.pixelSize: Kit.Runtime.px(15); color: parent.foreground }
-                        Kit.Label { anchors.horizontalCenter: parent.horizontalCenter; y: Kit.Runtime.px(25); text: Kit.Runtime.tr(parent.modelData.key).toUpperCase(); font.pixelSize: Kit.Runtime.px(8); color: parent.foreground }
+                        Kit.Micro { anchors.horizontalCenter: parent.horizontalCenter; y: Kit.Runtime.px(25); text: parent.modelData.key === "shutdown" ? "OFF" : parent.modelData.key.toUpperCase(); pixels: 7.5; color: parent.foreground }
                     }
                 }
             }

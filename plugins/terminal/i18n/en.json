@@ -36,5 +36,13 @@
   "unavailable": "Unavailable",
   "menu": "Omarchy menu",
   "identity": "Wuling · 武陵",
-  "workspace": "Workspace"
+  "workspace": "Workspace",
+  "shutdown": "Shutdown",
+  "weekday-1": "Mon",
+  "weekday-2": "Tue",
+  "weekday-3": "Wed",
+  "weekday-4": "Thu",
+  "weekday-5": "Fri",
+  "weekday-6": "Sat",
+  "weekday-7": "Sun"
 }
