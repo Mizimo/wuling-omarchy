@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "research.arrival",
+  "name": "Disposable Arrival first-frame probe",
+  "version": "0.1.0",
+  "kinds": ["service"],
+  "keepLoaded": true,
+  "entryPoints": {"service": "Probe.qml"}
+}
