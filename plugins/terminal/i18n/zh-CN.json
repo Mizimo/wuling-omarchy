@@ -24,7 +24,6 @@
   "previous": "上一首",
   "pause": "暂停",
   "next": "下一首",
-  "ask-agent": "询问你的代理",
   "cpu": "处理",
   "memory": "记忆",
   "temperature": "温度",
@@ -48,7 +47,8 @@
   "count-unit": "则",
   "show-all": "展开所有通知",
   "more-count": "则",
-  "panel-unavailable": "当前任务栏没有这个面板。",
+  "panel-unavailable": "顶栏上没有这个面板。",
   "action-failed": "当前无法执行此操作，请重试。",
-  "connected": "已连接"
+  "connected": "已连接",
+  "open-agent": "打开默认代理"
 }

@@ -151,7 +151,12 @@ Item {
                                 Rectangle { anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(12);y:Kit.Runtime.px(14);width:Kit.Runtime.px(16);height:width;color:"transparent";border.width:1;border.color:Kit.Runtime.c(card.chosen?"on-accent":"mist-5");Kit.Micro { anchors.centerIn:parent;text:card.modelData.key;pixels:8;color:card.ink } }
                                 Kit.Icon { x:Kit.Runtime.px(14);y:Kit.Runtime.px(113);name:card.modelData.icon;font.pixelSize:Kit.Runtime.px(24);color:card.ink }
                                 Kit.Label { x:Kit.Runtime.px(14);y:Kit.Runtime.px(149);width:parent.width-x*2;text:card.modelData.label.toUpperCase();font.family:Kit.Runtime.display;font.pixelSize:Kit.Runtime.px(13);font.weight:Font.DemiBold;font.letterSpacing:Kit.Runtime.px(2);color:card.ink }
-                                Kit.Label { visible:Kit.Runtime.language!=="en";x:Kit.Runtime.px(14);y:Kit.Runtime.px(168);width:parent.width-x*2;text:card.modelData.translated?Kit.Runtime.tr(card.modelData.name):card.modelData.label;font.family:Kit.Runtime.sans;font.pixelSize:Kit.Runtime.px(11.5);color:Kit.Runtime.c(card.chosen?"on-accent":"mist-4") }
+                                Kit.Label {
+                                    visible:Kit.Runtime.language!=="en" || card.chosen && card.modelData.dangerous
+                                    x:Kit.Runtime.px(14);y:Kit.Runtime.px(168);width:parent.width-x*2
+                                    text: { const label=Kit.Runtime.language==="en"?"":card.modelData.translated?Kit.Runtime.tr(card.modelData.name):card.modelData.label; return label+(card.chosen && card.modelData.dangerous?(label?" · ":"")+Kit.Runtime.tr("hold"):""); }
+                                    font.family:Kit.Runtime.sans;font.pixelSize:Kit.Runtime.px(11.5);color:Kit.Runtime.c(card.chosen?"on-accent":"mist-4")
+                                }
                                 Rectangle { anchors.bottom:parent.bottom;width:parent.width*(card.chosen?power.holdProgress:0);height:Kit.Runtime.px(4);color:Kit.Runtime.c("on-accent") }
                                 Kit.Label { visible:power.committed && card.chosen;anchors.right:parent.right;anchors.bottom:parent.bottom;anchors.margins:Kit.Runtime.px(10);text:"終";font.family:Kit.Runtime.serif;font.weight:Font.Black;font.pixelSize:Kit.Runtime.px(34);color:Kit.Runtime.c("vermilion");scale:1+.4*Math.max(0,1-power.exitElapsed/60) }
                                 MouseArea {

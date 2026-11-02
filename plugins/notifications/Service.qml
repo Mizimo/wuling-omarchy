@@ -28,9 +28,6 @@ Item {
     property string keyboardOutput: ""
     readonly property bool paused: pointerIn || expanded || keyboardMode
     property var terminals: ({})
-    property string pendingWrite: ""
-    property bool writeInFlight: false
-    property bool writerReady: false
     readonly property var displayNames: Quickshell.screens.map(s => s.name)
     readonly property string focusedDisplay: Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : displayNames[0] || ""
     readonly property string targetDisplay: displayNames.indexOf(pinnedOutput) >= 0 ? pinnedOutput : focusedDisplay
@@ -263,15 +260,19 @@ Item {
         if(!ready || stopping)return;
         const rows=[];
         for(let i=0;i<live.count;i++) { const r=row(live.get(i).key); if(!r.replay)rows.push(rules.persisted(r,16384)); }
-        pendingWrite=JSON.stringify({schema_version:1,dnd:doNotDisturb,live:rows,history:history})+"\n";
-        flushWrite();
+        writer.enqueue(JSON.stringify({schema_version:1,dnd:doNotDisturb,live:rows,history:history})+"\n");
     }
-    function flushWrite() { if(writerReady && !writeInFlight && pendingWrite) { writeInFlight=true; writer.write(pendingWrite); pendingWrite=""; } }
+    function writerHealth() { return writer.health(); }
+    Writer { id:writer;onExhausted:warningClaim.running=true }
+    function writerWarning() {
+        if(stopping || !ready)return;
+        if(!live.count)pinnedOutput=focusedDisplay;
+        const r=shape({key:"writer-"+Date.now(),app:"WULING",summary:Kit.Runtime.tr("writer-failed"),urgency:0},true);
+        live.insert(0,r);revision++;schedule();
+    }
     Process {
-        id:writer; command:["wuling","notifications","persist"]; stdinEnabled:true
-        onStarted: { daemon.writerReady=true; daemon.flushWrite(); }
-        stdout:SplitParser { onRead: line => { daemon.writeInFlight=false; daemon.flushWrite(); } }
-        onExited: { daemon.writerReady=false; daemon.writeInFlight=false; }
+        id:warningClaim;command:["wuling","notifications","claim-warning"]
+        stdout:StdioCollector { onStreamFinished: { try { if(JSON.parse(text).claimed)daemon.writerWarning(); }catch(_) {} } }
     }
     Process {
         id:boot; command:["wuling","notifications","boot"]; running:true
@@ -292,7 +293,7 @@ Item {
                         live.append(r);
                     }
                     if(live.count)daemon.pinnedOutput=daemon.focusedDisplay;
-                    daemon.ready=true; writer.running=true; daemon.schedule(); daemon.saveSoon();
+                    daemon.ready=true; writer.start(); daemon.schedule(); daemon.saveSoon();
                 } catch(_) { daemon.fallback(); }
             }
         }
@@ -307,7 +308,7 @@ Item {
     Component.onDestruction: {
         stopping=true;
         for(const key in wires)unwire(key);
-        writer.running=false;
+        writer.stop();
     }
     Loader {
         active:daemon.ready

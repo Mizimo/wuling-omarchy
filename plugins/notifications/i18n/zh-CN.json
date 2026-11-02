@@ -3,5 +3,6 @@
   "dismiss": "关闭通知",
   "copy-code": "复制验证码",
   "no-recent": "没有近期通知",
-  "more-notifications": "MORE 更多"
+  "more-notifications": "MORE 更多",
+  "writer-failed": "通知无法保存。请运行 wuling doctor。"
 }

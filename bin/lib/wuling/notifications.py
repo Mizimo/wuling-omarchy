@@ -1,6 +1,7 @@
 """Version gate and bounded private notification state. Never log message text."""
 from pathlib import Path
 import hashlib
+import fcntl
 import html
 import json
 import os
@@ -168,6 +169,38 @@ def persist():
         except (Error, OSError, ValueError):
             reply = {"schema_version": SCHEMA, "ok": False, "reason": "Cannot persist notification state"}
         print(json.dumps(reply), flush=True)
+
+
+def writer_health():
+    from .dispatch import enabled
+    if not enabled("wuling.notifications"):
+        return {"schema_version": SCHEMA, "ok": True, "enabled": False, "reason": "Plugin disabled"}
+    try:
+        raw = probe(["omarchy-shell", "wuling.notifications", "writer"])
+        value = json.loads(raw or "null")
+        if isinstance(value, dict) and value.get("schema_version") == SCHEMA and type(value.get("ok")) is bool:
+            return {**value, "enabled": True}
+    except (ValueError, TypeError):
+        pass
+    return {"schema_version": SCHEMA, "ok": False, "enabled": True,
+            "reason": "Enabled notification writer has no health response"}
+
+
+def claim_warning():
+    """One warning per compositor session, including plugin/shell restarts."""
+    from .session import runtime
+    identity = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+    if not identity:
+        raise Error("No compositor session identity")
+    marker = runtime() / "notification-writer-warning"
+    fd = os.open(marker, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "r+") as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX)
+        token = hashlib.sha256(identity.encode()).hexdigest()
+        if stream.read(128) == token:
+            return {"schema_version": SCHEMA, "claimed": False}
+        stream.seek(0); stream.truncate(); stream.write(token)
+        return {"schema_version": SCHEMA, "claimed": True}
 
 
 def fallback():

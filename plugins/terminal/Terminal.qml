@@ -328,10 +328,14 @@ Ui.Panel {
                                 }
                             }
                         }
-                        Item {
+                        Kit.Button {
+                            id:defaultAgent
                             x:Kit.Runtime.px(14);width:parent.width-Kit.Runtime.px(28);height:Kit.Runtime.px(26)
-                            Kit.Button { anchors.left:parent.left;height:parent.height;text:Kit.Runtime.tr("ask-agent");icon:"smart_toy";onClicked:terminal.act("agent") }
-                            Kit.Micro { anchors.right:parent.right;anchors.verticalCenter:parent.verticalCenter;text:String(terminal.state.default_agent || "").toUpperCase() }
+                            Accessible.name:Kit.Runtime.tr("open-agent")
+                            onClicked:terminal.act("agent")
+                            Kit.Icon { id:agentIcon;x:Kit.Runtime.px(8);anchors.verticalCenter:parent.verticalCenter;name:"smart_toy";color:defaultAgent.foreground }
+                            Kit.Label { x:agentIcon.x+agentIcon.width+Kit.Runtime.px(6);height:parent.height;width:Math.max(0,agentTag.x-x-Kit.Runtime.px(8));text:Kit.Runtime.tr("open-agent");font.pixelSize:Kit.Runtime.px(10);color:defaultAgent.foreground }
+                            Kit.Micro { id:agentTag;anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(8);anchors.verticalCenter:parent.verticalCenter;text:String(terminal.state.default_agent || "").toUpperCase();color:defaultAgent.foreground }
                         }
                     }
                     Part {
@@ -387,7 +391,7 @@ Ui.Panel {
                 gradient:Gradient { GradientStop { position:0;color:Qt.rgba(bodyFade.ground.r,bodyFade.ground.g,bodyFade.ground.b,0) } GradientStop { position:1;color:bodyFade.ground } }
                 id:bodyFade
             }
-            Kit.Label { id: errorLabel; anchors.bottom: foot.top; width: parent.width; height: text ? Kit.Runtime.px(30) : 0; text: terminal.actionError; color: Kit.Runtime.c("vermilion"); wrapMode: Text.Wrap; font.pixelSize: Kit.Runtime.px(10) }
+            Kit.Label { id: errorLabel; anchors.bottom: foot.top; x:Kit.Runtime.px(14); width: parent.width-Kit.Runtime.px(28); height: text ? Kit.Runtime.px(30) : 0; text: terminal.actionError; color: Kit.Runtime.c("vermilion"); wrapMode: Text.Wrap; font.pixelSize: Kit.Runtime.px(10) }
             Row {
                 id: foot; anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(12); x: Kit.Runtime.px(22); spacing: Kit.Runtime.px(6)
                 Repeater {

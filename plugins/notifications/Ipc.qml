@@ -29,6 +29,7 @@ Item {
     IpcHandler {
         target:"wuling.notifications"
         function ping(): string { return "ok"; }
+        function writer(): string { return JSON.stringify(service.writerHealth()); }
         function log(): string { return JSON.stringify({schema_version:1,provider:"wuling.notifications",count:service.history.length}); }
         function terminal(name: string, geometry: string): string {
             try { const value=JSON.parse(geometry); const next=Object.assign({},service.terminals); next[name]={open:value.open===true,x:Number(value.x),y:Number(value.y),width:Math.max(0,Math.min(8192,Number(value.width)||0)),height:Math.max(0,Math.min(8192,Number(value.height)||0))}; service.terminals=next; return "ok"; } catch(_) { return "invalid"; }

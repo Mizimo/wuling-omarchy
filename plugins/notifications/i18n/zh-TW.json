@@ -3,5 +3,6 @@
   "dismiss": "關閉通知",
   "copy-code": "複製驗證碼",
   "no-recent": "沒有近期通知",
-  "more-notifications": "MORE 更多"
+  "more-notifications": "MORE 更多",
+  "writer-failed": "通知無法儲存。請執行 wuling doctor。"
 }

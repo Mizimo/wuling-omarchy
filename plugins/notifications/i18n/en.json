@@ -3,5 +3,6 @@
   "dismiss": "Dismiss",
   "copy-code": "Copy code",
   "no-recent": "No recent notifications",
-  "more-notifications": "MORE"
+  "more-notifications": "MORE",
+  "writer-failed": "Notifications could not be saved. Run wuling doctor."
 }

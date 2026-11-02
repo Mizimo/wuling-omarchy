@@ -24,7 +24,6 @@
   "previous": "上一首",
   "pause": "暫停",
   "next": "下一首",
-  "ask-agent": "詢問你的代理",
   "cpu": "處理器",
   "memory": "記憶體",
   "temperature": "溫度",
@@ -43,5 +42,6 @@
   "weekday-4": "週四",
   "weekday-5": "週五",
   "weekday-6": "週六",
-  "weekday-7": "週日"
+  "weekday-7": "週日",
+  "open-agent": "開啟預設代理"
 }

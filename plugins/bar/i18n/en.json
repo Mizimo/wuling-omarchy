@@ -24,7 +24,6 @@
   "previous": "Previous",
   "pause": "Pause",
   "next": "Next",
-  "ask-agent": "Ask your agent",
   "cpu": "CPU",
   "memory": "Memory",
   "temperature": "Temp",
@@ -43,5 +42,6 @@
   "weekday-4": "Thu",
   "weekday-5": "Fri",
   "weekday-6": "Sat",
-  "weekday-7": "Sun"
+  "weekday-7": "Sun",
+  "open-agent": "Open default agent"
 }

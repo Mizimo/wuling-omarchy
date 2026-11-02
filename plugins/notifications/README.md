@@ -33,6 +33,16 @@ It holds DND, at most 100 live cards and 100 history rows retained for 24 hours.
 Verification text is redacted before writing; images and detected links are
 excluded. Live state survives shell restarts. Persistence uses one bounded
 stdin writer and coalesced event-driven updates, with no idle polling.
+The verification-code privacy guarantee covers WULING's own files. If a sender
+puts a code in an image filename that fails to load, Qt can include that path in
+a journal warning, just as it can with the native notification renderer.
+The latest full snapshot remains pending until an `ok: true` acknowledgement.
+An exited or failed writer gets recovery attempts after 1, 5 and 30 seconds;
+if all three fail within ten minutes of the original fault, recovery stops.
+A writer that survives that window starts a fresh budget on its next failure.
+`wuling doctor` reads `wuling.notifications writer` and reports a degraded,
+missing or stopped writer. Exhaustion produces one low-priority warning per
+compositor session. Teardown kills its child without waiting or flushing.
 Notification objects and their signal callbacks belong to the service, never
 to delegates or model rows, and are explicitly disconnected on release.
 

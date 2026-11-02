@@ -3,12 +3,54 @@ from pathlib import Path
 import json
 import os
 import stat
+import subprocess
 from unittest.mock import patch
 from test_foundations import IsolatedHome
-from wuling import Error, notifications
+from wuling import Error, ROOT, notifications
 
 
 class NotificationStateTests(IsolatedHome):
+    def test_writer_ack_coalescing_recovery_and_finite_budget(self):
+        code = (ROOT / "plugins/notifications/WriterState.js").read_text().replace('.pragma library', '')
+        subprocess.run(["node", "-e", code + r'''
+const assert=require('assert'), ok=JSON.stringify({schema_version:1,ok:true});
+const s=create();enqueue(s,'old');assert.equal(send(s),'old');
+enqueue(s,'new');assert.equal(send(s),'');assert(acknowledge(s,ok));
+assert.equal(s.latest,'new');assert.equal(send(s),'new');
+for(const reply of ['garbage','{}','null','{"schema_version":1,"ok":false}','{"schema_version":1,"ok":"true"}']) {
+    assert(!acknowledge(s,reply));assert.equal(s.latest,'new');
+}
+assert.equal(failed(s,10000,'exit'),1000);assert.equal(send(s),'new');
+assert(acknowledge(s,ok));assert.equal(s.latest,'');
+enqueue(s,'after-recovery');assert.equal(send(s),'after-recovery');
+assert.equal(failed(s,12000,'exit'),5000);assert.equal(send(s),'after-recovery');
+assert.equal(failed(s,18000,'exit'),30000);assert.equal(send(s),'after-recovery');
+assert.equal(failed(s,49000,'exit'),0);assert(s.halted);
+enqueue(s,'latest-while-stopped');assert.equal(s.latest,'latest-while-stopped');assert.equal(send(s),'');
+const t=create();assert.equal(failed(t,10000,'exit'),1000);
+assert.equal(failed(t,610000,'exit'),1000);assert.equal(t.attempts,1);
+assert(!acknowledge(t,ok));
+'''], check=True)
+
+    def test_writer_health_requires_enabled_provider_reply(self):
+        with patch("wuling.dispatch.enabled", return_value=True), patch.object(notifications, "probe", return_value="ok"):
+            self.assertFalse(notifications.writer_health()["ok"])
+        with patch("wuling.dispatch.enabled", return_value=False), patch.object(notifications, "probe") as probe:
+            self.assertTrue(notifications.writer_health()["ok"])
+            probe.assert_not_called()
+        health={"schema_version":1,"ok":False,"stopped":True,"reason":"Notification writer exited (code 9)"}
+        with patch("wuling.dispatch.enabled", return_value=True), patch.object(notifications, "probe", return_value=json.dumps(health)):
+            self.assertEqual(notifications.writer_health()["reason"],health["reason"])
+
+    def test_writer_warning_claim_survives_shell_restart_but_not_new_session(self):
+        directory=self.home / "runtime";directory.mkdir()
+        with patch("wuling.session.runtime", return_value=directory), patch.dict(os.environ, {"HYPRLAND_INSTANCE_SIGNATURE":"fixture-session-one"}):
+            self.assertTrue(notifications.claim_warning()["claimed"])
+            self.assertFalse(notifications.claim_warning()["claimed"])
+        with patch("wuling.session.runtime", return_value=directory), patch.dict(os.environ, {"HYPRLAND_INSTANCE_SIGNATURE":"fixture-session-two"}):
+            self.assertTrue(notifications.claim_warning()["claimed"])
+        self.assertEqual(len(list(directory.iterdir())),1)
+
     def test_first_dnd_uses_compatible_native_state_without_writing_it(self):
         for version, relative in (("4.0.6", "notifications.json"), ("4.5.0-rc2", "notifications/quiet.json")):
             with self.subTest(version=version):

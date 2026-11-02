@@ -60,6 +60,9 @@ def doctor():
         gate = notifications.compatibility()
         add("notifications:compatibility", gate["ok"], gate.get("version") or gate.get("reason"),
             "Keep Omarchy's native notifications enabled until WULING supports the installed modules.")
+        health = notifications.writer_health()
+        add("notifications:writer", health["ok"], health,
+            "Check the shell journal for the writer exit code and state-directory permissions, then restart the shell with omarchy restart shell.")
     for plugin in plugins:
         try:
             add("plugin:" + plugin.parent.name, True, command(["omarchy", "plugin", "validate", str(plugin.parent)]))
@@ -111,7 +114,7 @@ def main(argv=None):
     display.add_argument("action", choices=["device"])
     display.add_argument("kind", choices=["input", "output"])
     notices = sub.add_parser("notifications", help="Inspect notification compatibility and private state")
-    notices.add_argument("action", choices=["compatibility", "state", "persist", "fallback", "boot", "terminals", "open-history"])
+    notices.add_argument("action", choices=["compatibility", "state", "persist", "fallback", "boot", "terminals", "open-history", "claim-warning"])
     sub.add_parser("doctor", help="Check versions, files, fonts and plugins").add_argument("--json", action="store_true")
     sub.add_parser("uninstall", help="Plan and remove unchanged owned resources").add_argument("--yes", action="store_true")
     args = parser.parse_args(argv)
@@ -170,7 +173,9 @@ def main(argv=None):
         elif args.verb == "osd":
             emit(osd.device(args.kind))
         elif args.verb == "notifications":
-            if args.action == "persist":
+            if args.action == "claim-warning":
+                emit(notifications.claim_warning())
+            elif args.action == "persist":
                 notifications.persist()
             elif args.action == "compatibility":
                 emit(notifications.compatibility())
