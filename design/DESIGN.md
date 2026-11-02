@@ -235,8 +235,8 @@ scripts and keys reach it unchanged.
   only. Removal deletes the file: it holds other people's messages. This promise covers WULING's own files: a sender that names an image file after a code and fails
   to load it gets Qt's warning in the journal, as under Omarchy, and we leave that.
 - **Saving can't fail quietly.** One writer process saves the state. A change counts as saved only when the writer answers ok; until then the newest full state is kept and
-  sent again. If the writer exits while the shell runs, it gets three restarts, after 1, 5 and 30 s; the first exit doesn't count against them. If the third restart also dies, all within 10
-  minutes of that first exit, it stops trying, `wuling doctor` fails with the reason, and one low toast says history isn't being saved, once per session. A writer that outlives those 10 minutes starts a new count. Shell teardown still never waits for it.
+  sent again. If the writer exits or fails to start while the shell runs, it gets three restarts, after 1, 5 and 30 s; the first failure doesn't count against them. If the third restart also dies, all within 10
+  minutes of that first failure, it stops trying, `wuling doctor` fails with the reason, and one low toast says history isn't being saved, once per session. A writer that outlives those 10 minutes starts a new count. Shell teardown still never waits for it.
 - **`showHistory`** opens the Terminal at the log, all rows showing. If the Terminal or its log section is off, it replays the newest 6 as toasts and
   changes no setting. Like Omarchy's replay this ignores DND: the user asked, and it is how to see what DND held back. A replay records nothing new.
   With nothing to show, a low toast says `No recent notifications`, not a dead key.
