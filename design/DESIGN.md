@@ -172,9 +172,9 @@ and `shell.json` keep working. All four edges. One window per output.
 - **The clock is the one cell that layers.** Draw the label (Barlow Condensed 21 px; 25 in `hud`) and a date stack; put
   Omarchy's `omarchy.clock` over it, same box, `opacity: 0`. Bind the label to the widget's `displayText`; let the host
   own the width. Draw the open and hover states yourself, since the widget's are hidden. If the widget's internals
-  change, fall back to showing the widget as it is. Vertical bars use the plain widget. Omarchy's default format is `dddd HH:mm`, so when the
-  layout entry sets none the host passes `HH:mm`. Right-click still cycles Omarchy's formats and writes them to `shell.json`;
-  show the date stack only while the format has no date of its own.
+  change, fall back to showing the widget as it is. Vertical bars use the plain widget. Omarchy's stock layout sets `dddd HH:mm` explicitly, so when the
+  layout entry sets none or exactly that, the host passes `HH:mm` and the date stack carries the day (`MON 週一` by language, as in the Terminal's head). Right-click still
+  cycles Omarchy's formats and writes them to `shell.json`, one step of the ring then looks like the next, which we accept; show the date stack only while the format has no date of its own.
 - **Host font** is Geist Mono. Icon glyphs fall back through fontconfig to Omarchy's Nerd Font, as tested.
 - **Narrow screens:** below 1280 px drop the identity cell; below 1024 px also drop the date stack and window.
 - **Not rebuilt:** drag to reorder, drag to move the bar. `omarchy bar move` and `omarchy bar position` do it.
@@ -190,15 +190,15 @@ under Omarchy's own bar too. Key: **Super+Ctrl+G**. 372 px wide, full height min
 | # | Section | Shows | Source | Input |
 |---|---|---|---|---|
 | 02 | Terminal | Clock with seconds, date, zone, uptime | System | — |
-| 03 | Link | Tiles: Wi-Fi, Bluetooth, Tailscale, DND, Night, Power profile. A tile with no hardware or service hides | Quickshell modules, Omarchy commands | Left: toggle. Right: Omarchy's matching panel; where Omarchy has none mounted (Tailscale's exists only as its bar widget) the panel stays open and one line says so |
+| 03 | Link | Tiles: Wi-Fi, Bluetooth, Tailscale, DND, Night, Power profile. A tile with no hardware or service hides. Wi-Fi shows the network's name when connected and Tailscale `Connected`; otherwise On or Off in the language's pair. Read without starting a scan | Quickshell modules, Omarchy commands | Left: toggle. Right: Omarchy's matching panel; where Omarchy has none mounted (Tailscale's exists only as its bar widget) the panel stays open and one line says so |
 | 04 | Levels | Volume, brightness, segmented | PipeWire, `omarchy-brightness-display` | Drag, wheel. Same OSD as the keys |
 | — | Signal | Now playing. Hidden when nothing plays | MPRIS | Play/pause, previous, next |
-| 05 | Agent | Per agent: plan, session and week meters, time to reset. Row: open the default agent. Hidden when no agent has usage | `~/.local/state/omarchy/agents/usage/*.json` | Row: `omarchy-agent --pick`. Agent: Omarchy's agents panel |
+| 05 | Agent | Per agent: plan, session and week meters, time to reset. A meter's label is the limit's name without its parenthesis, micro uppercase; the label column grows to the widest, up to 66 px, and the meter gives the room. Row: open the default agent, left aligned, its name as a micro tag at the right when known. Hidden when no agent has usage | `~/.local/state/omarchy/agents/usage/*.json` | Row: `omarchy-agent --pick`. Agent: Omarchy's agents panel |
 | 06 | Telemetry | CPU, memory, temperature with sparklines. Sampled only while open | `/proc`, hwmon | — |
 | 07 | Comms log | The newest rows that fit above the foot, at least 3; a `+N` row opens the rest and the body scrolls. Head: the count. Hidden while `wuling.notifications` is off | `wuling.notifications`' state file | Click: the row's stored `omarchy-exec-argv`, validated again. A row without one doesn't react |
 | | Foot | Lock, Sleep; Exit, Reboot, Off | Omarchy's commands | Dangerous ones open the power menu |
 
-Section numbers follow what is shown. Too tall: the body scrolls and the foot stays. Sections can be switched off in
+Section numbers follow what is shown. Too tall: the body scrolls, its last 14 px fade into the panel's ground, and the foot stays, so a cut row never reads as a glitch against the foot. Sections can be switched off in
 overrides. Data comes from commands printing JSON (`wuling status --json`); the QML only displays it. Share one
 collection schedule with Omarchy's agents panel; never start collectors per view, never log account contents.
 
@@ -228,6 +228,8 @@ scripts and keys reach it unchanged.
   Omarchy's fields.
 - **Actions:** buttons as the app sends them. **Clicking a toast** runs its `omarchy-exec-argv` hint as argv, never through a shell,
   with the same validation as Omarchy's. Omarchy's crash notification (`omarchy-crash-watch`) has no action buttons and depends on this.
+- **DND survives the handover.** With no state file of its own yet, the plugin takes DND from Omarchy's stored state, read once. Omarchy's file is never written, so
+  after the plugin is disabled Omarchy returns to the value it last stored.
 - **History** goes to `~/.local/state/wuling/notifications.json`, 0600 in a 0700 directory: 100 rows and 24 hours on both versions. A row keeps what
   Omarchy 4.5's `Store.persistable` keeps: no images or links, and text with a verification code only as the placeholder. `clear` clears history
   only. Removal deletes the file: it holds other people's messages.
