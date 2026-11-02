@@ -184,7 +184,7 @@ Ui.Panel {
                 color: Kit.Runtime.c("fill")
                 Kit.Label { id: headerTitle; x: Kit.Runtime.px(14); height: parent.height; text: "FIELD TERMINAL"; color: Kit.Runtime.c("on-accent"); font.pixelSize: Kit.Runtime.px(10); font.weight: Font.Bold; font.letterSpacing: Kit.Runtime.px(1.6) }
                 Kit.Label { id: headerHost; anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(14); width: Math.min(implicitWidth, Kit.Runtime.px(105)); height: parent.height; text: terminal.hostname; color: Kit.Runtime.c("on-accent"); font.pixelSize: Kit.Runtime.px(10); font.weight: Font.Bold }
-                Kit.Hazard { anchors.left: headerTitle.right; anchors.right: headerHost.left; anchors.margins: Kit.Runtime.px(10); anchors.verticalCenter: parent.verticalCenter; height: Kit.Runtime.px(6); ink: Kit.Runtime.c("on-accent") }
+                Kit.Hazard { anchors.left: headerTitle.right; anchors.right: headerHost.left; anchors.margins: Kit.Runtime.px(10); anchors.verticalCenter: parent.verticalCenter; height: Kit.Runtime.px(6); ink: Kit.Runtime.c("on-accent"); ground: header.color }
             }
             Flickable {
                 id: scroll; anchors.top: header.bottom; anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: errorLabel.top
