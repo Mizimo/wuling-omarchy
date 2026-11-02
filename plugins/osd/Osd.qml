@@ -70,7 +70,7 @@ Item {
         id: surface
         required property var modelData
         screen:modelData
-        readonly property bool showHere:osd.opened && screen && screen.name===osd.targetOutput
+        readonly property bool showHere:osd.opened && modelData && modelData.name===osd.targetOutput
         visible: showHere || card.opacity > 0
         anchors { top: true; bottom: true; left: true; right: true }
         color: "transparent"
@@ -117,7 +117,7 @@ Item {
             Kit.Label {
                 id: number; anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(14); anchors.verticalCenter: parent.verticalCenter
                 visible: osd.state.progress; width: Math.min(Kit.Runtime.px(90),Math.max(implicitWidth,Kit.Runtime.px(Kit.Runtime.hud ? 40 : 30))); horizontalAlignment: Text.AlignRight
-                text: osd.state.progressText || Math.round(osd.fraction * 100)
+                text: osd.state.progressText ? osd.state.progressText.replace(/%$/, "") : Math.round(osd.fraction * 100)
                 font.family: Kit.Runtime.display; font.weight: Font.DemiBold; font.pixelSize: Kit.Runtime.px(Kit.Runtime.hud ? 30 : 24)
                 color: Kit.Runtime.c(Kit.Runtime.hud ? "accent-ink" : "paper-1")
             }

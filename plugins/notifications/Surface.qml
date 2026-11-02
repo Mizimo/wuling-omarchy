@@ -34,7 +34,7 @@ PanelWindow {
     property var pendingMeasurements: ({})
     property var visibleKeys: []
     function arrange() {
-        const eligible=[]; const reserve=Kit.Runtime.px(26);
+        const eligible=[]; const reserve=Kit.Runtime.px(30);
         for(let i=0;i<service.live.count;i++)if(!service.live.get(i).held)eligible.push(service.live.get(i).key);
         function fit(start) {
             const result=[]; let used=0;
@@ -96,17 +96,22 @@ PanelWindow {
                     Toast {
                         id:toast; width:parent.width
                         row:slot.model; service:surface.service
-                        maximumHeight:Math.max(Kit.Runtime.px(70),surface.room-Kit.Runtime.px(26))
+                        maximumHeight:Math.max(Kit.Runtime.px(70),surface.room-Kit.Runtime.px(30))
                         onImplicitHeightChanged:surface.measure(row.key,implicitHeight)
                         Component.onCompleted:surface.measure(row.key,implicitHeight)
                         Component.onDestruction:if(!service.stopping)surface.forget(row.key)
                     }
                 }
             }
-            Kit.Micro {
-                visible:surface.waiting>0; width:parent.width; height:visible?Kit.Runtime.px(18):0
-                text:"+"+surface.waiting; horizontalAlignment:Text.AlignRight
-                color:Kit.Runtime.c("paper-2")
+            Rectangle {
+                visible:surface.waiting>0; width:parent.width; height:visible?Kit.Runtime.px(22):0
+                readonly property color ink:Kit.Runtime.c("ink-3")
+                color:Qt.rgba(ink.r,ink.g,ink.b,.97); border.width:1; border.color:Kit.Runtime.c("line")
+                Kit.Micro {
+                    anchors.fill:parent; anchors.leftMargin:Kit.Runtime.px(10); anchors.rightMargin:Kit.Runtime.px(10)
+                    text:"+"+surface.waiting+(Kit.Runtime.language==="en"?" ":" · ")+Kit.Runtime.tr("more-notifications")
+                    horizontalAlignment:Text.AlignRight; verticalAlignment:Text.AlignVCenter; color:Kit.Runtime.c("paper-2")
+                }
             }
         }
     }

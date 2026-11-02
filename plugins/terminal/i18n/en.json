@@ -46,5 +46,6 @@
   "weekday-6": "Sat",
   "weekday-7": "Sun",
   "count-unit": "",
-  "show-all": "Show all notifications"
+  "show-all": "Show all notifications",
+  "more-count": "more"
 }

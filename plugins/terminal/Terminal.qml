@@ -338,7 +338,7 @@ Ui.Panel {
                                     Kit.Label { anchors.right: parent.right; height: parent.height; text: Qt.formatDateTime(new Date(parent.modelData.time * 1000), "HH:mm"); font.pixelSize: Kit.Runtime.px(9); color: Kit.Runtime.c("mist-5") }
                                 }
                             }
-                            Kit.Button { visible: terminal.logRows.length > commsPart.shownRows; width: parent.width; height: Kit.Runtime.px(22); borderVisible: false; text: "+" + (terminal.logRows.length - commsPart.shownRows); Accessible.name: Kit.Runtime.tr("show-all"); onClicked: terminal.logExpanded = true }
+                            Kit.Button { visible: terminal.logRows.length > commsPart.shownRows; width: parent.width; height: Kit.Runtime.px(22); borderVisible: false; text: "+" + (terminal.logRows.length - commsPart.shownRows) + " " + Kit.Runtime.tr("more-count"); Accessible.name: Kit.Runtime.tr("show-all"); onClicked: terminal.logExpanded = true }
                             Kit.Label { visible: !terminal.logRows.length; width: parent.width; height: Kit.Runtime.px(20); text: Kit.Runtime.tr("no-notifications"); color: Kit.Runtime.c("mist-4"); font.family: Kit.Runtime.sans }
                         }
                     }

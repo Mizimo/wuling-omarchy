@@ -14,7 +14,7 @@ Item {
     readonly property bool important: actions.length>0 || !!service.rules.argv(row.execArgv)
     readonly property color backgroundInk: Kit.Runtime.c("ink-3")
     readonly property real contentLimit: Math.max(20,maximumHeight-header.height-Kit.Runtime.px(42)-actionBox.implicitHeight)
-    implicitHeight:Math.min(maximumHeight,header.height+content.height+actionBox.implicitHeight+Kit.Runtime.px(actions.length?22:21))
+    implicitHeight:Math.min(maximumHeight,(actions.length?actionBox.y+actionBox.implicitHeight:content.y+content.height)+Kit.Runtime.px(10))
     property real arrival: 0
     opacity:arrival
     transform:Translate { x:Kit.Runtime.reduced?0:(1-toast.arrival)*Kit.Runtime.px(8) }
@@ -41,7 +41,12 @@ Item {
         Kit.Micro { id:caption; x:Kit.Runtime.px(10); anchors.verticalCenter:parent.verticalCenter; text:Kit.Runtime.label("comms").toUpperCase(); color:Kit.Runtime.c(Kit.Runtime.hud && toast.important?"on-accent":"mist-5") }
         Kit.Micro { x:caption.x+caption.width+Kit.Runtime.px(8); anchors.verticalCenter:parent.verticalCenter; width:Math.max(0,stamp.x-x-Kit.Runtime.px(8)); text:row.app.toUpperCase(); color:Kit.Runtime.c(Kit.Runtime.hud && toast.important?"on-accent":"paper-2") }
         Kit.Micro { id:stamp; anchors.right:close.left; anchors.rightMargin:Kit.Runtime.px(6); anchors.verticalCenter:parent.verticalCenter; text:Qt.formatDateTime(new Date(row.ts*1000),"HH:mm"); color:caption.color }
-        Kit.Button { id:close; anchors.right:parent.right; anchors.rightMargin:Kit.Runtime.px(4); width:Kit.Runtime.px(22); height:parent.height; borderVisible:false; icon:"close"; activeFocusOnTab:false; baseForeground:caption.color; Accessible.name:Kit.Runtime.tr("dismiss"); onClicked:service.closeToast(row.key,"dismissed") }
+        Kit.Button {
+            id:close; anchors.right:parent.right; anchors.rightMargin:Kit.Runtime.px(4); width:Kit.Runtime.px(22); height:parent.height
+            borderVisible:false; activeFocusOnTab:false; baseForeground:caption.color; Accessible.name:Kit.Runtime.tr("dismiss")
+            Kit.Icon { anchors.centerIn:parent; name:"close"; font.pixelSize:Kit.Runtime.px(14); color:close.foreground }
+            onClicked:service.closeToast(row.key,"dismissed")
+        }
     }
     Row {
         id:content; x:Kit.Runtime.px(12); y:header.height+Kit.Runtime.px(10); width:parent.width-Kit.Runtime.px(24); spacing:Kit.Runtime.px(10)
