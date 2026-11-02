@@ -1,0 +1,133 @@
+{
+  "inbox": "v173",
+  "product": "e603ad371c54fd3150d89377aebd8cd183884a59",
+  "vm": {
+    "406": {
+      "entries300": [
+        {
+          "dispatchOpen": false,
+          "count": 300,
+          "pings": 88,
+          "maxLatencyMs": 78.74760800000047
+        },
+        {
+          "dispatchOpen": true,
+          "count": 300,
+          "pings": 88,
+          "maxLatencyMs": 66.9014150000038
+        }
+      ],
+      "audioGain": 0.6000000239657595,
+      "coldFirstFrame": {
+        "earlyBarObserved": true,
+        "earlyWallpaperObserved": false,
+        "recordings": 4
+      },
+      "partialParts": 8,
+      "heldPositiveControls": 3
+    },
+    "450": {
+      "entries300": [
+        {
+          "dispatchOpen": false,
+          "count": 300,
+          "pings": 136,
+          "maxLatencyMs": 173.803692000007
+        },
+        {
+          "dispatchOpen": true,
+          "count": 300,
+          "pings": 137,
+          "maxLatencyMs": 160.69972799999732
+        }
+      ],
+      "audioGain": 0.6000000239657595,
+      "coldFirstFrame": {
+        "earlyBarObserved": false,
+        "earlyWallpaperObserved": false,
+        "recordings": 2
+      },
+      "partialParts": 8,
+      "heldPositiveControls": 3
+    }
+  },
+  "soak": {
+    "status": "ongoing",
+    "run": "soak-v173-02",
+    "secondsRequired": 86400,
+    "startEpoch": 1793644615.5137396,
+    "incompleteRun01Seconds": 77.57,
+    "runsJoined": false
+  },
+  "resume": {
+    "visualPass": false,
+    "reason": "own VM DRM blocked after S3; s2idle did not wake; no clean-native attribution control",
+    "nativePowerActions": false
+  },
+  "update": {
+    "officialExit": 0,
+    "from": "4.5.0rc2-1",
+    "to": "4.5.0rc3-1",
+    "tested": false,
+    "notificationContract": "4.5.0-rc2",
+    "overridesPreserved": true,
+    "shellConfigPreserved": true,
+    "interactiveDeclineAndAccept": true,
+    "changedModuleNativeFallback": true,
+    "changedModuleRestored": true,
+    "firstFaultRestartNonzeroUnattributed": true
+  },
+  "fullBoot": {
+    "vm": "406",
+    "palettes": [
+      "MIST",
+      "PAPER"
+    ],
+    "officialPlymouth": true,
+    "realLuksDataVolumeUnlock": true,
+    "encryptedRootCovered": false,
+    "rawCapture": "60fps lossless RGB, original PTS",
+    "durationIncludesHumanInspection": true
+  },
+  "findings": [
+    {
+      "severity": "P2",
+      "id": "F-1",
+      "title": "Native bar precedes Arrival ink on 4.0.6",
+      "recordings": 4
+    }
+  ],
+  "uninstall": {
+    "ownedResourcesAndArrivalRuleAbsentBoth": true,
+    "nativeMenuBarToastSeenBoth": true,
+    "overridesRetainedByDesign": true,
+    "rc3DconfValuesSameAsBaseline": true
+  },
+  "cleanup": {
+    "reportedImageBytes": 1342780517,
+    "ownedContainersRemaining": [],
+    "disks": {
+      "406": {
+        "snapshots": [
+          "verified-clean-b"
+        ],
+        "allocatedKiB": 10611808
+      },
+      "450": {
+        "snapshots": [
+          "verified-clean-b"
+        ],
+        "allocatedKiB": 10815676
+      }
+    },
+    "privateRoundKiB": 583448,
+    "bothFinalShutdownsNormal": true,
+    "workingDisksRestored": true
+  },
+  "toolsCheck": {
+    "tests": 84,
+    "passed": true,
+    "target": "e603ad3",
+    "stagedReviewPrivacy": true
+  }
+}
