@@ -52,12 +52,13 @@
     }
   },
   "soak": {
-    "status": "ongoing",
+    "status": "completed; see soak-summary.json for verdict, limits and post-soak update",
     "run": "soak-v173-02",
     "secondsRequired": 86400,
     "startEpoch": 1793644615.5137396,
     "incompleteRun01Seconds": 77.57,
-    "runsJoined": false
+    "runsJoined": false,
+    "finalReport": "SOAK.md"
   },
   "resume": {
     "visualPass": false,
@@ -94,7 +95,8 @@
       "severity": "P2",
       "id": "F-1",
       "title": "Native bar precedes Arrival ink on 4.0.6",
-      "recordings": 4
+      "recordings": 4,
+      "disposition": "accepted Omarchy 4.0.6 limitation under v174; no fix/retest"
     }
   ],
   "uninstall": {
@@ -129,5 +131,6 @@
     "passed": true,
     "target": "e603ad3",
     "stagedReviewPrivacy": true
-  }
+  },
+  "finalDispositionInbox": "v174"
 }

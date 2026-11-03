@@ -1,0 +1,1221 @@
+{
+  "inbox": "v174",
+  "productUnderSoak": "e603ad371c54fd3150d89377aebd8cd183884a59",
+  "run": "soak-v173-02",
+  "verdict": "WULING shell/writer soak criteria met; compositor CPU plateau retained as an unattributed observation, not an isolated whole-desktop idle pass",
+  "complete": true,
+  "observerElapsedSeconds": 86400.06474139699,
+  "controllerElapsedSeconds": 86402.088823484,
+  "startEpoch": 1793644615.598711,
+  "endEpoch": 1793731015.6634443,
+  "samples": 8641,
+  "gapsSeconds": {
+    "n": 8640,
+    "min": 9.902977466583252,
+    "max": 10.097373485565186,
+    "median": 10.000003457069397,
+    "mean": 9.999999767431506,
+    "p95": 10.005757343769073
+  },
+  "incompleteRun01Seconds": 77.57,
+  "runsJoined": false,
+  "shellAndCompositorIdentityUnchangedDuringSoak": true,
+  "activity": {
+    "quarterHourlyGroups": 96,
+    "hourlyBundles": 24,
+    "markedSeconds": 4220.573739528656,
+    "eligibleSamples": 8136,
+    "eligibleCpuIntervalSeconds": 81360.00121347893,
+    "fullyQuiescentMachine": false
+  },
+  "writer": {
+    "healthObservations": 10466,
+    "pidTransitionsDuringSoak": 0,
+    "journalStartsOrExitsDuringSoak": 0,
+    "journalRetentionPositiveControl": true,
+    "unhealthyObservations": 0,
+    "neverStarted": 0,
+    "givenUp": 0,
+    "pendingOrInflightObserved": 0,
+    "recoveryAttempts": 0,
+    "retryBudgetExhausted": false,
+    "boundaryProcessSamples": 384,
+    "fds": [
+      3,
+      3
+    ],
+    "threads": [
+      1,
+      1
+    ]
+  },
+  "metrics": {
+    "shell": {
+      "idle": {
+        "pss_kib": {
+          "n": 8136,
+          "min": 255653,
+          "max": 343177,
+          "median": 295939.0,
+          "mean": 292891.10791543755,
+          "p95": 319986.0
+        },
+        "uss_kib": {
+          "n": 8136,
+          "min": 241712,
+          "max": 329096,
+          "median": 281876.0,
+          "mean": 278848.68534906587,
+          "p95": 305901.0
+        },
+        "swap_pss_kib": {
+          "n": 8136,
+          "min": 0,
+          "max": 23008,
+          "median": 0.0,
+          "mean": 4371.650442477876,
+          "p95": 13830.0
+        },
+        "fds": {
+          "n": 8136,
+          "min": 144,
+          "max": 149,
+          "median": 144.0,
+          "mean": 144.0453539823009,
+          "p95": 144.0
+        },
+        "threads": {
+          "n": 8136,
+          "min": 25,
+          "max": 26,
+          "median": 25.0,
+          "mean": 25.04240412979351,
+          "p95": 25.0
+        },
+        "maps": {
+          "n": 8136,
+          "min": 1641,
+          "max": 1769,
+          "median": 1717.0,
+          "mean": 1715.418756145526,
+          "p95": 1729.0
+        },
+        "pssPlusSwapKiB": {
+          "n": 8136,
+          "min": 264375,
+          "max": 343177,
+          "median": 297804.0,
+          "mean": 297262.75835791545,
+          "p95": 323297.0
+        },
+        "cpuPercent": 0.05227384386144041,
+        "pssPlusSwapSlopeMiBPerHour": 1.1240678866310971,
+        "drm-total-system0KiB": {
+          "n": 8136,
+          "min": 77376.0,
+          "max": 104752.0,
+          "median": 80524.0,
+          "mean": 81092.07030481809,
+          "p95": 82568.0
+        },
+        "drm-resident-system0KiB": {
+          "n": 8136,
+          "min": 6360.0,
+          "max": 104424.0,
+          "median": 80472.0,
+          "mean": 79964.85152409047,
+          "p95": 82220.0
+        },
+        "slopeMiBPerHour": 0.39136419409117773
+      },
+      "idleH7toH24": {
+        "pss_kib": {
+          "n": 6103,
+          "min": 255653,
+          "max": 343177,
+          "median": 297838,
+          "mean": 297193.77535638213,
+          "p95": 322031.0
+        },
+        "uss_kib": {
+          "n": 6103,
+          "min": 241712,
+          "max": 329096,
+          "median": 283724,
+          "mean": 283168.14877928887,
+          "p95": 307948.0
+        },
+        "swap_pss_kib": {
+          "n": 6103,
+          "min": 0,
+          "max": 23008,
+          "median": 0,
+          "mean": 5827.9121743404885,
+          "p95": 22984.0
+        },
+        "fds": {
+          "n": 6103,
+          "min": 144,
+          "max": 149,
+          "median": 144,
+          "mean": 144.043093560544,
+          "p95": 144.0
+        },
+        "threads": {
+          "n": 6103,
+          "min": 25,
+          "max": 26,
+          "median": 25,
+          "mean": 25.039816483696544,
+          "p95": 25.0
+        },
+        "maps": {
+          "n": 6103,
+          "min": 1699,
+          "max": 1769,
+          "median": 1718,
+          "mean": 1718.7044076683599,
+          "p95": 1729.0
+        },
+        "pssPlusSwapKiB": {
+          "n": 6103,
+          "min": 266453,
+          "max": 343177,
+          "median": 300794,
+          "mean": 303021.6875307226,
+          "p95": 326127.0
+        },
+        "cpuPercent": 0.05112239778139215,
+        "pssPlusSwapSlopeMiBPerHour": -0.03253299563127553,
+        "drm-total-system0KiB": {
+          "n": 6103,
+          "min": 78444.0,
+          "max": 104752.0,
+          "median": 80564.0,
+          "mean": 81198.6078977552,
+          "p95": 82568.0
+        },
+        "drm-resident-system0KiB": {
+          "n": 6103,
+          "min": 6360.0,
+          "max": 104424.0,
+          "median": 80480.0,
+          "mean": 79707.56480419466,
+          "p95": 82192.0
+        },
+        "slopeMiBPerHour": -1.1366105241005242
+      },
+      "settledH7toH24": {
+        "pss_kib": {
+          "n": 72,
+          "min": 263159,
+          "max": 331699,
+          "median": 301681.0,
+          "mean": 300306.6666666667,
+          "p95": 319661.4
+        },
+        "uss_kib": {
+          "n": 72,
+          "min": 248716,
+          "max": 317116,
+          "median": 287058.0,
+          "mean": 285782.6666666667,
+          "p95": 304908.8
+        },
+        "swap_pss_kib": {
+          "n": 72,
+          "min": 0,
+          "max": 22984,
+          "median": 0.0,
+          "mean": 5687.444444444444,
+          "p95": 16282.800000000036
+        },
+        "fds": {
+          "n": 72,
+          "min": 144,
+          "max": 145,
+          "median": 144.0,
+          "mean": 144.01388888888889,
+          "p95": 144.0
+        },
+        "threads": {
+          "n": 72,
+          "min": 25,
+          "max": 26,
+          "median": 25.0,
+          "mean": 25.01388888888889,
+          "p95": 25.0
+        },
+        "maps": {
+          "n": 72,
+          "min": 1709,
+          "max": 1771,
+          "median": 1756.0,
+          "mean": 1746.6666666666667,
+          "p95": 1769.45
+        },
+        "pssPlusSwapKiB": {
+          "n": 72,
+          "min": 273959,
+          "max": 331699,
+          "median": 305490.0,
+          "mean": 305994.1111111111,
+          "p95": 323112.7
+        },
+        "cpuPercent": null,
+        "pssPlusSwapSlopeMiBPerHour": -0.143590637642057,
+        "drm-total-system0KiB": {
+          "n": 72,
+          "min": 80380.0,
+          "max": 130120.0,
+          "median": 102336.0,
+          "mean": 98076.72222222222,
+          "p95": 124705.2
+        },
+        "drm-resident-system0KiB": {
+          "n": 72,
+          "min": 78932.0,
+          "max": 128616.0,
+          "median": 100968.0,
+          "mean": 97345.83333333333,
+          "p95": 123201.2
+        },
+        "slopeMiBPerHour": -1.2050463640974813
+      }
+    },
+    "compositor": {
+      "idle": {
+        "pss_kib": {
+          "n": 8136,
+          "min": 36106,
+          "max": 42105,
+          "median": 41820.0,
+          "mean": 41399.10275319567,
+          "p95": 41912.0
+        },
+        "uss_kib": {
+          "n": 8136,
+          "min": 30160,
+          "max": 35964,
+          "median": 35696.0,
+          "mean": 35293.60324483776,
+          "p95": 35776.0
+        },
+        "swap_pss_kib": {
+          "n": 8136,
+          "min": 61364,
+          "max": 65860,
+          "median": 61596.0,
+          "mean": 61814.46066863323,
+          "p95": 62695.0
+        },
+        "fds": {
+          "n": 8136,
+          "min": 134,
+          "max": 143,
+          "median": 138.0,
+          "mean": 137.75749754178958,
+          "p95": 140.0
+        },
+        "threads": {
+          "n": 8136,
+          "min": 16,
+          "max": 16,
+          "median": 16.0,
+          "mean": 16,
+          "p95": 16.0
+        },
+        "maps": {
+          "n": 8136,
+          "min": 944,
+          "max": 950,
+          "median": 946.0,
+          "mean": 946.8102261553589,
+          "p95": 949.0
+        },
+        "pssPlusSwapKiB": {
+          "n": 8136,
+          "min": 101966,
+          "max": 103701,
+          "median": 103416.0,
+          "mean": 103213.5634218289,
+          "p95": 103508.0
+        },
+        "cpuPercent": 0.9698746168028219,
+        "pssPlusSwapSlopeMiBPerHour": -0.040567543708432144,
+        "drm-total-system0KiB": {
+          "n": 8136,
+          "min": 119528.0,
+          "max": 124224.0,
+          "median": 123760.0,
+          "mean": 122880.16273352999,
+          "p95": 124160.0
+        },
+        "drm-resident-system0KiB": {
+          "n": 8136,
+          "min": 78812.0,
+          "max": 114148.0,
+          "median": 89264.0,
+          "mean": 94275.26204523107,
+          "p95": 113760.0
+        },
+        "slopeMiBPerHour": -0.09346745621025963
+      },
+      "idleH7toH24": {
+        "pss_kib": {
+          "n": 6103,
+          "min": 36106,
+          "max": 41900,
+          "median": 41820,
+          "mean": 41235.407668359825,
+          "p95": 41896.0
+        },
+        "uss_kib": {
+          "n": 6103,
+          "min": 30160,
+          "max": 35776,
+          "median": 35696,
+          "mean": 35139.32819924627,
+          "p95": 35776.0
+        },
+        "swap_pss_kib": {
+          "n": 6103,
+          "min": 61596,
+          "max": 65860,
+          "median": 61596,
+          "mean": 61896.54202851057,
+          "p95": 65860.0
+        },
+        "fds": {
+          "n": 6103,
+          "min": 134,
+          "max": 143,
+          "median": 138,
+          "mean": 137.949860724234,
+          "p95": 141.0
+        },
+        "threads": {
+          "n": 6103,
+          "min": 16,
+          "max": 16,
+          "median": 16,
+          "mean": 16,
+          "p95": 16.0
+        },
+        "maps": {
+          "n": 6103,
+          "min": 945,
+          "max": 950,
+          "median": 947,
+          "mean": 947.069474029166,
+          "p95": 949.0
+        },
+        "pssPlusSwapKiB": {
+          "n": 6103,
+          "min": 101966,
+          "max": 103496,
+          "median": 103416,
+          "mean": 103131.94969687039,
+          "p95": 103492.0
+        },
+        "cpuPercent": 1.2403244054032185,
+        "pssPlusSwapSlopeMiBPerHour": -0.062072962957763204,
+        "drm-total-system0KiB": {
+          "n": 6103,
+          "min": 119532.0,
+          "max": 124224.0,
+          "median": 123788.0,
+          "mean": 123029.53891528756,
+          "p95": 124160.0
+        },
+        "drm-resident-system0KiB": {
+          "n": 6103,
+          "min": 78812.0,
+          "max": 101512.0,
+          "median": 89264.0,
+          "mean": 89097.18826806489,
+          "p95": 95292.0
+        },
+        "slopeMiBPerHour": -0.15088427497009577
+      },
+      "settledH7toH24": {
+        "pss_kib": {
+          "n": 72,
+          "min": 36601,
+          "max": 41896,
+          "median": 41820.0,
+          "mean": 41286.52777777778,
+          "p95": 41896.0
+        },
+        "uss_kib": {
+          "n": 72,
+          "min": 30580,
+          "max": 35776,
+          "median": 35696.0,
+          "mean": 35190.11111111111,
+          "p95": 35776.0
+        },
+        "swap_pss_kib": {
+          "n": 72,
+          "min": 61596,
+          "max": 65860,
+          "median": 61596.0,
+          "mean": 61849.555555555555,
+          "p95": 63536.80000000001
+        },
+        "fds": {
+          "n": 72,
+          "min": 134,
+          "max": 141,
+          "median": 138.0,
+          "mean": 138.26388888888889,
+          "p95": 140.0
+        },
+        "threads": {
+          "n": 72,
+          "min": 16,
+          "max": 16,
+          "median": 16.0,
+          "mean": 16,
+          "p95": 16.0
+        },
+        "maps": {
+          "n": 72,
+          "min": 945,
+          "max": 949,
+          "median": 947.0,
+          "mean": 947.1388888888889,
+          "p95": 949.0
+        },
+        "pssPlusSwapKiB": {
+          "n": 72,
+          "min": 102461,
+          "max": 103492,
+          "median": 103416.0,
+          "mean": 103136.08333333333,
+          "p95": 103492.0
+        },
+        "cpuPercent": null,
+        "pssPlusSwapSlopeMiBPerHour": -0.061292516068444554,
+        "drm-total-system0KiB": {
+          "n": 72,
+          "min": 119608.0,
+          "max": 124160.0,
+          "median": 123776.0,
+          "mean": 123230.61111111111,
+          "p95": 124160.0
+        },
+        "drm-resident-system0KiB": {
+          "n": 72,
+          "min": 85032.0,
+          "max": 95676.0,
+          "median": 89264.0,
+          "mean": 89479.5,
+          "p95": 95256.8
+        },
+        "slopeMiBPerHour": -0.13669882518550658
+      }
+    }
+  },
+  "compositorHighCpuSegments": [
+    {
+      "firstHour": 15.508333356624442,
+      "lastHour": 23.166666727690004,
+      "sampleCount": 2595,
+      "meanCpuPercent": 2.7237379542085707
+    }
+  ],
+  "matchedWindows": {
+    "1": {
+      "kind": "normal",
+      "wallStartEpoch": 1793645515.598711,
+      "wallEndEpoch": 1793646415.598711,
+      "effectiveIdleSeconds": 839.9998187739984,
+      "processes": {
+        "shell": {
+          "pss_kib": {
+            "n": 84,
+            "min": 270420,
+            "max": 272920,
+            "median": 271740.0,
+            "mean": 271654.63095238095,
+            "p95": 272920.0
+          },
+          "uss_kib": {
+            "n": 84,
+            "min": 256336,
+            "max": 258836,
+            "median": 257656.0,
+            "mean": 257571.33333333334,
+            "p95": 258836.0
+          },
+          "swap_pss_kib": {
+            "n": 84,
+            "min": 0,
+            "max": 0,
+            "median": 0.0,
+            "mean": 0,
+            "p95": 0.0
+          },
+          "fds": {
+            "n": 84,
+            "min": 144,
+            "max": 145,
+            "median": 144.0,
+            "mean": 144.03571428571428,
+            "p95": 144.0
+          },
+          "threads": {
+            "n": 84,
+            "min": 25,
+            "max": 26,
+            "median": 25.0,
+            "mean": 25.035714285714285,
+            "p95": 25.0
+          },
+          "maps": {
+            "n": 84,
+            "min": 1659,
+            "max": 1709,
+            "median": 1660.0,
+            "mean": 1661.107142857143,
+            "p95": 1671.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 84,
+            "min": 270420,
+            "max": 272920,
+            "median": 271740.0,
+            "mean": 271654.63095238095,
+            "p95": 272920.0
+          },
+          "cpuPercent": 0.04761905789263269,
+          "pssPlusSwapSlopeMiBPerHour": -3.1147828614884623,
+          "drm-total-system0KiB": {
+            "n": 84,
+            "min": 78132.0,
+            "max": 100068.0,
+            "median": 78132.0,
+            "mean": 78516.38095238095,
+            "p95": 79692.0
+          },
+          "drm-resident-system0KiB": {
+            "n": 84,
+            "min": 78132.0,
+            "max": 100068.0,
+            "median": 78132.0,
+            "mean": 78516.38095238095,
+            "p95": 79692.0
+          },
+          "slopeMiBPerHour": -3.1147828614884623
+        },
+        "compositor": {
+          "pss_kib": {
+            "n": 84,
+            "min": 41869,
+            "max": 41874,
+            "median": 41874.0,
+            "mean": 41873.94047619047,
+            "p95": 41874.0
+          },
+          "uss_kib": {
+            "n": 84,
+            "min": 35732,
+            "max": 35732,
+            "median": 35732.0,
+            "mean": 35732,
+            "p95": 35732.0
+          },
+          "swap_pss_kib": {
+            "n": 84,
+            "min": 61364,
+            "max": 61364,
+            "median": 61364.0,
+            "mean": 61364,
+            "p95": 61364.0
+          },
+          "fds": {
+            "n": 84,
+            "min": 134,
+            "max": 138,
+            "median": 138.0,
+            "mean": 136.85714285714286,
+            "p95": 138.0
+          },
+          "threads": {
+            "n": 84,
+            "min": 16,
+            "max": 16,
+            "median": 16.0,
+            "mean": 16,
+            "p95": 16.0
+          },
+          "maps": {
+            "n": 84,
+            "min": 944,
+            "max": 947,
+            "median": 945.0,
+            "mean": 944.9404761904761,
+            "p95": 946.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 84,
+            "min": 103233,
+            "max": 103238,
+            "median": 103238.0,
+            "mean": 103237.94047619047,
+            "p95": 103238.0
+          },
+          "cpuPercent": 0.11785716828426591,
+          "pssPlusSwapSlopeMiBPerHour": -0.00023240588935296061,
+          "drm-total-system0KiB": {
+            "n": 84,
+            "min": 119528.0,
+            "max": 123824.0,
+            "median": 123696.0,
+            "mean": 122226.47619047618,
+            "p95": 123696.0
+          },
+          "drm-resident-system0KiB": {
+            "n": 84,
+            "min": 109528.0,
+            "max": 113824.0,
+            "median": 113696.0,
+            "mean": 112226.47619047618,
+            "p95": 113696.0
+          },
+          "slopeMiBPerHour": -0.00023240588957723716
+        }
+      }
+    },
+    "4": {
+      "kind": "hourly",
+      "wallStartEpoch": 1793648215.598711,
+      "wallEndEpoch": 1793649115.598711,
+      "effectiveIdleSeconds": 830.0001731269876,
+      "processes": {
+        "shell": {
+          "pss_kib": {
+            "n": 83,
+            "min": 268974,
+            "max": 284605,
+            "median": 269328,
+            "mean": 271365.0361445783,
+            "p95": 283602.0
+          },
+          "uss_kib": {
+            "n": 83,
+            "min": 254872,
+            "max": 269708,
+            "median": 255248,
+            "mean": 257262.26506024096,
+            "p95": 269474.8
+          },
+          "swap_pss_kib": {
+            "n": 83,
+            "min": 0,
+            "max": 0,
+            "median": 0,
+            "mean": 0,
+            "p95": 0.0
+          },
+          "fds": {
+            "n": 83,
+            "min": 144,
+            "max": 145,
+            "median": 144,
+            "mean": 144.03614457831324,
+            "p95": 144.0
+          },
+          "threads": {
+            "n": 83,
+            "min": 25,
+            "max": 26,
+            "median": 25,
+            "mean": 25.03614457831325,
+            "p95": 25.0
+          },
+          "maps": {
+            "n": 83,
+            "min": 1689,
+            "max": 1692,
+            "median": 1690,
+            "mean": 1690.2168674698796,
+            "p95": 1692.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 83,
+            "min": 268974,
+            "max": 284605,
+            "median": 269328,
+            "mean": 271365.0361445783,
+            "p95": 283602.0
+          },
+          "cpuPercent": 0.057831313238360174,
+          "pssPlusSwapSlopeMiBPerHour": -37.803473796306015,
+          "drm-total-system0KiB": {
+            "n": 83,
+            "min": 80396.0,
+            "max": 82132.0,
+            "median": 81812.0,
+            "mean": 81776.72289156627,
+            "p95": 82125.6
+          },
+          "drm-resident-system0KiB": {
+            "n": 83,
+            "min": 80348.0,
+            "max": 82100.0,
+            "median": 81764.0,
+            "mean": 81731.22891566265,
+            "p95": 82036.0
+          },
+          "slopeMiBPerHour": -37.803473796306015
+        },
+        "compositor": {
+          "pss_kib": {
+            "n": 83,
+            "min": 41592,
+            "max": 41597,
+            "median": 41597,
+            "mean": 41596.3734939759,
+            "p95": 41597.0
+          },
+          "uss_kib": {
+            "n": 83,
+            "min": 35456,
+            "max": 35456,
+            "median": 35456,
+            "mean": 35456,
+            "p95": 35456.0
+          },
+          "swap_pss_kib": {
+            "n": 83,
+            "min": 61640,
+            "max": 61640,
+            "median": 61640,
+            "mean": 61640,
+            "p95": 61640.0
+          },
+          "fds": {
+            "n": 83,
+            "min": 134,
+            "max": 141,
+            "median": 138,
+            "mean": 137.43373493975903,
+            "p95": 140.0
+          },
+          "threads": {
+            "n": 83,
+            "min": 16,
+            "max": 16,
+            "median": 16,
+            "mean": 16,
+            "p95": 16.0
+          },
+          "maps": {
+            "n": 83,
+            "min": 944,
+            "max": 948,
+            "median": 946,
+            "mean": 946.0120481927711,
+            "p95": 947.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 83,
+            "min": 103232,
+            "max": 103237,
+            "median": 103237,
+            "mean": 103236.3734939759,
+            "p95": 103237.0
+          },
+          "cpuPercent": 0.15180719725069547,
+          "pssPlusSwapSlopeMiBPerHour": -0.0008929253552645037,
+          "drm-total-system0KiB": {
+            "n": 83,
+            "min": 119528.0,
+            "max": 124080.0,
+            "median": 123760.0,
+            "mean": 122397.78313253012,
+            "p95": 124073.6
+          },
+          "drm-resident-system0KiB": {
+            "n": 83,
+            "min": 109528.0,
+            "max": 114080.0,
+            "median": 113760.0,
+            "mean": 112397.78313253012,
+            "p95": 114073.6
+          },
+          "slopeMiBPerHour": -0.0008929253552507509
+        }
+      }
+    },
+    "92": {
+      "kind": "hourly",
+      "wallStartEpoch": 1793727415.598711,
+      "wallEndEpoch": 1793728315.598711,
+      "effectiveIdleSeconds": 830.0001438550244,
+      "processes": {
+        "shell": {
+          "pss_kib": {
+            "n": 83,
+            "min": 270271,
+            "max": 289671,
+            "median": 286823,
+            "mean": 286270.2409638554,
+            "p95": 288823.0
+          },
+          "uss_kib": {
+            "n": 83,
+            "min": 256700,
+            "max": 276100,
+            "median": 273252,
+            "mean": 272698.5542168675,
+            "p95": 275252.0
+          },
+          "swap_pss_kib": {
+            "n": 83,
+            "min": 22984,
+            "max": 23008,
+            "median": 22984,
+            "mean": 22985.734939759037,
+            "p95": 23008.0
+          },
+          "fds": {
+            "n": 83,
+            "min": 144,
+            "max": 145,
+            "median": 144,
+            "mean": 144.03614457831324,
+            "p95": 144.0
+          },
+          "threads": {
+            "n": 83,
+            "min": 25,
+            "max": 26,
+            "median": 25,
+            "mean": 25.03614457831325,
+            "p95": 25.0
+          },
+          "maps": {
+            "n": 83,
+            "min": 1713,
+            "max": 1729,
+            "median": 1714,
+            "mean": 1714.7951807228915,
+            "p95": 1729.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 83,
+            "min": 293279,
+            "max": 312655,
+            "median": 309807,
+            "mean": 309255.9759036145,
+            "p95": 311807.0
+          },
+          "cpuPercent": 0.04939758179989116,
+          "pssPlusSwapSlopeMiBPerHour": 21.71613594649602,
+          "drm-total-system0KiB": {
+            "n": 83,
+            "min": 80516.0,
+            "max": 82320.0,
+            "median": 82256.0,
+            "mean": 82077.78313253012,
+            "p95": 82320.0
+          },
+          "drm-resident-system0KiB": {
+            "n": 83,
+            "min": 43836.0,
+            "max": 80800.0,
+            "median": 80736.0,
+            "mean": 78018.40963855422,
+            "p95": 80800.0
+          },
+          "slopeMiBPerHour": 21.760211449885475
+        },
+        "compositor": {
+          "pss_kib": {
+            "n": 83,
+            "min": 36595,
+            "max": 36601,
+            "median": 36601,
+            "mean": 36600.5421686747,
+            "p95": 36601.0
+          },
+          "uss_kib": {
+            "n": 83,
+            "min": 30580,
+            "max": 30580,
+            "median": 30580,
+            "mean": 30580,
+            "p95": 30580.0
+          },
+          "swap_pss_kib": {
+            "n": 83,
+            "min": 65860,
+            "max": 65860,
+            "median": 65860,
+            "mean": 65860,
+            "p95": 65860.0
+          },
+          "fds": {
+            "n": 83,
+            "min": 134,
+            "max": 143,
+            "median": 140,
+            "mean": 139.26506024096386,
+            "p95": 142.89999999999998
+          },
+          "threads": {
+            "n": 83,
+            "min": 16,
+            "max": 16,
+            "median": 16,
+            "mean": 16,
+            "p95": 16.0
+          },
+          "maps": {
+            "n": 83,
+            "min": 946,
+            "max": 950,
+            "median": 949,
+            "mean": 948.0843373493976,
+            "p95": 949.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 83,
+            "min": 102455,
+            "max": 102461,
+            "median": 102461,
+            "mean": 102460.5421686747,
+            "p95": 102461.0
+          },
+          "cpuPercent": 1.8168671549813629,
+          "pssPlusSwapSlopeMiBPerHour": -0.009984606291013288,
+          "drm-total-system0KiB": {
+            "n": 83,
+            "min": 119608.0,
+            "max": 124224.0,
+            "median": 124160.0,
+            "mean": 123436.81927710843,
+            "p95": 124160.0
+          },
+          "drm-resident-system0KiB": {
+            "n": 83,
+            "min": 85032.0,
+            "max": 89648.0,
+            "median": 89584.0,
+            "mean": 88837.68674698795,
+            "p95": 89584.0
+          },
+          "slopeMiBPerHour": -0.009984606290786178
+        }
+      }
+    },
+    "95": {
+      "kind": "normal",
+      "wallStartEpoch": 1793730115.598711,
+      "wallEndEpoch": 1793731015.598711,
+      "effectiveIdleSeconds": 840.0000228429853,
+      "processes": {
+        "shell": {
+          "pss_kib": {
+            "n": 84,
+            "min": 266859,
+            "max": 268559,
+            "median": 267575.0,
+            "mean": 267447.5595238095,
+            "p95": 267987.0
+          },
+          "uss_kib": {
+            "n": 84,
+            "min": 253288,
+            "max": 254988,
+            "median": 254004.0,
+            "mean": 253877.95238095237,
+            "p95": 254416.0
+          },
+          "swap_pss_kib": {
+            "n": 84,
+            "min": 22984,
+            "max": 22996,
+            "median": 22984.0,
+            "mean": 22988.714285714286,
+            "p95": 22996.0
+          },
+          "fds": {
+            "n": 84,
+            "min": 144,
+            "max": 145,
+            "median": 144.0,
+            "mean": 144.03571428571428,
+            "p95": 144.0
+          },
+          "threads": {
+            "n": 84,
+            "min": 25,
+            "max": 26,
+            "median": 25.0,
+            "mean": 25.035714285714285,
+            "p95": 25.0
+          },
+          "maps": {
+            "n": 84,
+            "min": 1726,
+            "max": 1766,
+            "median": 1728.0,
+            "mean": 1727.9166666666667,
+            "p95": 1728.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 84,
+            "min": 289855,
+            "max": 291543,
+            "median": 290559.0,
+            "mean": 290436.2738095238,
+            "p95": 290983.0
+          },
+          "cpuPercent": 0.04880952248219618,
+          "pssPlusSwapSlopeMiBPerHour": -3.908591689118793,
+          "drm-total-system0KiB": {
+            "n": 84,
+            "min": 80560.0,
+            "max": 102400.0,
+            "median": 80576.0,
+            "mean": 80834.85714285714,
+            "p95": 80576.0
+          },
+          "drm-resident-system0KiB": {
+            "n": 84,
+            "min": 70636.0,
+            "max": 100896.0,
+            "median": 79072.0,
+            "mean": 79119.52380952382,
+            "p95": 79072.0
+          },
+          "slopeMiBPerHour": -3.977918403575069
+        },
+        "compositor": {
+          "pss_kib": {
+            "n": 84,
+            "min": 36106,
+            "max": 36601,
+            "median": 36601.0,
+            "mean": 36526.607142857145,
+            "p95": 36601.0
+          },
+          "uss_kib": {
+            "n": 84,
+            "min": 30160,
+            "max": 30580,
+            "median": 30580.0,
+            "mean": 30510,
+            "p95": 30580.0
+          },
+          "swap_pss_kib": {
+            "n": 84,
+            "min": 65860,
+            "max": 65860,
+            "median": 65860.0,
+            "mean": 65860,
+            "p95": 65860.0
+          },
+          "fds": {
+            "n": 84,
+            "min": 134,
+            "max": 138,
+            "median": 138.0,
+            "mean": 136.8095238095238,
+            "p95": 138.0
+          },
+          "threads": {
+            "n": 84,
+            "min": 16,
+            "max": 16,
+            "median": 16.0,
+            "mean": 16,
+            "p95": 16.0
+          },
+          "maps": {
+            "n": 84,
+            "min": 945,
+            "max": 947,
+            "median": 946.0,
+            "mean": 946.1428571428571,
+            "p95": 947.0
+          },
+          "pssPlusSwapKiB": {
+            "n": 84,
+            "min": 101966,
+            "max": 102461,
+            "median": 102461.0,
+            "mean": 102386.60714285714,
+            "p95": 102461.0
+          },
+          "cpuPercent": 0.15119047207899794,
+          "pssPlusSwapSlopeMiBPerHour": -1.1803097769554642,
+          "drm-total-system0KiB": {
+            "n": 84,
+            "min": 119544.0,
+            "max": 123776.0,
+            "median": 123712.0,
+            "mean": 122206.57142857143,
+            "p95": 123776.0
+          },
+          "drm-resident-system0KiB": {
+            "n": 84,
+            "min": 84968.0,
+            "max": 89200.0,
+            "median": 89136.0,
+            "mean": 87630.57142857143,
+            "p95": 89200.0
+          },
+          "slopeMiBPerHour": -1.1803097769554975
+        }
+      }
+    }
+  },
+  "upgrade": {
+    "target": "58056acb3ce34b0c8befb9971190a7887cea8e52",
+    "selection": "latest shared local main at update; no configured git remote, private remote query unavailable",
+    "installerExit": 0,
+    "doctorExit": 0,
+    "payloadFilesMatched": 328,
+    "shellAndWriterReplacementExpectedAfterSoak": true,
+    "compositorAndBootUnchanged": true,
+    "settingsOwnerWindowBackgroundBindingsPreserved": true,
+    "soundOffPluginOn": true,
+    "dndOn": true,
+    "workspace": 1,
+    "unlocked": true,
+    "historyAndToasts": 0,
+    "lidRulePreservedForLead": true
+  },
+  "cleanup": {
+    "controllerObserverWatcherAndArmedMarkerRetired": true,
+    "onlyPersistentOwnedShellChild": "notification writer",
+    "productOncePerSessionMarkersRetained": true,
+    "localRoundKiBAtAudit": 568620,
+    "remoteRoundKiBAfterSourceRemoval": 23224,
+    "remoteSourceRemovedKiB": 79216,
+    "localSourceRemovedKiB": 39224,
+    "ownedContainersRemaining": [],
+    "ownedRuntimeImageRemaining": false
+  },
+  "vmDisposition": {
+    "reportCommit": "1573921214fa2f69ea36213499047e715de42164",
+    "previousDeliveryConfirmed": true,
+    "acceptedInbox": "v174",
+    "F1": "accepted Omarchy 4.0.6 limitation; no retest",
+    "visualResume": "unverified VM limitation"
+  },
+  "validation": {
+    "toolsCheckPassed": true,
+    "runtimeTests": 84,
+    "target": "58056acb3ce34b0c8befb9971190a7887cea8e52",
+    "generationMetadataSyntax": true,
+    "stagedPrivacy": true,
+    "publicCsvCountAndStateChecks": true,
+    "manualPrivacyReview": true
+  }
+}

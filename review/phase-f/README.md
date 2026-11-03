@@ -1,11 +1,13 @@
 # F independent verification
 
 Inbox v173; product `e603ad371c54fd3150d89377aebd8cd183884a59`.
-This is the VM report. Kujira's separate 86,400-second run is still in
-progress; this report does not award a soak pass. Later main commits are
-outside the pinned test target.
+This is the original VM report, accepted under inbox v174. The completed
+24-hour native soak and subsequent main update are reported separately in
+[SOAK.md](SOAK.md); later main commits were not part of these pinned VM tests.
+F-1 below was accepted as an Omarchy 4.0.6 limitation (no repair or retest).
+Visual S3/s2idle resume remains unverified within the documented VM limits.
 
-## P2 — native bar precedes Arrival ink on 4.0.6
+## F-1 — accepted native-bar limitation on 4.0.6 (originally P2)
 
 All four externally recorded cold-cache 4.0.6 logins show a dark top strip
 and a brief central indicator before Arrival's opaque ink. This violates the
@@ -162,16 +164,17 @@ Both VMs finished with normal guest poweroff. Both containers and the named
 runtime image were removed; its reported size was 1.25 GiB, not a claim about
 reclaimed shared layers. Each disk retains its baseline plus only
 `verified-clean-b`, with the working disk restored: allocation 10.12 / 10.31 GiB.
-Private evidence and pinned source occupy about 570 MiB. Accepted E source
-copies were removed earlier in the round (74.8 MiB). Reproducible F source stays
-until acceptance; raw recordings are retained. The native soak controller and
-its completion watcher remain active independently of these VM containers.
+At VM-report delivery, private evidence and pinned source occupied about
+570 MiB. Accepted E source copies had been removed (74.8 MiB). After v174
+acceptance, the F source copies were also removed; raw recordings remain.
+The native controller and completion watcher have now retired. Current disk
+sizes and final cleanup are recorded in [SOAK.md](SOAK.md).
 
 Evidence: `vm{406,450}/uninstall-*-{diff,result,owned-check}.*`, native UI shots,
 `vm450/dconf-semantic-audit.json`, final normal-shutdown/clean-restore records
 and `cleanup-summary.json`.
 
-## Kujira soak in progress
+## Kujira soak setup (completed separately)
 
 The authorized update ff501b4 → e603ad3 passed doctor. Sounds were prearmed
 off before installation, reasserted afterward, and remain off with the sound
@@ -192,7 +195,7 @@ Dispatch through a state list that excludes overlays. Its owned overlay was
 closed; writer and desktop were unchanged. The corrected run uses actual
 component state and namespace checks. Run 01 is retained separately and will
 never be joined to run 02. Final completion, full-series growth/CPU/handle
-analysis and every writer transition are deferred to the separate soak report.
+analysis and every writer transition are now recorded in [SOAK.md](SOAK.md).
 
 ## Evidence integrity
 
