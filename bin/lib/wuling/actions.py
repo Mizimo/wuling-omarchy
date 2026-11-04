@@ -25,8 +25,9 @@ FIXED = {
 }
 PANELS = {"wifi": "omarchy.network", "bluetooth": "omarchy.bluetooth", "tailscale": "omarchy.tailscale",
           "night": "omarchy.monitor", "power": "omarchy.power", "audio": "omarchy.audio", "agent": "omarchy.agents"}
-NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action", "profile", "audio-default", "audio-volume", "audio-mute", "system-copy")
-PAGES = ("comms", "performance", "power", "audio", "system", "calendar")
+RADIOS = ("wifi-radio", "wifi-scan", "wifi-connect", "wifi-disconnect", "wifi-forget", "bluetooth-radio", "bluetooth-scan", "bluetooth-pair", "bluetooth-connect", "bluetooth-disconnect", "bluetooth-forget", "tailnet")
+NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action", "profile", "audio-default", "audio-volume", "audio-mute", "system-copy") + RADIOS
+PAGES = ("comms", "performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet")
 
 
 class PanelUnavailable(Error):
@@ -148,6 +149,20 @@ def plan(name, value=None):
 
 
 def run(name, value=None):
+    if name in RADIOS:
+        from . import radios
+        try:
+            if name == "bluetooth-scan":
+                radios.discover()
+            elif name == "tailnet":
+                radios.tailnet_action(value)
+            elif name.startswith("wifi-"):
+                radios.wifi_action(name, value)
+            else:
+                radios.bluetooth_action(name, value)
+        except KeyboardInterrupt:
+            raise Error("The radio action was cancelled") from None
+        return {"schema_version": SCHEMA, "action": name, "ok": True}
     argv = plan(name, value)
     if name == "system-copy":
         from .details import System
@@ -189,6 +204,8 @@ def terminal(action, page=None):
     if page is not None:
         if action != "open" or page not in PAGES:
             raise Error("Choose an available Terminal page with open")
+        if page == "tailnet" and not status.shutil.which("tailscale"):
+            raise Error("Tailnet is not installed")
         monitors = json.loads(command(["hyprctl", "-j", "monitors"]))
         focused = next((row["name"] for row in monitors if row.get("focused")), "")
         if not re.fullmatch(r"[\w.-]{1,120}", focused) or command(["omarchy-shell", "wuling.terminal." + focused, "page", page]) != "ok":

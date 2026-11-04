@@ -13,12 +13,17 @@ Item {
     property string crumb: ""
     function key(event) { if(pageLoader.item)pageLoader.item.key(event); }
     property string error: ""
+    property bool busy:false
+    property bool scanning:false
+    function result(name,ok) { if(pageLoader.item && typeof pageLoader.item.result==="function")pageLoader.item.result(name,ok); }
     property real progress: 0
     property int direction: 1
     readonly property alias controls: pageBody
     readonly property alias flickable: scroll
     readonly property bool loaded:pageLoader.item!==null
     signal command(string name,string value)
+    signal credential(string value,string secret)
+    signal discovery()
     signal back()
     signal clear()
     signal action(string key, int index)
@@ -62,12 +67,18 @@ Item {
                 Loader {
                     id:pageLoader;width:parent.width
                     active:frame.terminalOpen && frame.visible && frame.retainedPage!=="comms"
-                    source:({performance:"PerformancePage.qml",power:"PowerPage.qml",audio:"AudioPage.qml",system:"SystemPage.qml",calendar:"CalendarPage.qml"})[frame.retainedPage] || ""
-                    onLoaded:item.snapshot=Qt.binding(()=>frame.snapshot)
+                    source:({performance:"PerformancePage.qml",power:"PowerPage.qml",audio:"AudioPage.qml",system:"SystemPage.qml",calendar:"CalendarPage.qml",wifi:"WifiPage.qml",bluetooth:"BluetoothPage.qml",tailnet:"TailnetPage.qml"})[frame.retainedPage] || ""
+                    onLoaded: {
+                        item.snapshot=Qt.binding(()=>frame.snapshot);
+                        if(item.busy!==undefined)item.busy=Qt.binding(()=>frame.busy);
+                        if(item.scanning!==undefined)item.scanning=Qt.binding(()=>frame.scanning);
+                    }
                 }
                 Connections {
                     target:pageLoader.item;ignoreUnknownSignals:true
                     function onAction(name,value) { frame.command(name,value); }
+                    function onCredential(value,secret) { frame.credential(value,secret); }
+                    function onDiscovery() { frame.discovery(); }
                     function onFocusMoved(control) {
                         const point=control.mapToItem(scroll.contentItem,0,0);
                         if(point.y<scroll.contentY || point.y+control.height>scroll.contentY+scroll.height)

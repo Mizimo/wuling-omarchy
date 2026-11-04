@@ -12,6 +12,9 @@ Ui.Panel {
     implicitHeight: bar ? bar.barSize : Kit.Runtime.px(30)
     property var state: ({})
     property var actionQueue: []
+    property bool scanning:false
+    property string pendingCredential:""
+    property string actionPage:""
     property string actionError: ""
     property bool restartingCollector: false
     property var collectingSections: []
@@ -25,7 +28,25 @@ Ui.Panel {
     readonly property var sections: Kit.Runtime.setting("terminal.sections")
     readonly property var activeSections: pageName ? sections.filter(key => key === "clock").concat([pageName]) : sections
     onSectionsChanged: { if(pageName === "comms" && sections.indexOf("comms")<0)backPage(); else restartCollector(); }
-    onPageNameChanged: restartCollector()
+    onPageNameChanged: { stopRadioWork();restartCollector(); }
+    function radioAction(name) { return name.indexOf("wifi-")===0 || name.indexOf("bluetooth-")===0 || name==="tailnet"; }
+    function stopRadioWork() {
+        scanning=false;pendingCredential="";credentialProcess.running=false;
+        if(actionProcess.command.length>2 && radioAction(actionProcess.command[2]))actionProcess.running=false;
+        actionQueue=actionQueue.filter(row=>!radioAction(row[2]));
+    }
+    function submitCredential(value,secret) {
+        if(!opened || pageName!=="wifi" || credentialProcess.running)return;
+        pendingCredential=secret;
+        credentialProcess.command=["wuling","action","wifi-connect",value];credentialProcess.running=true;
+    }
+    function completed(name,response) {
+        actionError=response.error?Kit.Runtime.tr(response.error.code==="panel_unavailable"?"panel-unavailable":"action-failed"):"";
+        detail.result(name,!response.error);
+        if(actionError)Kit.Runtime.cue("deny");
+        else if(["performance-monitor","system-fastfetch"].indexOf(name)>=0)close();
+        else if(radioAction(name) && opened)restartCollector();
+    }
     function restartCollector() {
         if (!opened) return;
         restartingCollector = true;
@@ -55,7 +76,7 @@ Ui.Panel {
         return openPage("comms");
     }
     function openPage(name, source) {
-        const section=source || ({comms:"comms",performance:"telemetry",power:"telemetry",audio:"levels",system:"clock",calendar:"clock"})[name];
+        const section=source || ({comms:"comms",performance:"telemetry",power:"telemetry",audio:"levels",system:"clock",calendar:"clock",wifi:"link",bluetooth:"link",tailnet:"link"})[name];
         if(!section || name==="comms" && sections.indexOf("comms")<0 || bar && bar.barHidden)return "off";
         const index=shown.indexOf(section)>=0?shown.indexOf(section):sections.indexOf(section);
         pageNumber=String(Math.max(0,index)+2).padStart(2,"0");pageSection=section;
@@ -75,6 +96,7 @@ Ui.Panel {
         function state(): string { return JSON.stringify({open:terminal.opened,page:terminal.pageName,sections:terminal.opened?terminal.collectingSections:[],historyRows:terminal.logRows.length,detailLoaded:detail.loaded,spectrum:signalPanel.inspection()}); }
     }
     function act(name, value) {
+        if(name==="bluetooth-scan") { scanning=!scanning;return; }
         const next = ["wuling", "action", name]; if (value !== undefined) next.push(String(value));
         // Slider drags retain the latest pending value, not a queue of stale
         // commands. Discrete clicks remain ordered and bounded.
@@ -83,6 +105,7 @@ Ui.Panel {
     }
     function runNext() {
         if (actionProcess.running || !actionQueue.length) return;
+        actionPage=pageName;
         actionProcess.command = actionQueue[0]; actionQueue = actionQueue.slice(1); actionProcess.running = true;
     }
     function tileValue(tile) {
@@ -99,7 +122,7 @@ Ui.Panel {
     function foot(action) { close(); act(action); }
     onOpenedChanged: {
         Kit.Runtime.cue(opened ? "open" : "close");
-        if (!opened) { collector.running = false; restartingCollector = false; pageName="";state = ({});overviewComms.expandedKeys=({}); }
+        if (!opened) { stopRadioWork();collector.running = false; restartingCollector = false; pageName="";state = ({});overviewComms.expandedKeys=({}); }
         else { actionError = ""; startCollector(); body.resetNavigation(); }
         reportGeometry();
     }
@@ -115,20 +138,45 @@ Ui.Panel {
         id: collector
         onExited: if (terminal.restartingCollector) Qt.callLater(terminal.startCollector)
         stdout: SplitParser {
-            onRead: line => { try { const data = JSON.parse(line); if (terminal.opened && !terminal.restartingCollector && JSON.stringify(terminal.collectingSections)===JSON.stringify(terminal.activeSections) && data.schema_version === 1) terminal.state = data; } catch (_) {} }
+            onRead: line => { try {
+                const data=JSON.parse(line);
+                if(terminal.opened && !terminal.restartingCollector && JSON.stringify(terminal.collectingSections)===JSON.stringify(terminal.activeSections) && data.schema_version===1) {
+                    const page=terminal.pageName;
+                    if(["wifi","bluetooth","tailnet"].indexOf(page)>=0 && (data.pending || []).indexOf(page)>=0 && terminal.state[page])data[page]=terminal.state[page];
+                    terminal.state=data;
+                }
+            } catch (_) {} }
         }
     }
     Process {
         id: actionProcess
         stdout: StdioCollector {
             onStreamFinished: {
-                try { const response = JSON.parse(text); terminal.actionError = response.error ? Kit.Runtime.tr(response.error.code === "panel_unavailable" ? "panel-unavailable" : "action-failed") : ""; }
+                if(terminal.radioAction(actionProcess.command[2]) && (!terminal.opened || terminal.actionPage!==terminal.pageName))return;
+                try { terminal.completed(actionProcess.command[2],JSON.parse(text)); }
                 catch (_) { terminal.actionError = Kit.Runtime.tr("unavailable"); }
-                if (terminal.actionError) Kit.Runtime.cue("deny");
-                else if(["performance-monitor","system-fastfetch"].indexOf(actionProcess.command[2])>=0)terminal.close();
             }
         }
         onExited: Qt.callLater(terminal.runNext)
+    }
+    Process {
+        id:credentialProcess;stdinEnabled:true
+        onStarted: { write(terminal.pendingCredential+"\n");terminal.pendingCredential=""; }
+        onRunningChanged:if(!running)terminal.pendingCredential=""
+        stdout:StdioCollector { onStreamFinished: {
+            if(!terminal.opened || terminal.pageName!=="wifi")return;
+            try { terminal.completed("wifi-connect",JSON.parse(text)); }
+            catch(_) { terminal.actionError=Kit.Runtime.tr("action-failed");detail.result("wifi-connect",false); }
+        } }
+    }
+    Process {
+        id:discoveryProcess;command:["wuling","action","bluetooth-scan"]
+        running:terminal.opened && terminal.pageName==="bluetooth" && terminal.scanning
+        onExited:terminal.scanning=false
+        stdout:StdioCollector { onStreamFinished: {
+            if(!terminal.scanning)return;
+            try { terminal.completed("bluetooth-scan",JSON.parse(text)); } catch(_) {}
+        } }
     }
     Kit.Button {
         id: button; anchors.fill: parent; host: terminal.bar
@@ -301,8 +349,8 @@ Ui.Panel {
                                     width: (contents.width - Kit.Runtime.px(40)) / 3; height: Kit.Runtime.px(52)
                                     selected: modelData.active
                                     Accessible.name: Kit.Runtime.tr(modelData.id)
-                                    onClicked: modelData.id==="power"?terminal.openPage("power","link"):terminal.act(modelData.action)
-                                    onRightClicked: terminal.act("panel", modelData.id)
+                                    onClicked: ["power","wifi","bluetooth","tailscale"].indexOf(modelData.id)>=0?terminal.openPage(modelData.id==="tailscale"?"tailnet":modelData.id,"link"):terminal.act(modelData.action)
+                                    onRightClicked: modelData.id==="tailscale"?terminal.openPage("tailnet","link"):terminal.act("panel", modelData.id)
                                     Kit.Icon { x: Kit.Runtime.px(8); y: Kit.Runtime.px(7); name: ({wifi:"wifi",bluetooth:"bluetooth",tailscale:"hub",dnd:"do_not_disturb_on",night:"bedtime",power:"speed"})[parent.modelData.id]; color: parent.foreground; font.pixelSize: Kit.Runtime.px(15) }
                                     Kit.Micro { anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(8); y: Kit.Runtime.px(10); text: ({wifi:"WI-FI", bluetooth:"BT", tailscale:"TAILNET", dnd:"DND", night:"NIGHT", power:"POWER"})[parent.modelData.id]; color: parent.foreground; pixels: 7.5 }
                                     Kit.Label { x: Kit.Runtime.px(8); y: Kit.Runtime.px(31); width: parent.width - Kit.Runtime.px(16); text: terminal.tileValue(parent.modelData); color: parent.foreground; font.family: Kit.Runtime.sans }
@@ -448,8 +496,12 @@ Ui.Panel {
                 id:detail;y:header.height+(clockPart.visible?clockPart.height:0);width:parent.width;height:Math.max(0,parent.height-y)
                 pageName:terminal.pageName;terminalOpen:terminal.opened
                 snapshot:terminal.state[retainedPage] || ({})
-                crumb:retainedPage==="comms"?Kit.Runtime.label("comms-page"):Kit.Runtime.label(terminal.pageSection)+" › "+Kit.Runtime.label(retainedPage)
+                crumb:retainedPage==="comms"?Kit.Runtime.label("comms-page"):Kit.Runtime.label(terminal.pageSection).toUpperCase()+" › "+Kit.Runtime.label(retainedPage==="bluetooth"?"bluetooth-page":retainedPage).toUpperCase()
                 onCommand:(name,value)=>terminal.act(name,value || undefined)
+                busy:actionProcess.running || credentialProcess.running
+                scanning:terminal.scanning
+                onCredential:(value,secret)=>terminal.submitCredential(value,secret)
+                onDiscovery:terminal.scanning=!terminal.scanning
                 showing:terminal.opened && terminal.pageName!=="";rows:terminal.logRows;number:terminal.pageNumber;error:terminal.actionError
                 onBack:terminal.backPage()
                 onClear:terminal.act("comms-clear")

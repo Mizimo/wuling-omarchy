@@ -14,8 +14,8 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   reapplies the active one while preserving the selected background. An empty `login_music` disables the optional file.
 - `wuling status --json [--sections SECTION ...]`: an on-demand snapshot of
   `clock`, `link`, `levels`, `signal`, `agent`, `telemetry` and `comms` by default.
-  Opt-in detail sections are `performance`, `power`, `audio`, `system` and
-  `calendar`; they are never added to the default collection set. Unknown
+  Opt-in detail sections are `performance`, `power`, `audio`, `system`,
+  `calendar`, `wifi`, `bluetooth` and `tailnet`; they are never added to the default collection set. Unknown
   hardware yields null or no tile. CPU percentage needs two samples; the first
   is null. `--watch` produces live JSON lines until terminated (fast initial results,
   then a one-second cadence). The
@@ -32,11 +32,18 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   takes `value` (0–100). Current public PipeWire identity is revalidated before
   acting. `system-copy` sends a fresh information snapshot to the clipboard via
   stdin; `system-fastfetch` and `performance-monitor` use native TUI launchers.
+  Radio actions revalidate the public interface, access-point or device identity
+  in their JSON argument. `wifi-connect` with `credentials: true` reads one
+  passphrase line from stdin; never put the passphrase in the argument.
+  `bluetooth-scan` owns a bounded discovery client until cancelled.
+  `tailnet start|stop` uses the native command and login-browser handoff.
+  Destructive radio actions require the panel's hold; direct CLI callers are
+  responsible for confirming their intent.
 - `wuling status --spectrum`: optional 20-cell cava frames, at most 20 per
   second. No cava returns `available: false`; the caller owns its lifetime.
 - `wuling terminal open|close|toggle`: the Field Terminal on the focused output.
   `wuling terminal open PAGE` opens `comms`, `performance`, `power`, `audio`,
-  `system` or `calendar`.
+  `system`, `calendar`, `wifi`, `bluetooth` or `tailnet`.
 - `wuling notifications compatibility|state|boot|terminals|open-history|fallback`:
   internal notification bridge and diagnostics. `compatibility` checks the
   installed native modules. `persist` accepts bounded JSON lines on stdin and

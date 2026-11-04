@@ -16,7 +16,7 @@ import time
 from . import Error, SCHEMA, paths
 
 OVERVIEW_SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
-SECTIONS = OVERVIEW_SECTIONS + ("performance", "power", "audio", "system", "calendar")
+SECTIONS = OVERVIEW_SECTIONS + ("performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet")
 PROC = Path("/proc")
 SYS = Path("/sys")
 _stopping = threading.Event()
@@ -88,6 +88,15 @@ def probe(argv, timeout=3):
                     pass
                 child.communicate()
                 return None
+            except BaseException:
+                # A page may close during an initial synchronous device read.
+                # Popen's context manager otherwise waits for that child.
+                try:
+                    os.killpg(child.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                child.communicate()
+                raise
             return output.strip() if child.returncode == 0 else None
     except (OSError, UnicodeError):
         return None
@@ -186,15 +195,16 @@ def links():
             return {"id": "wifi", "active": state == "enabled", "state": state,
                     "network": network, "panel": "omarchy.network", "action": "wifi"}
     def bluetooth():
-        if any((SYS / "class/bluetooth").glob("hci*")):
+        from .radios import bluetooth_present
+        if bluetooth_present():
             state = probe(["omarchy-bluetooth-power", "is-on"])
             return {"id": "bluetooth", "active": state is not None,
                     "panel": "omarchy.bluetooth", "action": "bluetooth"}
     def tailscale():
         data = probe_json(["tailscale", "status", "--json"])
-        if data.get("BackendState"):
-            return {"id": "tailscale", "active": data["BackendState"] == "Running",
-                    "state": label(data["BackendState"]), "panel": "omarchy.tailscale", "action": "tailscale"}
+        if shutil.which("tailscale"):
+            return {"id": "tailscale", "active": data.get("BackendState") == "Running",
+                    "state": label(data.get("BackendState", "Unavailable")), "panel": "omarchy.tailscale", "action": "tailscale"}
     def dnd():
         state = probe(["omarchy-shell", "notifications", "isDnd"])
         if state in ("on", "off"):
@@ -315,20 +325,21 @@ class Collector:
     def __init__(self, sections=None):
         _stopping.clear()
         from .devices import battery_rows
-        from . import details
+        from . import details, radios
         self.sections = set(OVERVIEW_SECTIONS if sections is None else sections)
         if "telemetry" in self.sections:
             self.sections.add("batteries")
         self.telemetry = Telemetry()
         self.latest = {}
         self.readers = {"link": links, "levels": levels, "signal": media, "agent": agent_usage, "comms": comms, "batteries": battery_rows}
-        for name, factory in (("performance", details.Performance), ("power", details.Power), ("system", details.System)):
+        for name, factory in (("performance", details.Performance), ("power", details.Power), ("system", details.System), ("wifi", radios.Wifi)):
             if name in self.sections:
                 reader = factory()
                 self.readers[name] = reader.read
                 if hasattr(reader, "initial"):
                     self.latest[name] = reader.initial
         self.readers.update(audio=details.audio, calendar=details.calendar_today)
+        self.readers.update(bluetooth=radios.bluetooth, tailnet=radios.tailnet)
         self.pool = ThreadPoolExecutor(max_workers=5)
         self.pending = {}
         self.due = {}
@@ -354,7 +365,7 @@ class Collector:
                     self.latest[name] = None
                 del self.pending[name]
                 self.serial += 1
-                self.due[name] = now + (1 if name in ("signal", "comms", "performance", "audio") else 2 if name in ("levels", "power") else 30 if name == "calendar" else 5)
+                self.due[name] = now + (1 if name in ("signal", "comms", "performance", "audio") else 2 if name in ("levels", "power", "wifi", "bluetooth", "tailnet") else 30 if name == "calendar" else 5)
         if "clock" in self.sections and now >= self.due.get("clock", 0):
             self.latest["clock"] = clock()
             self.due["clock"] = now + 1
