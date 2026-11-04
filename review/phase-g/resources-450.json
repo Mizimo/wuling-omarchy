@@ -1,0 +1,203 @@
+{
+ "product": "ef45c12c224cf84a8ff4e95074b3dd16fb7c9c6b",
+ "omarchy": "4.5.0rc2-1",
+ "vm": "12 vCPU, 8 GiB, virgl/llvmpipe",
+ "measure": "omarchy-shell PSS+SwapPSS (MiB), one shell process throughout",
+ "detailPageRuns": [
+  {
+   "run": 1,
+   "cycles": 200,
+   "durationS": 290.1,
+   "baselineMedianMiB": 463.8,
+   "medians25MiB": [
+    457.2,
+    455.9,
+    460.5,
+    464.1,
+    472.1,
+    474.9,
+    474.8,
+    476.6
+   ],
+   "finalIdleMedianMiB": 478.6,
+   "last100SlopeMiBPerCycle": 0.0509,
+   "fdLast100": [
+    190
+   ],
+   "threadsLast100": [
+    21
+   ],
+   "collectorChildrenAfterClose": 0,
+   "idleCpuPctBaseline": 0.095,
+   "idleCpuPctFinal": 0.144,
+   "maxCycleGapS": 2.5
+  },
+  {
+   "run": 2,
+   "cycles": 200,
+   "durationS": 295.9,
+   "baselineMedianMiB": 466.6,
+   "medians25MiB": [
+    468.4,
+    479.0,
+    480.8,
+    486.2,
+    489.3,
+    490.0,
+    490.1,
+    492.2
+   ],
+   "finalIdleMedianMiB": 499.0,
+   "last100SlopeMiBPerCycle": 0.0377,
+   "fdLast100": [
+    190
+   ],
+   "threadsLast100": [
+    21
+   ],
+   "collectorChildrenAfterClose": 0,
+   "idleCpuPctBaseline": 0.142,
+   "idleCpuPctFinal": 0.096,
+   "maxCycleGapS": 2.57
+  },
+  {
+   "run": 3,
+   "cycles": 200,
+   "durationS": 270.4,
+   "baselineMedianMiB": 508.0,
+   "medians25MiB": [
+    495.9,
+    492.3,
+    494.6,
+    496.3,
+    497.4,
+    497.4,
+    500.5,
+    501.4
+   ],
+   "finalIdleMedianMiB": 501.5,
+   "last100SlopeMiBPerCycle": 0.0587,
+   "fdLast100": [
+    190
+   ],
+   "threadsLast100": [
+    21
+   ],
+   "collectorChildrenAfterClose": 0,
+   "idleCpuPctBaseline": 0.095,
+   "idleCpuPctFinal": 0.096,
+   "maxCycleGapS": 2.71
+  },
+  {
+   "run": 4,
+   "cycles": 200,
+   "durationS": 270.1,
+   "baselineMedianMiB": 513.3,
+   "medians25MiB": [
+    507.4,
+    508.1,
+    509.4,
+    509.9,
+    513.2,
+    510.6,
+    515.0,
+    517.2
+   ],
+   "finalIdleMedianMiB": 518.6,
+   "last100SlopeMiBPerCycle": 0.0558,
+   "fdLast100": [
+    190
+   ],
+   "threadsLast100": [
+    21
+   ],
+   "collectorChildrenAfterClose": 0,
+   "idleCpuPctBaseline": 0.096,
+   "idleCpuPctFinal": 0.096,
+   "maxCycleGapS": 1.9
+  },
+  {
+   "run": 5,
+   "cycles": 200,
+   "durationS": 290.3,
+   "baselineMedianMiB": 521.9,
+   "medians25MiB": [
+    517.6,
+    520.2,
+    522.0,
+    524.9,
+    526.0,
+    526.6,
+    526.6,
+    530.4
+   ],
+   "finalIdleMedianMiB": 530.5,
+   "last100SlopeMiBPerCycle": 0.0544,
+   "fdLast100": [
+    190,
+    193,
+    201
+   ],
+   "threadsLast100": [
+    21,
+    24
+   ],
+   "collectorChildrenAfterClose": 0,
+   "idleCpuPctBaseline": 0.096,
+   "idleCpuPctFinal": 0.14,
+   "maxCycleGapS": 2.88
+  }
+ ],
+ "controls": {
+  "omarchyAudioPanelToggle": {
+   "cycles": 200,
+   "baselineMedianMiB": 547.3,
+   "medians25MiB": [
+    537.1,
+    535.9,
+    533.4,
+    534.6,
+    539.8,
+    542.3,
+    541.6,
+    541.7
+   ],
+   "finalIdleMedianMiB": 545.9,
+   "last100SlopeMiBPerCycle": 0.0203,
+   "fdLast100": [
+    187,
+    190
+   ],
+   "threadsLast100": [
+    17,
+    18
+   ]
+  },
+  "terminalOverviewOnly": {
+   "cycles": 200,
+   "baselineMedianMiB": 549.4,
+   "medians25MiB": [
+    543.5,
+    543.1,
+    543.1,
+    541.9,
+    544.7,
+    544.8,
+    545.8,
+    546.1
+   ],
+   "finalIdleMedianMiB": 550.3,
+   "last100SlopeMiBPerCycle": 0.0259,
+   "fdLast100": [
+    187,
+    189,
+    190
+   ],
+   "threadsLast100": [
+    17,
+    18
+   ]
+  }
+ },
+ "note": "Five separate 200-cycle detail-page runs, not stitched; each cycle opens the next of ten pages with wuling terminal open and closes. Controls follow on the same shell."
+}
