@@ -105,12 +105,16 @@ white or yellow fill on MIST would hide it.
   Noto Sans/Serif CJK for Chinese, Material Symbols Sharp for WULING's own icons. Sizes in `tokens.css`.
 - **Shape.** Square. Chamfers 6/10 px on chips, cards and toasts. 1 px hairlines. No radius, no shadow. Panels on Omarchy's `qs.Ui`
   panel, the Terminal included, keep its square frame: chamfering it would mean a second input layer to keep working on every version.
-- **Labels.** Micro labels are 8–9 px uppercase mono and decorative: nothing important is only in a micro label.
+- **Labels.** Micro labels are 8–9 px uppercase mono and decorative: nothing important is only in a micro label. A label, WULING's
+  own fixed text, is never cut: one that doesn't fit its cell wraps to a second line, at the narrowest Terminal (1366×768) and at
+  text size 16 alike, and the number it labels doesn't wrap. Content (a hostname, a notification body) elides only where this
+  spec says so.
 - **Selection in WULING's own surfaces.** The plate inverts: `paper-0` ground, `ink-2` ink, 2 px yellow on the leading
   edge or foot.
 - **Danger.** Logout, Reboot and Shutdown carry a hazard strip and need a long press.
-- **Marks.** `assets/ef-mark.svg` is the Endfield Industries mark, redrawn as vector shapes in `currentColor`: use it wherever it is
-  shown large. `assets/emblem.svg` is the simplified 30 px plate for the bar's menu cell.
+- **Marks.** `assets/ef-mark.svg` is the Endfield Industries mark, redrawn as vector shapes in `currentColor`: use it only where it is
+  shown large: Arrival, the exit, the boot screen and the backgrounds. Its detail turns to noise when small. `assets/emblem.svg` is the
+  simplified plate for small sizes: the bar's menu cell at 30 px and the System page's head at 52 px.
 
 ## 5. Motion
 
@@ -220,7 +224,7 @@ The spectrum needs `cava`, which stock Omarchy doesn't ship. WULING never instal
 |---|---|---|
 | Performance 效 | CPU % large, load 1 · 5 · 15, temperature, frequency, uptime. 60 s sparkline. One 24-cell bar per thread, yellow above 80 %, two columns past 8 threads. Memory: a 24-cell bar of used, cache and free, a legend, swap. Processes: name, CPU %, RSS | `S` sorts by CPU or memory. Enter: `btop` in the default terminal |
 | Power 電 | Combined % large, state in jade while charging, time to full or empty, watts, supply. 24 h level sparkline from UPower's history. One card per pack: state word, gauge, %, health | Profile: `SAVER 省電 · BALANCED 平衡 · PERFORMANCE 效能`, ←→ moves it |
-| Audio 音 | Output devices: the active one a card with a jade rail, a level and mute; the others rows. The input device with its level and a live meter. `STREAMS`: one level per app | Choose the device, drag or wheel a level, mute. The meter runs only while this page is open; if it lights Omarchy's microphone indicator, it comes out and the delivery says so |
+| Audio 音 | Output devices: the active one a card with a jade rail, a level and mute; the others rows. The input device with its level, mute and a live meter. Muted looks the same on output and input: the icon crossed out. `STREAMS`: one level per app | Choose the device, drag or wheel a level, mute. The meter runs only while this page is open; if it lights Omarchy's microphone indicator, it comes out and the delivery says so |
 | System 系 | The emblem and the hostname large. `HOST`: host, OS, kernel, CPU, GPU, disk. `SESSION`: Omarchy, Hyprland and Quickshell versions, uptime, display, input method. `RELEASE`: WULING version, commit, date | `COPY 複製`, `FASTFETCH` in the default terminal |
 | Calendar 曆 | A month, Monday first, ISO week numbers; today a yellow tag, Sundays vermilion-light, other months muted. `TODAY`: date, ISO week, day of year, zone | ‹ ›, `TODAY · 今天`. Omarchy's clock panel stays on the bar |
 | Wi-Fi 網 | `RADIO`, interface, an OFF\|ON switch. `● LINKED · 已連線` in jade: signal bars, name, lock, band; IPv4, gateway, rate and security, signal; `hub` + `TAILNET · 遠端經此` only when public data shows it: an active direct peer whose address routes over this interface (`tailscale status --json`, `ip route get`). A relay, or anything uncertain, shows nothing. `AVAILABLE · n`, the list's age, `↻ SCAN`: signal bars, name, lock or `OPEN · 開放`, band, `SAVED · 已存` | Enter connects. A secured unsaved network opens `PASSPHRASE` in place, hidden with a `visibility` toggle. The passphrase goes to `nmcli` on stdin, as in Omarchy's panel: never in argv, the environment, a log or a state file. Enterprise networks hand over to Omarchy's panel. `DISCONNECT` (hold), `FORGET` (a hold for the network in use, since forgetting it disconnects; at once for one that isn't). `S` scans; opening the page doesn't, it shows what NetworkManager already has |
@@ -393,7 +397,7 @@ in §8.5. Times run from the end of the hold.
 
 ### 8.10 Keymap — `wuling.keymap`
 
-Every key on one screen, as in the earlier WULING. An overlay plugin on **Super+Ctrl+/**, in the owned block of `bindings.lua`; Omarchy's Super+K list stays. Built only while it's open. Full screen on the focused output, over the live desktop: the theme's darkest ink at 86 %, the head `KEYMAP · 鍵位`, the vertical 鍵位 in Serif Black 64 with its yellow cut. The same in both presets. Reduced motion: a 90 ms fade.
+Every key on one screen, as in the earlier WULING. An overlay plugin on **Super+Ctrl+/**, in the owned block of `bindings.lua`; Omarchy's Super+K list stays. Built only while it's open. Full screen on the focused output, over the live desktop: the theme's darkest ink at 86 %, the head `KEYMAP · 鍵位`, the vertical 鍵位 in Serif Black 64 with its yellow cut. The bar shows dimmed through the ink; the head, the filter and the columns start below it, so nothing of the overlay touches the bar. The same in both presets. Reduced motion: a 90 ms fade.
 
 - **Layout:** groups in columns, by what the keys are for: `SHELL 介面`, `WINDOWS 視窗`, `NAVIGATE 導航`, `APPS 應用`, `SYSTEM 系統`, and `OTHER 其他` for a key that fits none, so none is dropped. A row: the description, then keycaps in mono with a 1 px border, Super a yellow cap `◆`. Too many for the screen: it scrolls. It fits 1366×768 and 4K alike.
 - **Data:** the keys bound right now, the user's own included. Omarchy's public `omarchy-menu-keybindings --print` first; then `hyprctl binds` adds only what that list leaves out, into `OTHER`: Copilot (`code:201`), and a Lua bind without a description as `Lua binding · 無描述`, never guessed at. A keycode without a name shows as `code:N`. Switch events such as the lid aren't keys and aren't listed. `wuling keymap --json` prints them and the QML displays them. A version that changes the source falls under §10: the overlay says it can't read the keys, and Omarchy's list is still there.
