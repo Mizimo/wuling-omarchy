@@ -2,6 +2,10 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-03 — the repository goes public
+
+Asked after the final report, with the history audit in hand, the owner chose to publish. Before that, the audit runs once more on the final commit: authors, addresses, credentials, accounts, personal paths, and every image ever committed.
+
 ## 2026-11-02 — memory only has to be reasonable
 
 Told that Arrival leaves about 12 MiB behind and that the design lead had relaxed a 2 MB limit, the owner: "這個記憶體佔用不需要這麼嚴格，合理範圍就可以了".
