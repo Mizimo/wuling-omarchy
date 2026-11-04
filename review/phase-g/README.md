@@ -1,6 +1,6 @@
 # G independent verification
 
-Inbox v175–v179; product `ef45c12c224cf84a8ff4e95074b3dd16fb7c9c6b`
+Inbox v175–v181; product `ef45c12c224cf84a8ff4e95074b3dd16fb7c9c6b`
 (the Terminal's detail pages). This report is by the Claude verifier, who
 took over from the Codex verifier at inbox v178. It combines three sources and
 says which one each result comes from:
@@ -48,7 +48,7 @@ stopped the queued DND toggle applied. Codex saw the same queue on 4.0.6 with
 a second Night click. Candidate repair: don't capture output for this
 launcher, or launch it detached. Not patched or validated.
 
-### G-V5 — P2: on 4.5, the shell's memory grows with every detail-page visit
+### G-V7 — P2: on 4.5, the shell's memory grows with every detail-page visit
 
 BRIEF G asks that 200 page cycles show no steady growth. On 4.5.0-rc2 they
 don't level off. Five separate 200-cycle runs on one shell, each opening the
@@ -101,14 +101,19 @@ turn into a blotchy pattern inside the yellow square. Seen on kujira and in
 every System capture on both VMs (Codex did not report it). The design has
 since been changed so small marks use the plate (main `64239f4`); not retested.
 
-### Smaller observations (kujira, zh-Hant, 372 px panel)
+### G-V5 — P3: labels cut at the 372 px panel width
 
-- Labels cut with an ellipsis: Power's `Health · 健康度` shows `健康…` with the
-  value directly against it; Performance's `LOAD 1 · 5 · 15` and
-  `Frequency · 頻率` are cut the same way. Also visible in the VM captures. The
-  design now says labels are never cut (main `64239f4`); not retested.
-- Audio: when the input is muted, its mic icon stays the normal glyph, while
-  the muted output shows the crossed-out speaker. The UNMUTE button is correct.
+In zh-Hant on kujira, Power's `Health · 健康度` shows as `健康…` with the value
+pressed against it, and Performance's `LOAD 1 · 5 · 15` and `Frequency · 頻率`
+are cut the same way. The same cuts are visible in the VM captures at the same
+372 px width (Codex's 4.5 `wuling-en` sheet shows `LOAD 1 · 5 ·…`). The design
+now says labels are never cut (main `64239f4`); not retested.
+
+### G-V6 — P3: a muted input keeps the normal mic glyph
+
+On kujira's Audio page the muted output shows the crossed-out speaker, but the
+muted input keeps the plain mic icon. Its UNMUTE button and level are correct
+(`wpctl` reported the source muted). Seen on kujira only; not reproduced in a VM.
 
 ## kujira — read-only, Claude, inbox v178
 
@@ -125,10 +130,11 @@ both without root, copied to a private directory and deleted afterwards.
   Terminal was open on the Comms page (`open: true, page: comms`), drawn on the
   full-screen `omarchy-keyboard-panel` layer; its `wuling status --watch
   --sections clock comms` had run for 680 s as a child of the shell. Closing the
-  panel removed both the layer and the watcher. The journal shows an SSH
-  session from the verification host ending one second after the watcher
-  started; `--sections clock comms` is exactly what `history()` or
-  `wuling terminal open comms` produce. Which agent sent it is not known.
+  panel removed both the layer and the watcher. Cause, confirmed by the design
+  lead (v180): the design lead's read-only check at 03:00:08 called
+  `omarchy-shell wuling.terminal.eDP-1 history`, which is `history() →
+  openPage("comms")`, so it opened the Comms page by mistake. Not a product
+  problem: the watcher ran only while the panel was open and stopped on close.
 - **Routes:** keyboard Super+Ctrl+G → ↓ (user plate) → Enter (System) →
   Backspace → Esc. Pointer: bar cell; Wi-Fi, Bluetooth, Tailnet and Power tiles;
   the clock (Calendar) and `⋮` (Config), back with BACK each time. Audio,
@@ -178,7 +184,7 @@ BlueZ registered the adapter) were completed by hand; both are recorded.
   (requests include 83–101 ms of channel latency).
 - **Retirement:** every page's collector is a new process that exits on
   leaving; closed, there is no watcher or `cava`.
-- **Resources:** see G-V5 and below.
+- **Resources:** see G-V7 and below.
 - **G-V2 on 4.5:** the native/WULING Night control and the UI queue (above).
 - **Cleanup:** fixtures stopped and original services restored, `wuling
   uninstall`, inventory compared with the one taken before installation. The
@@ -196,7 +202,7 @@ per 25 cycles 579 → 584 → 587 → 590 → 592 → 599 → 598 → 598 MiB: i
 about 12 MiB and then holds flat. FDs 141–145.
 
 4.5.0-rc2 (Claude): five separate 200-cycle runs and two controls, all on one
-shell; see G-V5 and [resources-450.json](resources-450.json). Detail-page
+shell; see G-V7 and [resources-450.json](resources-450.json). Detail-page
 cycles keep growing; the native-panel and overview-only controls don't.
 
 kujira, 4.0.6 real hardware: one tour of all ten pages, see above
