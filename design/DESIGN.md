@@ -396,7 +396,7 @@ in §8.5. Times run from the end of the hold.
 Every key on one screen, as in the earlier WULING. An overlay plugin on **Super+Ctrl+/**, in the owned block of `bindings.lua`; Omarchy's Super+K list stays. Built only while it's open. Full screen on the focused output, over the live desktop: the theme's darkest ink at 86 %, the head `KEYMAP · 鍵位`, the vertical 鍵位 in Serif Black 64 with its yellow cut. The same in both presets. Reduced motion: a 90 ms fade.
 
 - **Layout:** groups in columns, by what the keys are for: `SHELL 介面`, `WINDOWS 視窗`, `NAVIGATE 導航`, `APPS 應用`, `SYSTEM 系統`, and `OTHER 其他` for a key that fits none, so none is dropped. A row: the description, then keycaps in mono with a 1 px border, Super a yellow cap `◆`. Too many for the screen: it scrolls. It fits 1366×768 and 4K alike.
-- **Data:** the keys bound right now, the user's own included, from the same source as Omarchy's `omarchy-menu-keybindings`. Hyprland's Lua provider reports Lua binds only as `__lua`, so `hyprctl binds` alone isn't enough. `wuling keymap --json` prints them and the QML displays them. A version that changes the source falls under §10: the overlay says it can't read the keys, and Omarchy's list is still there.
+- **Data:** the keys bound right now, the user's own included. Omarchy's public `omarchy-menu-keybindings --print` first; then `hyprctl binds` adds only what that list leaves out, into `OTHER`: Copilot (`code:201`), and a Lua bind without a description as `Lua binding · 無描述`, never guessed at. A keycode without a name shows as `code:N`. Switch events such as the lid aren't keys and aren't listed. `wuling keymap --json` prints them and the QML displays them. A version that changes the source falls under §10: the overlay says it can't read the keys, and Omarchy's list is still there.
 - **Input:** typing filters, ↑↓ scrolls, Esc clears then closes, an outside click closes. Exclusive keyboard focus; pressing a listed key doesn't run it.
 
 ### 8.11 Theme wave — part of `wuling.session`
@@ -404,8 +404,10 @@ Every key on one screen, as in the earlier WULING. An overlay plugin on **Super+
 A theme switch, by any route, plays the wave of Arrival and Exit: the old look leaves in 16 × 9 cells from the top edge, threshold .55 · row + .35 · hash, cells at the threshold ghosting with a yellow tint and outline, 420 ms, `open` at half level, on every output. `session.theme` switches it off; reduced motion has none, and Omarchy's own transition runs.
 
 - **It never delays or blocks the switch.** If the overlay fails, the theme still changes, as Omarchy changes it.
-- **To be proven first.** The wave needs the old look on screen after the new palette applies, and Omarchy has no hook before the switch: `omarchy-theme-set` applies the palette early and runs `omarchy-hook theme-set` near the end. No wrapper around Omarchy's command and no capture running all the time. Omarchy's own theme picker must play it too, not only the Config page.
-- It doesn't play during Arrival, Exit or a lock, nor for a background change alone.
+- **The old look is caught early, best effort.** `omarchy-theme-set` creates `~/.local/state/omarchy/current/next-theme` before it applies anything. A watch on that directory, and nothing else at idle, asks for one capture of every output then. This reads Omarchy's internals, so it is gated by the contents of the installed `omarchy-theme-set` (§10): an unknown version switches the wave off. No wrapper, no capture running all the time, and Omarchy's own picker plays it like any other route.
+- **Never an old frame after the new one.** The capture covers the screen only if it is ready before the new palette reaches the shell. Later than that, nothing is shown and Omarchy's own transition runs: no snapping back.
+- **The cover hides the re-theming.** It matches the screen, so nobody sees it appear. It stays while the theme applies underneath, until `theme.name` names a different theme, the palette is in and Omarchy's background change has settled, at most 1.5 s, then the 420 ms wave reveals the new look. The same theme again, a background change alone or a failed switch: the cover goes at once. It takes no input, and the capture is released after the wave.
+- It doesn't play during Arrival, Exit or a lock.
 
 ## 9. Keys
 
