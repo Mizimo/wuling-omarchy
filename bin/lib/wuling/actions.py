@@ -6,6 +6,7 @@ from . import Error, SCHEMA, command
 from . import status
 
 FIXED = {
+    "comms-clear": ["omarchy-shell", "notifications", "clear"],
     "bluetooth": ["omarchy-bluetooth-power", "toggle"],
     "tailscale": ["omarchy-shell", "omarchy.tailscale", "toggleTailscale"],
     "dnd": ["omarchy-shell", "notifications", "toggleDnd"],
@@ -21,7 +22,8 @@ FIXED = {
 }
 PANELS = {"wifi": "omarchy.network", "bluetooth": "omarchy.bluetooth", "tailscale": "omarchy.tailscale",
           "night": "omarchy.monitor", "power": "omarchy.power", "audio": "omarchy.audio", "agent": "omarchy.agents"}
-NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel")
+NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action")
+PAGES = ("comms",)
 
 
 class PanelUnavailable(Error):
@@ -56,6 +58,15 @@ def checked_route(action, target, payload):
 
 
 def plan(name, value=None):
+    if name == "comms-action":
+        try:
+            data = json.loads(value)
+            key, index = data["key"], data["index"]
+            if not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,120}", key) or type(index) is not int or not -1 <= index < 3:
+                raise ValueError()
+        except (TypeError, ValueError, KeyError):
+            raise Error("Invalid notification action") from None
+        return ["omarchy-shell", "wuling.notifications", "historyDeed", key, str(index)]
     if name in FIXED:
         if value is not None:
             raise Error(f"{name} does not take a value")
@@ -107,12 +118,22 @@ def run(name, value=None):
         raise PanelUnavailable("The requested native panel is unavailable in the current bar")
     if result == "unhandled":
         raise Error("The native service cannot perform this action now")
+    if name in ("comms-clear", "comms-action") and result != "ok":
+        raise Error("The notification action is no longer available")
     # Do not forward arbitrary native output to a QML log.
     return {"schema_version": SCHEMA, "action": name, "ok": True}
 
 
-def terminal(action):
+def terminal(action, page=None):
     if action not in ("open", "close", "toggle"):
         raise Error("Unknown Terminal action")
-    route(action, "wuling.terminal")
+    if page is not None:
+        if action != "open" or page not in PAGES:
+            raise Error("Choose an available Terminal page with open")
+        monitors = json.loads(command(["hyprctl", "-j", "monitors"]))
+        focused = next((row["name"] for row in monitors if row.get("focused")), "")
+        if not re.fullmatch(r"[\w.-]{1,120}", focused) or command(["omarchy-shell", "wuling.terminal." + focused, "page", page]) != "ok":
+            raise PanelUnavailable("The requested Terminal page is unavailable")
+    else:
+        route(action, "wuling.terminal")
     return {"schema_version": SCHEMA, "action": action, "ok": True}

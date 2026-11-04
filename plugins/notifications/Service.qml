@@ -243,9 +243,9 @@ Item {
         while(live.count>100)closeToast(live.get(live.count-1).key,"overflow");
         revision++;schedule();
     }
-    function historyAction(key) {
+    function historyAction(key, index) {
         const entry=history.find(r => r.key===key && r.closed_ts>Date.now()/1000-86400);
-        const argv=entry ? rules.argv(entry.execArgv) : null;
+        const argv=entry ? index===undefined || index===-1 ? rules.argv(entry.execArgv) : Number.isInteger(index) && index>=0 && index<3 ? rules.execAction(entry,index) : null : null;
         if(!argv)return false;
         Quickshell.execDetached(argv);return true;
     }

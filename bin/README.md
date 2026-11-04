@@ -15,7 +15,8 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 - `wuling status --json [--sections SECTION ...]`: an on-demand snapshot of
   `clock`, `link`, `levels`, `signal`, `agent`, `telemetry` and `comms`. Unknown
   hardware yields null or no tile. CPU percentage needs two samples; the first
-  is null. `--watch` produces one JSON line a second until terminated. The
+  is null. `--watch` produces live JSON lines until terminated (fast initial results,
+  then a one-second cadence). The
   caller must stop it when its surface closes. Slow native probes are bounded,
   concurrent and never overlap themselves. No daemon or cache file is created.
   Agent usage reads Omarchy's existing display records; WULING never starts a
@@ -24,7 +25,10 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   Volume and brightness accept 0–100 or signed adjustments; they use the same
   OSD route as keys. `panel NAME` opens the matching native panel. The three
   dangerous foot actions open the System route (WULING power cards when enabled); this command never performs logout, reboot or poweroff directly.
+- `wuling status --spectrum`: optional 20-cell cava frames, at most 20 per
+  second. No cava returns `available: false`; the caller owns its lifetime.
 - `wuling terminal open|close|toggle`: the Field Terminal on the focused output.
+  `wuling terminal open comms` opens its history page.
 - `wuling notifications compatibility|state|boot|terminals|open-history|fallback`:
   internal notification bridge and diagnostics. `compatibility` checks the
   installed native modules. `persist` accepts bounded JSON lines on stdin and

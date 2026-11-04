@@ -18,7 +18,7 @@ The `notifications` target provides `ping`, `dndState`, `isDnd`, `setDnd`,
 Methods added in 4.5 are also available on 4.0.6 without adding keybindings.
 The service exposes native `doNotDisturb` and `setDoNotDisturb` members.
 `wuling.notifications` provides the private Terminal bridge: `ping`, `log`,
-`terminal`, and `historyAction`. None of these runs a command string as a shell.
+`terminal`, `historyAction` and `historyDeed(key, index)`. None of these runs a command string as a shell.
 
 Cards stack newest first, with overflow waiting behind `+N`. Pointer hover
 pauses expiry and holds new cards for at most 30 seconds. Keyboard mode lasts
@@ -53,7 +53,7 @@ three recovery attempts as exits and failed acknowledgements.
 Notification objects and their signal callbacks belong to the service, never
 to delegates or model rows, and are explicitly disconnected on release.
 
-`showHistory` opens the enabled Terminal log. When that route is disabled it
+`showHistory` opens the enabled Terminal Comms page. When that route is disabled it
 replays six recent rows, including under DND, without recording them again.
 `clear` clears history only. Disabling this plugin hides the Terminal log;
 WULING never reads native notification history. Uninstall deletes this private

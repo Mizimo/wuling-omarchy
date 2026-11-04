@@ -1,6 +1,6 @@
 #!/bin/bash
 # omarchy:summary=Read live Terminal state without starting background collectors
-# omarchy:args=[--json] [--watch] [--sections clock link levels signal agent telemetry comms]
+# omarchy:args=[--json] [--watch|--spectrum] [--sections clock link levels signal agent telemetry comms]
 # omarchy:examples=wuling status --json | wuling status --watch --sections clock telemetry
 set -euo pipefail
 exec "$(dirname "$(readlink -f "$0")")/wuling" status "$@"

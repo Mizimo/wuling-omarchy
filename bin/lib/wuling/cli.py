@@ -94,13 +94,16 @@ def main(argv=None):
     cfg.add_argument("--json", action="store_true")
     state = sub.add_parser("status", help="Read live Terminal state on demand")
     state.add_argument("--json", action="store_true")
-    state.add_argument("--watch", action="store_true", help="JSON lines once a second; stop when the surface closes")
+    stream = state.add_mutually_exclusive_group()
+    stream.add_argument("--watch", action="store_true", help="Live JSON lines; stop when the surface closes")
+    stream.add_argument("--spectrum", action="store_true", help="Optional 20-cell spectrum; only while playing in Terminal")
     state.add_argument("--sections", nargs="+", choices=status.SECTIONS)
     action = sub.add_parser("action", help="Run a named native Terminal action")
     action.add_argument("name", choices=actions.NAMES)
     action.add_argument("value", nargs="?")
     term = sub.add_parser("terminal", help="Open or close the Field Terminal")
     term.add_argument("action", choices=["open", "close", "toggle"])
+    term.add_argument("page", nargs="?", choices=actions.PAGES)
     launch = sub.add_parser("dispatch", help="Open Dispatch or read its on-demand data")
     launch.add_argument("action", choices=["open", "close", "toggle", "snapshot", "activate"])
     launch.add_argument("mode", nargs="?", choices=["apps", "clip", "run", "calc", "ask"])
@@ -139,14 +142,19 @@ def main(argv=None):
                     raise Error("Usage: wuling config set <key> <value>")
                 emit(lifecycle.set_config(args.key, args.value))
         elif args.verb == "status":
-            if args.watch:
+            if args.spectrum:
+                if args.sections:
+                    raise Error("The spectrum takes no section list")
+                from . import spectrum
+                spectrum.watch()
+            elif args.watch:
                 status.watch(args.sections)
             else:
                 emit(status.collect(args.sections))
         elif args.verb == "action":
             emit(actions.run(args.name, args.value))
         elif args.verb == "terminal":
-            emit(actions.terminal(args.action))
+            emit(actions.terminal(args.action, args.page))
         elif args.verb == "dispatch":
             if args.action == "snapshot":
                 if args.mode or args.value:

@@ -4,18 +4,33 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 import json
+import html
 import math
 import os
 import re
 import signal
 import shutil
 import subprocess
+import threading
 import time
 from . import Error, SCHEMA, paths
 
 SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
 PROC = Path("/proc")
 SYS = Path("/sys")
+_stopping = threading.Event()
+_children = set()
+_children_lock = threading.Lock()
+
+
+def stop_probes():
+    with _children_lock:
+        _stopping.set()
+        for child in _children:
+            try:
+                os.killpg(child.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
 
 
 def text(path, limit=65536):
@@ -55,18 +70,30 @@ def probe(argv, timeout=3):
     record, network peer list or service response into a shell log.
     """
     try:
-        with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                              text=True, start_new_session=True,
-                              env={**os.environ, "LC_ALL": "C.UTF-8"}) as child:
+        with _children_lock:
+            if _stopping.is_set():
+                return None
+            child = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                     text=True, start_new_session=True,
+                                     env={**os.environ, "LC_ALL": "C.UTF-8"})
+            _children.add(child)
+        with child:
             try:
                 output, _ = child.communicate(timeout=timeout)
             except subprocess.TimeoutExpired:
-                os.killpg(child.pid, signal.SIGKILL)
+                try:
+                    os.killpg(child.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
                 child.communicate()
                 return None
             return output.strip() if child.returncode == 0 else None
     except (OSError, UnicodeError):
         return None
+    finally:
+        if "child" in locals():
+            with _children_lock:
+                _children.discard(child)
 
 
 def probe_json(argv):
@@ -206,13 +233,16 @@ def levels():
 
 
 def media():
+    from .devices import media_times
     data = probe_json(["omarchy-shell", "media", "status"])
-    if data.get("hasPlayer") is not True or data.get("playing") is not True:
+    if data.get("hasPlayer") is not True:
         return None
     return {key: label(data.get(key)) for key in ("identity", "title", "artist", "album")} | {
-        "playing": True, "can_next": data.get("canGoNext") is True,
+        "art_url": str(data.get("artUrl") or "")[:8192],
+        "desktop_entry": label(data.get("desktopEntry")),
+        "playing": data.get("playing") is True, "can_next": data.get("canGoNext") is True,
         "can_previous": data.get("canGoPrevious") is True,
-        "can_toggle": data.get("canTogglePlaying") is True}
+        "can_toggle": data.get("canTogglePlaying") is True, **media_times(data)}
 
 
 class Telemetry:
@@ -258,21 +288,43 @@ def comms():
     from . import notifications
     try:
         rows = notifications.read()["history"]
-        return {"available": True, "items": [{"key":row["key"], "app":label(row["app"], 80),
-                "summary":label(row["summary"], 2048), "time":row["ts"], "action":bool(row["execArgv"])} for row in rows]}
+        def plain(value):
+            value = re.sub(r"<(?:br\s*/?|/p|/div)\s*>", "\n", str(value or ""), flags=re.I)
+            return html.unescape(re.sub(r"<[^>]*>", "", value))
+        def deeds(row):
+            result = [{"index": -1, "label": ""}] if row["execArgv"] else []
+            if marker.get("contract") == "4.5.0-rc2":
+                try:
+                    extra = json.loads(row["execActions"] or "[]")
+                    if isinstance(extra, list) and len(extra) <= 3:
+                        result += [{"index": i, "label": label(plain(entry["label"]), 80)}
+                                   for i, entry in enumerate(extra) if isinstance(entry, dict)
+                                   and isinstance(entry.get("label"), str) and isinstance(entry.get("argv"), list)]
+                except ValueError:
+                    pass
+            return result
+        return {"available": True, "items": [{"key": row["key"], "app": label(row["app"], 80),
+                "summary": plain(row["summary"]), "body": plain(row["body"]), "time": row["ts"],
+                "actions": deeds(row)} for row in sorted(rows, key=lambda r: r["ts"], reverse=True)]}
     except (Error, OSError, ValueError):
         return {"available": True, "items": [], "error": "Notification history is unavailable"}
 
 
 class Collector:
     def __init__(self, sections=None):
+        _stopping.clear()
+        from .devices import battery_rows
         self.sections = set(SECTIONS if sections is None else sections)
+        if "telemetry" in self.sections:
+            self.sections.add("batteries")
         self.telemetry = Telemetry()
-        self.readers = {"link": links, "levels": levels, "signal": media, "agent": agent_usage, "comms": comms}
+        self.readers = {"link": links, "levels": levels, "signal": media, "agent": agent_usage, "comms": comms, "batteries": battery_rows}
         self.pool = ThreadPoolExecutor(max_workers=5)
         self.pending = {}
         self.due = {}
         self.latest = {}
+        self.serial = 0
+        self.ready = threading.Event()
 
     def read(self, wait=False):
         now = time.monotonic()
@@ -280,7 +332,9 @@ class Collector:
             if name not in self.sections:
                 continue
             if name not in self.pending and now >= self.due.get(name, 0):
+                self.due.pop(name, None)
                 self.pending[name] = self.pool.submit(reader)
+                self.pending[name].add_done_callback(lambda _: self.ready.set())
             future = self.pending.get(name)
             if future and (wait or future.done()):
                 try:
@@ -290,16 +344,22 @@ class Collector:
                 except (OSError, ValueError, TypeError, AttributeError):
                     self.latest[name] = None
                 del self.pending[name]
-                self.due[name] = now + (2 if name in ("levels", "signal") else 5)
-        if "clock" in self.sections:
+                self.serial += 1
+                self.due[name] = now + (1 if name in ("signal", "comms") else 2 if name == "levels" else 5)
+        if "clock" in self.sections and now >= self.due.get("clock", 0):
             self.latest["clock"] = clock()
-        if "telemetry" in self.sections:
+            self.due["clock"] = now + 1
+            self.serial += 1
+        if "telemetry" in self.sections and now >= self.due.get("telemetry", 0):
             self.latest["telemetry"] = self.telemetry.read()
+            self.due["telemetry"] = now + 1
+            self.serial += 1
         return {"schema_version": SCHEMA, "phase": "C", "sampled_at": datetime.now().astimezone().isoformat(),
                 "capabilities": {"status_collection": True, "agent_collection": False},
                 "pending": sorted(self.pending), **self.latest}
 
     def close(self):
+        stop_probes()
         self.pool.shutdown(wait=True, cancel_futures=True)
 
 
@@ -316,11 +376,18 @@ def watch(sections=None):
         raise KeyboardInterrupt
     original = signal.signal(signal.SIGTERM, stop)
     collector = Collector(sections)
+    previous = None
     try:
         while True:
+            collector.ready.clear()
             start = time.monotonic()
-            print(json.dumps(collector.read(), ensure_ascii=False, separators=(",", ":")), flush=True)
-            time.sleep(max(.01, 1 - (time.monotonic() - start)))
+            sample = collector.read()
+            revision = (collector.serial, tuple(sample["pending"]))
+            if revision != previous:
+                print(json.dumps(sample, ensure_ascii=False, separators=(",", ":")), flush=True)
+                previous = revision
+            interval = min(1, max(.01, min(collector.due.values(), default=start+1)-start))
+            collector.ready.wait(max(.01, interval - (time.monotonic() - start)))
     except (BrokenPipeError, KeyboardInterrupt):
         pass
     finally:

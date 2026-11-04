@@ -16,29 +16,29 @@ Ui.Panel {
     property bool restartingCollector: false
     property var collectingSections: []
     property string hostname: ""
-    property bool logExpanded: false
-    property bool revealLog: false
+    property string pageName: ""
+    property string pageNumber: "08"
     readonly property string screenName: QsWindow.window && QsWindow.window.screen ? QsWindow.window.screen.name : ""
     property var logRows: []
     FileView { path: "/etc/hostname"; printErrors: false; onLoaded: terminal.hostname = text().trim().toUpperCase() }
     readonly property var sections: Kit.Runtime.setting("terminal.sections")
-    onSectionsChanged: restartCollector()
+    readonly property var activeSections: pageName === "comms" ? sections.filter(key => key === "clock" || key === "comms") : sections
+    onSectionsChanged: { if(pageName === "comms" && sections.indexOf("comms")<0)backPage(); else restartCollector(); }
+    onPageNameChanged: restartCollector()
     function restartCollector() {
         if (!opened) return;
         restartingCollector = true;
         collector.running = false;
-        state = ({});
         if (!collector.running) Qt.callLater(startCollector);
     }
     function startCollector() {
-        if (collector.running || !opened || !sections.length) return;
-        collectingSections = sections.slice();
+        if (collector.running || !opened || !activeSections.length) return;
+        collectingSections = activeSections.slice();
         restartingCollector = false;
         collector.command = ["wuling", "status", "--watch", "--sections"].concat(collectingSections);
         collector.running = true;
     }
     readonly property var shown: sections.filter(key => key !== "agent" || (state.agent || []).length > 0)
-        .filter(key => key !== "signal" || !!state.signal)
         .filter(key => key !== "link" || (state.link || []).length > 0)
         .filter(key => key !== "comms" || !!state.comms && state.comms.available)
         .filter(key => key !== "levels" || !!state.levels && (state.levels.volume !== null || state.levels.brightness !== null))
@@ -51,21 +51,25 @@ Ui.Panel {
         onTriggered: if(terminal.screenName)Quickshell.execDetached(["omarchy-shell", "-q", "wuling.notifications", "terminal", terminal.screenName, JSON.stringify(terminal.geometry())]);
     }
     function history() {
-        if (sections.indexOf("comms") < 0 || bar && bar.barHidden) return "off";
-        logExpanded = true; revealLog = true; open(); scrollLog.restart(); return "ok";
+        return openPage("comms");
+    }
+    function openPage(name) {
+        if(name!=="comms" || sections.indexOf("comms")<0 || bar && bar.barHidden)return "off";
+        pageNumber=String((shown.indexOf("comms")>=0?shown.indexOf("comms"):sections.indexOf("comms"))+2).padStart(2,"0");
+        pageName=name;scroll.contentY=0;actionError="";open();Kit.Runtime.cue("select");
+        body.forceActiveFocus();return "ok";
+    }
+    function backPage() {
+        if(!pageName)return false;
+        pageName="";actionError="";Kit.Runtime.cue("close");body.forceActiveFocus();return true;
     }
     IpcHandler {
         enabled: terminal.screenName !== ""
         target: "wuling.terminal." + terminal.screenName
         function geometry(): string { return JSON.stringify(terminal.geometry()); }
         function history(): string { return terminal.history(); }
-    }
-    Timer {
-        id: scrollLog; interval: 30
-        onTriggered: {
-            if (!terminal.opened) return;
-            if (terminal.has("comms")) { scroll.contentY = Math.max(0, Math.min(commsPart.y, contents.height - scroll.height)); terminal.revealLog = false; }
-        }
+        function page(name: string): string { return terminal.openPage(name); }
+        function state(): string { return JSON.stringify({open:terminal.opened,page:terminal.pageName,sections:terminal.opened?terminal.collectingSections:[],historyRows:terminal.logRows.length,spectrum:signalPanel.inspection()}); }
     }
     function act(name, value) {
         const next = ["wuling", "action", name]; if (value !== undefined) next.push(String(value));
@@ -92,23 +96,23 @@ Ui.Panel {
     function foot(action) { close(); act(action); }
     onOpenedChanged: {
         Kit.Runtime.cue(opened ? "open" : "close");
-        if (!opened) { collector.running = false; restartingCollector = false; state = ({}); logExpanded = false; revealLog = false; }
+        if (!opened) { collector.running = false; restartingCollector = false; pageName="";state = ({});overviewComms.expandedKeys=({}); }
         else { actionError = ""; startCollector(); }
         reportGeometry();
     }
     onScreenNameChanged: reportGeometry()
     Component.onDestruction: if (screenName) Quickshell.execDetached(["omarchy-shell", "-q", "wuling.notifications", "terminal", screenName, '{"open":false,"width":0}'])
     onStateChanged: {
+        if(opened && state.comms===undefined)return;
         const rows=state.comms && state.comms.available ? state.comms.items : [];
         // Unchanged status samples must not destroy a row underneath a press.
         if(JSON.stringify(rows)!==JSON.stringify(logRows))logRows=rows;
-        if(revealLog)scrollLog.restart();
     }
     Process {
         id: collector
         onExited: if (terminal.restartingCollector) Qt.callLater(terminal.startCollector)
         stdout: SplitParser {
-            onRead: line => { try { const data = JSON.parse(line); if (terminal.opened && !terminal.restartingCollector && JSON.stringify(terminal.collectingSections)===JSON.stringify(terminal.sections) && data.schema_version === 1) terminal.state = data; } catch (_) {} }
+            onRead: line => { try { const data = JSON.parse(line); if (terminal.opened && !terminal.restartingCollector && JSON.stringify(terminal.collectingSections)===JSON.stringify(terminal.activeSections) && data.schema_version === 1) terminal.state = data; } catch (_) {} }
         }
     }
     Process {
@@ -164,18 +168,22 @@ Ui.Panel {
             function controls(item, result) {
                 if (!item.visible || !item.enabled) return;
                 if (item.activeFocusOnTab) result.push(item);
-                else for (let i = 0; i < item.children.length; i++) controls(item.children[i], result);
+                for (let i = 0; i < item.children.length; i++) controls(item.children[i], result);
             }
             function move(direction) {
-                let list = []; controls(contents, list); controls(foot, list);
+                let list = [];
+                if(terminal.pageName)controls(detail.controls,list);else { controls(contents,list);controls(foot,list); }
                 const index = list.findIndex(item => item.activeFocus);
                 if (!list.length) return;
-                const target = list[(index + direction + list.length) % list.length]; target.forceActiveFocus();
-                const point = target.mapToItem(contents, 0, 0);
-                if (point.y >= 0 && point.y < contents.height) scroll.contentY = Math.max(0, Math.min(contents.height - scroll.height, point.y - scroll.height / 2));
+                const next = index < 0 ? (direction > 0 ? 0 : list.length - 1) : (index + direction + list.length) % list.length;
+                const target = list[next]; target.forceActiveFocus();
+                const area=terminal.pageName?detail.flickable:scroll;
+                const point=target.mapToItem(area.contentItem,0,0);
+                if(point.y>=0 && point.y<area.contentHeight)area.contentY=Math.max(0,Math.min(area.contentHeight-area.height,point.y-area.height/2));
             }
             Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) { terminal.close(); event.accepted = true; }
+                if (event.key === Qt.Key_Escape) { if(!terminal.backPage())terminal.close(); event.accepted = true; }
+                else if(terminal.pageName && (event.key===Qt.Key_Left || event.key===Qt.Key_Backspace)) { terminal.backPage();event.accepted=true; }
                 else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) { terminal.switchPanel(event.key === Qt.Key_Backtab || event.modifiers & Qt.ShiftModifier ? -1 : 1); event.accepted = true; }
                 else if ([Qt.Key_Down, Qt.Key_Up].indexOf(event.key) >= 0) { move(event.key === Qt.Key_Down ? 1 : -1); event.accepted = true; }
             }
@@ -188,6 +196,7 @@ Ui.Panel {
             }
             Flickable {
                 id: scroll; anchors.top: header.bottom; anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: errorLabel.top
+                interactive:terminal.pageName===""
                 contentWidth: width; contentHeight: contents.height; clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 Column {
@@ -212,7 +221,17 @@ Ui.Panel {
                         Behavior on opacity { NumberAnimation { duration: 90 } }
                         property Column layout: Column {
                             parent: part; width: part.width
-                            Kit.Section { width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey); detail: part.sectionKey === "clock" ? Quickshell.env("USER") : part.sectionKey === "comms" ? terminal.logRows.length + (Kit.Runtime.language === "en" ? "" : " " + Kit.Runtime.tr("count-unit")) : "" }
+                            Kit.Section {
+                                width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey === "signal" && !terminal.state.signal ? "no-signal-head" : part.sectionKey); detail: part.sectionKey === "clock" ? Quickshell.env("USER") : ""
+                                Rectangle {
+                                    visible:part.sectionKey==="comms";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(6)
+                                    width:headingActions.implicitWidth;height:Kit.Runtime.px(20);color:Kit.Runtime.c("ink-2")
+                                    Row { id:headingActions;spacing:Kit.Runtime.px(5)
+                                    Kit.Micro { anchors.verticalCenter:parent.verticalCenter;text:terminal.logRows.length+" "+Kit.Runtime.tr("count-unit");pixels:7.5 }
+                                    Kit.Button { height:Kit.Runtime.px(20);text:Kit.Runtime.label("clear-all");labelSize:8;borderVisible:false;enabled:terminal.logRows.length>0;onClicked:terminal.act("comms-clear") }
+                                    }
+                                }
+                            }
                             Column { id: sectionContent; width: parent.width; topPadding: Kit.Runtime.px(8) }
                         }
                         property Rectangle divider: Rectangle {
@@ -230,6 +249,7 @@ Ui.Panel {
                         }
                     }
                     Part {
+                        id:clockPart
                         sectionKey: "clock"
                         Item {
                             width: parent.width; height: Kit.Runtime.g("terminal_clock_size") * .9 + Kit.Runtime.px(2)
@@ -271,20 +291,12 @@ Ui.Panel {
                     }
                     Part {
                         sectionKey: "signal"
-                        Row {
-                            x: Kit.Runtime.px(14); spacing: Kit.Runtime.px(10)
-                            Kit.Icon { name: "music_note"; width: Kit.Runtime.px(38); height: Kit.Runtime.px(42); color: Kit.Runtime.c("accent-ink") }
-                            Column {
-                                width: contents.width - Kit.Runtime.px(80); spacing: Kit.Runtime.px(4)
-                                Kit.Label { width: parent.width; text: terminal.state.signal ? terminal.state.signal.title || terminal.state.signal.identity : ""; font.family: Kit.Runtime.sans; font.weight: Font.DemiBold }
-                                Kit.Label { width: parent.width; text: terminal.state.signal ? terminal.state.signal.artist : ""; color: Kit.Runtime.c("mist-4"); font.family: Kit.Runtime.sans; font.pixelSize: Kit.Runtime.px(10) }
-                                Row {
-                                    spacing: Kit.Runtime.px(6)
-                                    Kit.Button { icon: "skip_previous"; Accessible.name: Kit.Runtime.tr("previous"); enabled: !!terminal.state.signal && terminal.state.signal.can_previous; onClicked: terminal.act("previous") }
-                                    Kit.Button { icon: "pause"; Accessible.name: Kit.Runtime.tr("pause"); enabled: !!terminal.state.signal && terminal.state.signal.can_toggle; onClicked: terminal.act("play-pause") }
-                                    Kit.Button { icon: "skip_next"; Accessible.name: Kit.Runtime.tr("next"); enabled: !!terminal.state.signal && terminal.state.signal.can_next; onClicked: terminal.act("next") }
-                                }
-                            }
+                        Signal {
+                            id:signalPanel
+                            x:Kit.Runtime.px(14);width:parent.width-Kit.Runtime.px(28)
+                            player:terminal.state.signal || null
+                            collecting:terminal.opened && terminal.pageName==="" && terminal.has("signal")
+                            onAction:name=>terminal.act(name)
                         }
                     }
                     Part {
@@ -361,29 +373,16 @@ Ui.Panel {
                                 }
                             }
                         }
+                        BatteryCells { x:Kit.Runtime.px(14);width:parent.width-Kit.Runtime.px(28);rows:terminal.state.batteries || [] }
                     }
                     Part {
-                        id: commsPart
-                        sectionKey: "comms"
-                        property int roomRows: Math.max(3, Math.floor((scroll.height - y - Kit.Runtime.px(60)) / Kit.Runtime.px(20)))
-                        property int shownRows: terminal.logExpanded ? terminal.logRows.length : Math.min(terminal.logRows.length, roomRows)
-                        Column {
-                            x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); spacing: Kit.Runtime.px(5)
-                            Repeater {
-                                model: terminal.logRows.slice(0, commsPart.shownRows)
-                                Kit.Button {
-                                    required property var modelData
-                                    width: parent.width; height: Kit.Runtime.px(15); borderVisible: false
-                                    enabled: modelData.action
-                                    Accessible.name: modelData.summary
-                                    onClicked: Quickshell.execDetached(["omarchy-shell", "wuling.notifications", "historyAction", modelData.key])
-                                    Kit.Micro { x: 0; width: Kit.Runtime.px(54); anchors.verticalCenter: parent.verticalCenter; text: parent.modelData.app.toUpperCase() }
-                                    Kit.Label { x: Kit.Runtime.px(62); width: parent.width - Kit.Runtime.px(100); height: parent.height; text: parent.modelData.summary; font.family: Kit.Runtime.sans; color: parent.foreground }
-                                    Kit.Label { anchors.right: parent.right; height: parent.height; text: Qt.formatDateTime(new Date(parent.modelData.time * 1000), "HH:mm"); font.pixelSize: Kit.Runtime.px(9); color: Kit.Runtime.c("mist-5") }
-                                }
-                            }
-                            Kit.Button { visible: terminal.logRows.length > commsPart.shownRows; width: parent.width; height: Kit.Runtime.px(22); borderVisible: false; text: "+" + (terminal.logRows.length - commsPart.shownRows) + " " + Kit.Runtime.tr("more-count"); Accessible.name: Kit.Runtime.tr("show-all"); onClicked: terminal.logExpanded = true }
-                            Kit.Label { visible: !terminal.logRows.length; width: parent.width; height: Kit.Runtime.px(20); text: Kit.Runtime.tr("no-notifications"); color: Kit.Runtime.c("mist-4"); font.family: Kit.Runtime.sans }
+                        id:commsPart;sectionKey:"comms"
+                        CommsList {
+                            id:overviewComms;x:Kit.Runtime.px(14);width:parent.width-Kit.Runtime.px(28)
+                            rows:terminal.logRows
+                            limit:Math.max(3,Math.floor((scroll.height-commsPart.y-Kit.Runtime.px(60))/Kit.Runtime.px(90)))
+                            onMore:terminal.openPage("comms")
+                            onAction:(key,index)=>terminal.act("comms-action",JSON.stringify({key:key,index:index}))
                         }
                     }
                 }
@@ -395,7 +394,7 @@ Ui.Panel {
                 gradient:Gradient { GradientStop { position:0;color:Qt.rgba(bodyFade.ground.r,bodyFade.ground.g,bodyFade.ground.b,0) } GradientStop { position:1;color:bodyFade.ground } }
                 id:bodyFade
             }
-            Kit.Label { id: errorLabel; anchors.bottom: foot.top; x:Kit.Runtime.px(14); width: parent.width-Kit.Runtime.px(28); height: text ? Kit.Runtime.px(30) : 0; text: terminal.actionError; color: Kit.Runtime.c("vermilion"); wrapMode: Text.Wrap; font.pixelSize: Kit.Runtime.px(10) }
+            Kit.Label { id: errorLabel; anchors.bottom: foot.top; x:Kit.Runtime.px(14); width: parent.width-Kit.Runtime.px(28); height: text ? Kit.Runtime.px(30) : 0; text: terminal.pageName ? "" : terminal.actionError; color: Kit.Runtime.c("vermilion"); wrapMode: Text.Wrap; font.pixelSize: Kit.Runtime.px(10) }
             Row {
                 id: foot; anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(12); x: Kit.Runtime.px(22); spacing: Kit.Runtime.px(6)
                 Repeater {
@@ -410,6 +409,13 @@ Ui.Panel {
                         Kit.Micro { anchors.horizontalCenter: parent.horizontalCenter; y: Kit.Runtime.px(25); text: parent.modelData.key === "shutdown" ? "OFF" : parent.modelData.key.toUpperCase(); pixels: 7.5; color: parent.foreground }
                     }
                 }
+            }
+            DetailFrame {
+                id:detail;y:header.height+(clockPart.visible?clockPart.height:0);width:parent.width;height:Math.max(0,parent.height-y)
+                showing:terminal.opened && terminal.pageName!=="";rows:terminal.logRows;number:terminal.pageNumber;error:terminal.actionError
+                onBack:terminal.backPage()
+                onClear:terminal.act("comms-clear")
+                onAction:(key,index)=>terminal.act("comms-action",JSON.stringify({key:key,index:index}))
             }
         }
     }

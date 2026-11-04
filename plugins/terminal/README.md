@@ -5,22 +5,43 @@
 Escape, outside clicks and handoff to the next panel. It also runs under the
 native bar. The native square frame is retained.
 
-Open it with `wuling terminal open|close|toggle` or Super+Ctrl+G. These commands
-use the native shell router; the widget registers no duplicate IPC target.
-Tab/Shift+Tab switch panels. Up/Down select a control; Enter/Space activate it;
-Left/Right and Home/End adjust a focused level. Level drags and wheel changes
-call the same native volume/brightness command and OSD as the system keys.
+Open it with `wuling terminal open|close|toggle` or Super+Ctrl+G.
+`wuling terminal open comms` opens its history page on the focused output.
+Tab/Shift+Tab switch panels. Up/Down select a control; Enter/Space activate it.
+Escape, Left and Backspace return from Comms; a second Escape closes Terminal.
+Closing forgets the page. Left/Right and Home/End adjust a focused level.
+Level drags and wheel changes call the native command and OSD used by keys.
 
-The only data source is `wuling status --watch`, started while open and stopped
-on close. State and the bounded telemetry history are discarded on close.
-Native agent display records are read, never credentials, and no collector is
-started. Signal uses Omarchy's selected player. Missing hardware hides the
-corresponding control; no playing media and no agent usage hide those
-sections. Comms reads only WULING's private history while the independent
-notification plugin is enabled. It shows the newest rows that fit, at least
-three, with `+N` expanding the whole body. Row activation revalidates its stored
-argv through the notification service. Unchanged status samples retain the
-same delegates, including while a pointer is held down.
+`wuling status --watch` starts while open and stops on close. Entering Comms
+replaces the collection set with clock and history only. Pending probes and
+subprocess descendants stop with their collector. State and bounded telemetry
+history are discarded on close. Native agent display records are read, never
+credentials, and no agent collector is started. Missing hardware hides its
+control; no agent usage hides that section. Each UPower battery pack has its
+own cell. Zero full capacity means absent, not zero charge; low charge is a
+static vermilion value.
+
+Signal remains visible without a player and keeps paused players. Selection
+and transport use Omarchy's native media service. Art is loaded only while
+the overview is open. While playing, public MPRIS supplies length and position
+only when exactly one player matches native identity, desktop entry, track
+metadata and playback state. Ambiguous, unreadable or inconsistent candidates
+leave the times unknown and progress empty; this never selects a player.
+Paused players remain visible without querying MPRIS times.
+Optional `cava` runs at nice 19 only while that view is
+open and playing; WULING does not install it. Without cava, the public
+PipeWire peak monitor follows a uniquely matching playback stream. A missing
+or unsupported stream leaves flat cells. The stock peak monitor negotiates
+stereo; mono streams use the flat fallback to avoid its channel-mismatch log.
+
+Comms reads WULING's private, redacted history while the notification plugin
+is enabled. Rows show source, time, summary and two body lines; activation
+expands the full retained body and available actions. `+N` opens the history
+page with every retained row. `CLEAR ALL` clears history through the existing
+notification service. Actions are revalidated there, including expiry and
+the installed native action rules. Unchanged samples retain delegates while
+a pointer is held down. The detail page covers the footer, preserves the
+clock and releases its row objects after closing.
 The footer's dangerous actions currently open native System, never execute
 logout, reboot or shutdown directly.
 
@@ -34,7 +55,7 @@ scoped bar API. Disable with `omarchy plugin disable wuling.terminal`; native
 panels and shortcuts remain. The owned new key is removed by
 `wuling uninstall`, which preserves edited user bindings and settings.
 The manifest declares the native `right` default section for re-enablement.
-Per-output `wuling.terminal.<output>` IPC exposes `geometry` and `history` to
+Per-output `wuling.terminal.<output>` IPC exposes `geometry`, `history`, `page` and diagnostic `state` to
 the notification plugin. Geometry comes from the panel instance's public
 `cardOrigin` and content dimensions; no private child is traversed.
 

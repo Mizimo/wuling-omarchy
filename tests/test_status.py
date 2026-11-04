@@ -74,17 +74,19 @@ class StatusTests(IsolatedHome):
                 sampler.read()
             self.assertEqual(len(sampler.history["cpu"]), 40)
 
-    def test_media_follows_native_selection_and_hides_paused(self):
+    def test_media_follows_native_selection_and_keeps_paused(self):
         native = {"hasPlayer": True, "playing": True, "identity": "Example", "title": "Track",
-                  "artist": "Artist", "artUrl": "private-path", "canGoNext": True}
-        with patch.object(status, "probe_json", return_value=native) as probe:
+                  "artist": "Artist", "artUrl": "file:///example/cover.png", "canGoNext": True}
+        with patch.object(status, "probe_json", return_value=native) as probe, patch("wuling.devices.media_times", return_value={"length":180,"position":36}):
             result = status.media()
             probe.assert_called_once_with(["omarchy-shell", "media", "status"])
         self.assertEqual(result["title"], "Track")
         self.assertTrue(result["can_next"])
-        self.assertNotIn("private-path", json.dumps(result))
+        self.assertEqual(result["art_url"], native["artUrl"])
+        self.assertEqual(result["length"], 180)
+        self.assertEqual(result["position"], 36)
         with patch.object(status, "probe_json", return_value={**native, "playing": False}):
-            self.assertIsNone(status.media())
+            self.assertFalse(status.media()["playing"])
 
     def test_disabled_sections_do_not_probe(self):
         def comms_only(argv):
