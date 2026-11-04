@@ -7,12 +7,15 @@ import os
 from . import Error, ROOT, paths
 from . import jsonc, owned
 
-IDS = ("wuling.bar", "wuling.terminal", "wuling.osd", "wuling.notifications", "wuling.dispatch", "wuling.power", "wuling.session", "wuling.sound")
+IDS = ("wuling.bar", "wuling.terminal", "wuling.osd", "wuling.notifications", "wuling.dispatch", "wuling.power", "wuling.session", "wuling.sound", "wuling.keymap")
 BINDINGS = ((68, "G", 42, "Field Terminal", "wuling terminal toggle"),
-            (64, "D", 32, "Dispatch", "wuling dispatch toggle"))
+            (64, "D", 32, "Dispatch", "wuling dispatch toggle"),
+            (68, "SLASH", 61, "Keymap", "wuling keymap toggle"))
 BINDING = ('o.bind("SUPER + CTRL + G", "Field Terminal", "wuling terminal toggle")\n'
            'o.bind("SUPER + D", "Dispatch", "wuling dispatch toggle")\n'
-           'hl.layer_rule({ match = { namespace = "^wuling-session-arrival$" }, no_anim = true })\n')
+           'o.bind("SUPER + CTRL + slash", "Keymap", "wuling keymap toggle")\n'
+           'hl.layer_rule({ match = { namespace = "^wuling-session-arrival$" }, no_anim = true })\n'
+           'hl.layer_rule({ match = { namespace = "^wuling-theme-wave$" }, no_anim = true })\n')
 
 
 def add_independent(data, record):
@@ -20,7 +23,7 @@ def add_independent(data, record):
     for path in installed_sources():
         manifest = json.loads(path.read_text())
         identifier = manifest["id"]
-        if identifier not in ("wuling.dispatch", "wuling.power", "wuling.session", "wuling.sound") or identifier in adopted:
+        if identifier not in ("wuling.dispatch", "wuling.power", "wuling.session", "wuling.sound", "wuling.keymap") or identifier in adopted:
             continue
         if any(identity(row) == identifier for row in data.get("plugins", [])) or identifier in data.get("disabledPlugins", []):
             raise Error(f"Native configuration already mentions unowned {identifier}")
@@ -139,7 +142,8 @@ def prepare(previous, execute):
         for mask, key, code, title, action in BINDINGS:
             if entry.get("modmask") != mask or entry.get("submap", ""):
                 continue
-            if str(entry.get("key", "")).upper() != key and entry.get("keycode") != code:
+            found_key = str(entry.get("key", "")).upper().rsplit(" + ", 1)[-1]
+            if ("SLASH" if found_key == "/" else found_key) != key and entry.get("keycode") != code:
                 continue
             if prior and action in prior["bindings"]["written"] and (entry.get("arg") == action or
                           entry.get("dispatcher") == "__lua" and entry.get("description") == title):

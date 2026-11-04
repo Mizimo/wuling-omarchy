@@ -34,7 +34,7 @@ Column {
             Column {
                 x:Kit.Runtime.px(10);anchors.verticalCenter:parent.verticalCenter;width:parent.width-Kit.Runtime.px(42);spacing:Kit.Runtime.px(2)
                 Kit.Micro { text:Kit.Runtime.label("config-"+modelData);color:parent.parent.foreground;pixels:8 }
-                Kit.Label { width:parent.width;text:page.snapshot[modelData] || "—";elide:Text.ElideMiddle;color:parent.parent.foreground;font.pixelSize:Kit.Runtime.px(10) }
+                Kit.Label { width:parent.width;text:modelData==="background" && page.snapshot.background_key?Kit.Runtime.tr(page.snapshot.background_key):(page.snapshot[modelData] || "—");elide:Text.ElideMiddle;color:parent.parent.foreground;font.pixelSize:Kit.Runtime.px(10) }
             }
             Kit.Icon { anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(10);anchors.verticalCenter:parent.verticalCenter;name:"launch";color:parent.foreground }
         }
@@ -78,11 +78,11 @@ Column {
     }
     DetailHeading { width:parent.width;text:Kit.Runtime.label("session") }
     Repeater {
-        model:["arrival","exit"]
+        model:["arrival","exit","theme-wave"]
         ConfigChoice {
             required property string modelData
-            title:Kit.Runtime.label("config-"+modelData);value:page.values["session."+modelData];options:page.toggles;enabled:!page.busy
-            onChosen:value=>page.choose("session."+modelData,value)
+            title:Kit.Runtime.label("config-"+modelData);value:page.values["session."+(modelData==="theme-wave"?"theme":modelData)];options:page.toggles;enabled:!page.busy
+            onChosen:value=>page.choose("session."+(modelData==="theme-wave"?"theme":modelData),value)
         }
     }
     Column {

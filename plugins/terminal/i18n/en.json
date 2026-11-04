@@ -200,5 +200,9 @@
   "apply": "APPLY",
   "clear": "CLEAR",
   "invalid-music": "Choose an existing audio file (absolute path or ~/).",
-  "config-native-keys": "KEYS"
+  "config-native-keys": "KEYS",
+  "background-line": "Survey line",
+  "background-thin": "Thin band",
+  "background-band": "Wide band",
+  "config-theme-wave": "Theme wave"
 }

@@ -9,6 +9,36 @@ from wuling import integration, lifecycle
 
 
 class IntegrationTests(InstallHome):
+    def test_keymap_upgrade_adopts_once_and_keeps_independent_disable(self):
+        previous_sources = [p for p in integration.installed_sources() if p.parent.name != "keymap"]
+        previous_binding = "\n".join(line for line in integration.BINDING.splitlines() if "keymap" not in line) + "\n"
+        with patch.object(integration, "installed_sources", return_value=previous_sources), patch.object(integration, "BINDING", previous_binding):
+            lifecycle.install(True)
+        lifecycle.install(True)
+        shell, bindings = integration.locations()
+        data = json.loads(shell.read_text())
+        self.assertEqual(sum(integration.identity(row) == "wuling.keymap" for row in data["plugins"]), 1)
+        self.assertEqual(bindings.read_text().count("wuling keymap toggle"), 1)
+        data.setdefault("disabledPlugins", []).append("wuling.keymap")
+        shell.write_text(json.dumps(data))
+        lifecycle.install(True)
+        self.assertEqual(json.loads(shell.read_text()), data)
+        lifecycle.uninstall(True)
+        self.assertNotIn("wuling keymap toggle", bindings.read_text() if bindings.exists() else "")
+
+    def test_keymap_conflicts_are_refused_before_any_installation_write(self):
+        before = lifecycle.config_snapshot()
+        original = self.fake_command
+        for entry in ({"key":"slash"}, {"key":"/"}, {"key":"", "keycode":61}):
+            def conflict(argv, **kwargs):
+                if argv == ["hyprctl", "-j", "binds"]:
+                    return json.dumps([{**entry, "modmask":68, "arg":"user-command"}])
+                return original(argv, **kwargs)
+            with self.subTest(entry=entry), patch("wuling.lifecycle.command", side_effect=conflict), self.assertRaises(Error):
+                lifecycle.install(True)
+            self.assertEqual(lifecycle.config_snapshot(), before)
+            self.assertIsNone(lifecycle.manifest())
+
     def test_arrival_rule_upgrade_and_removal_preserve_surrounding_hyprland_config(self):
         _, bindings = integration.locations()
         bindings.parent.mkdir(parents=True, exist_ok=True)

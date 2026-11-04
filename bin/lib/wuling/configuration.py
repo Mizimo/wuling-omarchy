@@ -1,14 +1,19 @@
 """Config page: resolved WULING settings and native Omarchy entry points."""
 from pathlib import Path
 import os
-from . import Error, jsonc, paths, theme
+import re
+from . import Error, jsonc, paths, status, theme
 
 
 def snapshot():
     resolved = theme.resolve()
     background = paths()["current"] / "background"
+    name = background.resolve().name if background.exists() else ""
+    known = re.fullmatch(r"[123]-(line|thin|band)-wuling(?:-hud)?(?:-paper)?\.jpg", name)
     return {"settings": {key: entry["value"] for key, entry in resolved["settings"].items()},
-            "theme": resolved["theme"] or "", "background": background.resolve().name if background.exists() else ""}
+            "theme": resolved["theme"] or "",
+            "background_key": "background-" + known[1] if known else "",
+            "background": "" if known else status.probe(["omarchy", "theme", "bg", "current"], timeout=2) or ""}
 
 
 def native(value):

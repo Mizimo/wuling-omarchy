@@ -1,0 +1,17 @@
+{
+  "keymap": "鍵位",
+  "vertical": "鍵\n位",
+  "filter": "輸入以篩選鍵位",
+  "footer": "◆ SUPER   ·   輸入篩選   ·   ↑ ↓ 捲動   ·   ESC 清除／關閉",
+  "loading": "正在讀取鍵位…",
+  "no-matches": "沒有符合的鍵位",
+  "unavailable": "無法讀取鍵位。Omarchy 的鍵位清單仍可用 Super+K 開啟。",
+  "SHELL": "介面",
+  "WINDOWS": "視窗",
+  "NAVIGATE": "導航",
+  "APPS": "應用",
+  "SYSTEM": "系統",
+  "OTHER": "其他",
+  "lua-undescribed": "Lua binding · 無描述",
+  "binding-undescribed": "Binding · 無描述"
+}

@@ -6,7 +6,7 @@ import json
 import re
 import shutil
 from . import Error, ROOT, SCHEMA, command, paths
-from . import actions, arrival, dispatch, lifecycle, notifications, osd, power, session, settings, status, theme
+from . import actions, arrival, dispatch, keymap, lifecycle, notifications, osd, power, session, theme_wave, settings, status, theme
 
 
 def emit(value):
@@ -63,6 +63,9 @@ def doctor():
         health = notifications.writer_health()
         add("notifications:writer", health["ok"], health,
             "Check the shell journal for the writer exit code and state-directory permissions, then restart the shell with omarchy restart shell.")
+    gate = theme_wave.compatibility()
+    add("session:theme-compatibility", gate["ok"], gate.get("contract") or gate.get("reason"),
+        "The theme wave stays off for unknown native modules; Omarchy still changes themes.")
     for plugin in plugins:
         try:
             add("plugin:" + plugin.parent.name, True, command(["omarchy", "plugin", "validate", str(plugin.parent)]))
@@ -110,8 +113,11 @@ def main(argv=None):
     launch.add_argument("value", nargs="?")
     pwr = sub.add_parser("power", help="Open the native System actions as WULING cards")
     pwr.add_argument("action", choices=["open", "close", "toggle", "snapshot"])
+    keys = sub.add_parser("keymap", help="Read current native keys or open their WULING overlay")
+    keys.add_argument("action", nargs="?", default="snapshot", choices=["snapshot", "open", "close", "toggle"])
+    keys.add_argument("--json", action="store_true")
     motion = sub.add_parser("session", help="Preview session motion or execute a confirmed exit")
-    motion.add_argument("action", choices=["preview", "exit", "arm", "prepare-arrival"])
+    motion.add_argument("action", choices=["preview", "exit", "arm", "prepare-arrival", "theme-compatibility"])
     motion.add_argument("value", nargs="?")
     display = sub.add_parser("osd", help="Read OSD device state on demand")
     display.add_argument("action", choices=["device"])
@@ -169,8 +175,16 @@ def main(argv=None):
                 emit({"schema_version": SCHEMA, "ok": True, "action": args.action})
         elif args.verb == "power":
             emit(power.snapshot() if args.action == "snapshot" else power.toggle(args.action))
+        elif args.verb == "keymap":
+            if args.action == "snapshot":
+                emit(keymap.snapshot())
+            else:
+                actions.route(args.action, "wuling.keymap")
+                emit({"schema_version": SCHEMA, "ok": True, "action": args.action})
         elif args.verb == "session":
-            if args.action == "prepare-arrival":
+            if args.action == "theme-compatibility":
+                emit(theme_wave.compatibility())
+            elif args.action == "prepare-arrival":
                 if args.value is not None:
                     raise Error("session prepare-arrival takes no arguments")
                 emit(arrival.prepare())

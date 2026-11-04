@@ -1,0 +1,17 @@
+{
+  "keymap": "KEYMAP",
+  "vertical": "鍵\n位",
+  "filter": "Type to filter keys",
+  "footer": "◆ SUPER   ·   TYPE FILTER   ·   ↑ ↓ SCROLL   ·   ESC CLEAR / CLOSE",
+  "loading": "Reading current keys…",
+  "no-matches": "No matching keys",
+  "unavailable": "Cannot read the keys. Omarchy’s Keybindings list is still available on Super+K.",
+  "SHELL": "SHELL",
+  "WINDOWS": "WINDOWS",
+  "NAVIGATE": "NAVIGATE",
+  "APPS": "APPS",
+  "SYSTEM": "SYSTEM",
+  "OTHER": "OTHER",
+  "lua-undescribed": "Lua binding · no description",
+  "binding-undescribed": "Binding · no description"
+}

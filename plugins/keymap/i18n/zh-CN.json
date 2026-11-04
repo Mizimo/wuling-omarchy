@@ -1,0 +1,17 @@
+{
+  "keymap": "键位",
+  "vertical": "键\n位",
+  "filter": "输入以筛选键位",
+  "footer": "◆ SUPER   ·   输入筛选   ·   ↑ ↓ 滚动   ·   ESC 清除／关闭",
+  "loading": "正在读取键位…",
+  "no-matches": "没有符合的键位",
+  "unavailable": "无法读取键位。Omarchy 的键位清单仍可用 Super+K 打开。",
+  "SHELL": "界面",
+  "WINDOWS": "窗口",
+  "NAVIGATE": "导航",
+  "APPS": "应用",
+  "SYSTEM": "系统",
+  "OTHER": "其他",
+  "lua-undescribed": "Lua binding · 无描述",
+  "binding-undescribed": "Binding · 无描述"
+}

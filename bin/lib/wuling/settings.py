@@ -69,7 +69,7 @@ def validate_tokens(data):
     required = {"schema_version", "palettes", "omarchy_colors", "type", "geometry", "motion", "sound", "defaults", "presets", "themes"}
     if set(data) != required or set(data["palettes"]) != {"mist", "paper"} or set(data["presets"]) != {"field", "hud"}:
         raise Error("Incomplete or unknown token sections")
-    expected = {"labels", "menu.selected", "terminal.sections", "sounds", "motion", "session.arrival", "session.exit", "language", "login_music"}
+    expected = {"labels", "menu.selected", "terminal.sections", "sounds", "motion", "session.arrival", "session.exit", "session.theme", "language", "login_music"}
     if set(data["defaults"]) != expected:
         raise Error("Settings keys differ from the supported schema")
     for palette in data["palettes"].values():
@@ -112,7 +112,7 @@ def validate(key, value):
     defaults = tokens()["defaults"]
     if key not in defaults:
         raise Error(f"Unknown setting {key!r}. Supported: {', '.join(defaults)}")
-    if key in ("labels", "session.arrival", "session.exit") and type(value) is not bool:
+    if key in ("labels", "session.arrival", "session.exit", "session.theme") and type(value) is not bool:
         raise Error(f"{key} must be true or false")
     if key in ENUMS and value not in ENUMS[key]:
         raise Error(f"{key} must be one of: {', '.join(ENUMS[key])}")
@@ -139,7 +139,7 @@ def load(text=None):
 
 
 def parse_value(key, raw):
-    if key in ("labels", "session.arrival", "session.exit"):
+    if key in ("labels", "session.arrival", "session.exit", "session.theme"):
         value = {"true": True, "false": False}.get(raw, raw)
     elif key == "terminal.sections":
         try:

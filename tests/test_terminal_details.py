@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import select
 import threading
 import time
 import unittest
@@ -137,6 +138,9 @@ class DetailDataTests(IsolatedHome):
                 self.assertTrue(pidfile.exists())
                 analyzer=int(pidfile.read_text())
                 self.assertEqual(os.getpriority(os.PRIO_PROCESS,analyzer),19)
+                # The PID file precedes the first frame. Do not terminate the
+                # reader before its output is observable under CPU contention.
+                self.assertTrue(select.select([child.stdout], [], [], 5)[0])
                 child.terminate()
                 out,err=child.communicate(timeout=2)
                 self.assertEqual(child.returncode,0,err)

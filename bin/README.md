@@ -72,11 +72,11 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 for scripts; `--fastfetch` also opts into the mark in the user's fastfetch
 configuration. Interactive installation asks about fastfetch separately. No
 system font preference, authentication code or built-in binding is changed.
-It installs the bar, Terminal, notifications, OSD, Dispatch, power, session and sound
+It installs the bar, Terminal, notifications, OSD, Dispatch, power, session, sound and Keymap
 plugins, enables compatible new components, appends
-Terminal at the end of the native right section, and adds Super+Ctrl+G and Super+D in an
+Terminal at the end of the native right section, and adds Super+Ctrl+G, Super+D and Super+Ctrl+/ in an
 owned Lua block. That block also disables compositor animation only for the
-Arrival layer, effective on next login. An effective binding conflict is
+Arrival and theme-wave layers, effective on next login. An effective binding conflict is
 refused before changes.
 Updates preserve native widget placement and independent plugin disablement.
 Notifications and OSD use Omarchy's clone restoration contract. Notification
@@ -114,3 +114,13 @@ Panel commands reject native `unknown` responses with nonzero status and
 value, so their targets are checked through the public registry and live IPC
 before invocation. This includes Terminal, Dispatch and Power; exit status
 alone is never treated as delivery.
+
+`wuling keymap --json` reads the current native key list, including user-defined
+entries. `wuling keymap open|close|toggle` controls the independent Keymap
+overlay on Super+Ctrl+/. It never activates a listed binding; Omarchy's native
+Super+K list remains available.
+
+`wuling session theme-compatibility` reports the installed content contract for
+the optional wave. `session.theme` is an independent boolean setting, default
+true. Unknown native content keeps Omarchy's own transition. Keymap snapshots
+include a raw active-binding supplement; they never execute listed actions.

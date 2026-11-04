@@ -49,8 +49,34 @@ This external termination is outside the action guarantee.
 
 State stays under `$XDG_RUNTIME_DIR/wuling/`: login markers, the bounded OSD
 lease, an exit lock and (for external themes) a temporary recoloured mark.
-Settings: `session.arrival`, `session.exit`, `motion`. Internal IPC:
+Settings: `session.arrival`, `session.exit`, `session.theme`, `motion`. Internal IPC:
 `wuling.session begin/finish/state` and `arrival/inspect`; tokens reject stale
 exit replies.
 Supported: Omarchy 4.0.6 and 4.5.0-rc2. Disable with the official plugin command;
 Power still executes its native actions.
+
+The optional theme wave watches only `current/` at idle. A new `next-theme`
+directory requests one capture per output. The installed theme-set, Color,
+Style and Background files must match one tested content contract, checked at
+startup and again before each cover. Unknown content disables this effect,
+leaving the native theme command untouched; doctor reports the boundary.
+The installer owns a separate `wuling-theme-wave` no-animation layer rule.
+
+Every output must have a capture and two cover swaps before the native palette
+arrives. A changed theme name is an additional, earlier cutoff. Any late output
+cancels the whole effect; it never displays an old screenshot after revealing
+the new theme. The cover ignores input and lasts at most 1.5 seconds from the
+preparation event. Same-theme refresh, failure, lock, Arrival, Exit, output
+changes, disabled settings and reduced motion cancel or bypass it. The reveal
+is a 420 ms, 16 by 9 cell wave with a half-level open cue. All captures, effect
+objects, windows and active timers unload afterwards. Only aggregate counters
+and the last timing record remain in memory (`wuling.session themeState`).
+
+The native background has no public completion fence. The wave uses its
+content-gated reveal duration from the last palette assignment, plus 67 ms,
+bounded by the total 1.5-second deadline. These durations and the padding live
+beside the content hashes. This is a
+contract-derived time bound, not an observed completion fence.
+It reads no private native object tree, adds no wrapper, and never waits on or
+changes an Omarchy action. Lock state uses the existing read-only IPC only
+during an attempt.

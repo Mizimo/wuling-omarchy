@@ -30,11 +30,11 @@ reapply the theme. Preserve unrelated concurrent edits.
 
 The desktop components are independent Omarchy plugins:
 `wuling.bar`, `wuling.terminal`, `wuling.notifications`, `wuling.osd`,
-`wuling.dispatch`, `wuling.power`, `wuling.session`. Inspect native `omarchy plugin`
+`wuling.dispatch`, `wuling.power`, `wuling.session`, `wuling.sound`, `wuling.keymap`. Inspect native `omarchy plugin`
 and `omarchy bar` help before changing their enablement or placement. Bar
 replacement needs the official `omarchy restart shell`; never restart a live
 lock client or bypass Omarchy's refusal. Super+Ctrl+G belongs to Terminal and
-Super+D to Dispatch;
+Super+D to Dispatch and Super+Ctrl+/ to Keymap;
 all original keys still belong to Omarchy. `wuling terminal open` opens the
 panel on the focused output. `status --watch` belongs only to a visible view,
 and must stop when the view closes. Do not start an agent usage collector or

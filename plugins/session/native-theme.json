@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "contracts": {
+    "4.0.6": {
+      "background_ms": 420,
+      "scaled_duration": false,
+      "files": {
+        "bin/omarchy-theme-set": "2356e6e19656fcc67aa345fc46352a310945e54146706c039bf92a7bd3b3fb5a",
+        "shell/Commons/Color.qml": "cc9b62e2eaf8c307aa02206d9320c3d0ca349cf8feed452a6eddf387adaa5320",
+        "shell/Commons/Style.qml": "68616995d44b4790e3b2653d0390140b569a6a3b2b9dde66d79b97911a12ea39",
+        "shell/plugins/background/Background.qml": "6135a06b4c17c9a5a251053c294a657ecd80eb3a339f6eea146455b3925fd65b"
+      },
+      "settle_ms": 67
+    },
+    "4.5.0-rc2": {
+      "background_ms": 840,
+      "scaled_duration": true,
+      "files": {
+        "bin/omarchy-theme-set": "2c16d0860fd745666992a1bc413b794ef42f733ad4d17636092e80ac26110e76",
+        "shell/Commons/Color.qml": "08af401286831759b63279cf6d6732d666256c751864a03bd5594ea29a29f0e5",
+        "shell/Commons/Style.qml": "65758e4935a225984d88afee65e740bae99e335d608d12befdbe5ec5e2e57f90",
+        "shell/plugins/background/Background.qml": "bc0825a58c0cd01fe680c4628e1836e1cad74c7767941bb2e245b8394787f15c"
+      },
+      "settle_ms": 67
+    }
+  }
+}

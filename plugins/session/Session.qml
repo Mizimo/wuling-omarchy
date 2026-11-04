@@ -12,6 +12,9 @@ Item {
     id: session
     property var shell: null
     property string token: ""
+    property bool watchReady:false
+    Timer { interval:1;running:!session.arriving && !session.watchReady;onTriggered:session.watchReady=true }
+    Loader { id:themeWatcher;active:session.watchReady;source:"ThemeWatch.qml";onLoaded:item.owner=session }
     readonly property string identity:Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || ""
     property bool arriving:false
     property bool previewing:false
@@ -116,6 +119,7 @@ Item {
     IpcHandler {
         target:"wuling.session"
         function arrival(unused:string):string { return session.beginArrival(true); }
+        function themeState():string { return themeWatcher.item?themeWatcher.item.inspect():"{}"; }
         function inspect():string { return JSON.stringify({schema_version:1,arrival:session.arriving,first_swap:session.firstSwap,outputs:session.swapped,visual:session.visualReady,controller_loaded:!!presentation.item,watchdog:arrivalWatchdog.running,preview:session.previewing}); }
         function begin(payload:string):string { return session.begin(payload); }
         function finish(token:string):string {

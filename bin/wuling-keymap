@@ -1,0 +1,5 @@
+#!/bin/bash
+# omarchy:summary=Read every current key or open the Keymap overlay
+# omarchy:args=[snapshot|open|close|toggle] [--json]
+# omarchy:examples=wuling keymap --json | wuling keymap toggle
+exec "$(dirname "$(readlink -f "$0")")/wuling" keymap "$@"

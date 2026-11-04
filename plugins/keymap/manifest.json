@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"wuling.keymap","name":"WULING Keymap","version":"0.1.0","kinds":["overlay"],"keepLoaded":true,"entryPoints":{"overlay":"Keymap.qml"}}

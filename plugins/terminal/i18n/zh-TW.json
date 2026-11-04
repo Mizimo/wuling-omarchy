@@ -200,5 +200,9 @@
   "apply": "套用",
   "clear": "清除",
   "invalid-music": "請選擇現有音訊檔（絕對路徑或 ~/）。",
-  "config-native-keys": "按鍵"
+  "config-native-keys": "按鍵",
+  "background-line": "測線",
+  "background-thin": "細色帶",
+  "background-band": "寬色帶",
+  "config-theme-wave": "換主題墨色波"
 }

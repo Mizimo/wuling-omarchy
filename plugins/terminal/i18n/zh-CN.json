@@ -200,5 +200,9 @@
   "apply": "应用",
   "clear": "清除",
   "invalid-music": "请选择现有音频文件（绝对路径或 ~/）。",
-  "config-native-keys": "按键"
+  "config-native-keys": "按键",
+  "background-line": "测线",
+  "background-thin": "细色带",
+  "background-band": "宽色带",
+  "config-theme-wave": "换主题墨色波"
 }
