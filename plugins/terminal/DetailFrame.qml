@@ -4,13 +4,21 @@ import "kit" as Kit
 Item {
     id: frame
     property bool showing: false
+    property bool terminalOpen: false
     property var rows: []
     property string number: "08"
+    property string pageName: "comms"
+    property string retainedPage: "comms"
+    property var snapshot: ({})
+    property string crumb: ""
+    function key(event) { if(pageLoader.item)pageLoader.item.key(event); }
     property string error: ""
     property real progress: 0
     property int direction: 1
     readonly property alias controls: pageBody
     readonly property alias flickable: scroll
+    readonly property bool loaded:pageLoader.item!==null
+    signal command(string name,string value)
     signal back()
     signal clear()
     signal action(string key, int index)
@@ -19,18 +27,22 @@ Item {
     onShowingChanged: {
         direction=showing?1:-1;
         motion.to=showing?1:0;motion.restart();
-        if(showing)scroll.contentY=0;
+        if(showing) { retainedPage=pageName;scroll.contentY=0; }
+    }
+    onPageNameChanged:if(pageName) {
+        retainedPage=pageName;scroll.contentY=0;
+        if(showing) { progress=0;motion.to=1;motion.restart(); }
     }
     NumberAnimation { id:motion;target:frame;property:"progress";duration:Kit.Runtime.reduced?90:220;easing.type:Easing.OutCubic }
     Rectangle { anchors.fill:parent;color:Kit.Runtime.c("ink-2") }
-    Kit.Label { anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(12);y:Kit.Runtime.px(50);text:Kit.Runtime.tr("comms-mark");font.family:Kit.Runtime.serif;font.pixelSize:Kit.Runtime.px(150);opacity:.045 }
+    Kit.Label { anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(12);y:Kit.Runtime.px(50);text:Kit.Runtime.tr(frame.retainedPage+"-mark");font.family:Kit.Runtime.serif;font.pixelSize:Kit.Runtime.px(150);opacity:.045 }
     Item {
         id: pageBody;anchors.fill:parent
         Kit.Button { id:backButton;x:Kit.Runtime.px(14);y:Kit.Runtime.px(8);height:Kit.Runtime.px(24);text:Kit.Runtime.label("back");icon:"chevron_left";sound:"";onClicked:frame.back() }
         Row {
             anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(16);spacing:Kit.Runtime.px(5)
             Kit.Micro { text:frame.number;color:Kit.Runtime.c("accent-ink");pixels:8 }
-            Kit.Micro { text:Kit.Runtime.label("comms-page");pixels:8 }
+            Kit.Micro { text:frame.crumb || Kit.Runtime.label("comms-page");width:Math.min(implicitWidth,pageBody.width-Kit.Runtime.px(117));elide:Text.ElideLeft;pixels:8 }
         }
         Rectangle { y:Kit.Runtime.px(39);width:parent.width;height:1;color:Kit.Runtime.c("line") }
         Flickable {
@@ -39,13 +51,28 @@ Item {
             Column {
                 id:pageColumn;width:scroll.width;spacing:Kit.Runtime.px(8);topPadding:Kit.Runtime.px(12);bottomPadding:Kit.Runtime.px(14)
                 Row {
-                    width:parent.width;height:Kit.Runtime.px(26)
+                    visible:frame.retainedPage==="comms";width:parent.width;height:Kit.Runtime.px(26)
                     Kit.Micro { width:parent.width-clearButton.width;anchors.verticalCenter:parent.verticalCenter;text:frame.rows.length+" "+Kit.Runtime.tr("count-unit") }
                     Kit.Button { id:clearButton;text:Kit.Runtime.label("clear-all");enabled:frame.rows.length>0;height:Kit.Runtime.px(26);onClicked:frame.clear() }
                 }
                 CommsList {
-                    width:parent.width;rows:frame.visible?frame.rows:[];full:true
+                    visible:frame.retainedPage==="comms";width:parent.width;rows:frame.visible && visible?frame.rows:[];full:true
                     onAction:(key,index)=>frame.action(key,index)
+                }
+                Loader {
+                    id:pageLoader;width:parent.width
+                    active:frame.terminalOpen && frame.visible && frame.retainedPage!=="comms"
+                    source:({performance:"PerformancePage.qml",power:"PowerPage.qml",audio:"AudioPage.qml",system:"SystemPage.qml",calendar:"CalendarPage.qml"})[frame.retainedPage] || ""
+                    onLoaded:item.snapshot=Qt.binding(()=>frame.snapshot)
+                }
+                Connections {
+                    target:pageLoader.item;ignoreUnknownSignals:true
+                    function onAction(name,value) { frame.command(name,value); }
+                    function onFocusMoved(control) {
+                        const point=control.mapToItem(scroll.contentItem,0,0);
+                        if(point.y<scroll.contentY || point.y+control.height>scroll.contentY+scroll.height)
+                            scroll.contentY=Math.max(0,Math.min(scroll.contentHeight-scroll.height,point.y-scroll.height/2));
+                    }
                 }
             }
         }
@@ -60,7 +87,7 @@ Item {
         Item {
             id:hints;anchors.bottom:parent.bottom;width:parent.width;height:Kit.Runtime.px(30)
             Rectangle { width:parent.width;height:1;color:Kit.Runtime.c("line") }
-            Kit.Micro { x:Kit.Runtime.px(14);anchors.verticalCenter:parent.verticalCenter;text:Kit.Runtime.tr("page-keys");pixels:8 }
+            Kit.Micro { x:Kit.Runtime.px(14);anchors.verticalCenter:parent.verticalCenter;width:parent.width-Kit.Runtime.px(28);text:Kit.Runtime.tr(frame.retainedPage==="comms"?"page-keys":frame.retainedPage+"-keys");pixels:frame.retainedPage==="comms"?8:7 }
         }
     }
     Rectangle { visible:Kit.Runtime.hud && motion.running && !Kit.Runtime.reduced;width:parent.width;height:1;y:parent.height*frame.progress;color:Kit.Runtime.c("accent-ink") }

@@ -4,10 +4,12 @@ FocusScope {
     property real value: 0
     property string name: ""
     property string icon: ""
+    property bool iconNavigation: false
     property color fill: Runtime.c("fill")
     property real pendingValue: value
     property real wheelRemainder: 0
     signal adjusted(real percent)
+    signal iconClicked()
     implicitHeight: Runtime.px(Runtime.hud ? 28 : 24)
     activeFocusOnTab: true
     Accessible.role: Accessible.Slider
@@ -16,7 +18,13 @@ FocusScope {
     function change(next) { pendingValue = Math.min(100, Math.max(0, next)); flush.restart(); }
     Timer { id: flush; interval: 60; onTriggered: level.adjusted(level.pendingValue) }
     Rectangle { anchors.fill: parent; color: "transparent"; border.width: level.activeFocus ? 1 : 0; border.color: Runtime.c("accent-ink") }
-    Icon { name: level.icon; width: Runtime.px(26); height: parent.height; font.pixelSize: Runtime.px(15) }
+    Icon { visible:!level.iconNavigation;name: level.icon; width: Runtime.px(26); height: parent.height; font.pixelSize: Runtime.px(15) }
+    Button {
+        visible:level.iconNavigation;width:Runtime.px(26);height:parent.height;borderVisible:false;sound:""
+        Icon { anchors.centerIn:parent;name:level.icon;font.pixelSize:Runtime.px(15);color:parent.foreground }
+        Accessible.name:level.name
+        onClicked:level.iconClicked()
+    }
     Row {
         id: segments; x: Runtime.px(32); anchors.verticalCenter: parent.verticalCenter; spacing: Runtime.px(2)
         Repeater {

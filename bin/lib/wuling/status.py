@@ -15,7 +15,8 @@ import threading
 import time
 from . import Error, SCHEMA, paths
 
-SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
+OVERVIEW_SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
+SECTIONS = OVERVIEW_SECTIONS + ("performance", "power", "audio", "system", "calendar")
 PROC = Path("/proc")
 SYS = Path("/sys")
 _stopping = threading.Event()
@@ -314,15 +315,23 @@ class Collector:
     def __init__(self, sections=None):
         _stopping.clear()
         from .devices import battery_rows
-        self.sections = set(SECTIONS if sections is None else sections)
+        from . import details
+        self.sections = set(OVERVIEW_SECTIONS if sections is None else sections)
         if "telemetry" in self.sections:
             self.sections.add("batteries")
         self.telemetry = Telemetry()
+        self.latest = {}
         self.readers = {"link": links, "levels": levels, "signal": media, "agent": agent_usage, "comms": comms, "batteries": battery_rows}
+        for name, factory in (("performance", details.Performance), ("power", details.Power), ("system", details.System)):
+            if name in self.sections:
+                reader = factory()
+                self.readers[name] = reader.read
+                if hasattr(reader, "initial"):
+                    self.latest[name] = reader.initial
+        self.readers.update(audio=details.audio, calendar=details.calendar_today)
         self.pool = ThreadPoolExecutor(max_workers=5)
         self.pending = {}
         self.due = {}
-        self.latest = {}
         self.serial = 0
         self.ready = threading.Event()
 
@@ -345,7 +354,7 @@ class Collector:
                     self.latest[name] = None
                 del self.pending[name]
                 self.serial += 1
-                self.due[name] = now + (1 if name in ("signal", "comms") else 2 if name == "levels" else 5)
+                self.due[name] = now + (1 if name in ("signal", "comms", "performance", "audio") else 2 if name in ("levels", "power") else 30 if name == "calendar" else 5)
         if "clock" in self.sections and now >= self.due.get("clock", 0):
             self.latest["clock"] = clock()
             self.due["clock"] = now + 1

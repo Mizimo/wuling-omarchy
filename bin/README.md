@@ -13,7 +13,9 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   a JSON array. Menu selection regenerates installed WULING themes and
   reapplies the active one while preserving the selected background. An empty `login_music` disables the optional file.
 - `wuling status --json [--sections SECTION ...]`: an on-demand snapshot of
-  `clock`, `link`, `levels`, `signal`, `agent`, `telemetry` and `comms`. Unknown
+  `clock`, `link`, `levels`, `signal`, `agent`, `telemetry` and `comms` by default.
+  Opt-in detail sections are `performance`, `power`, `audio`, `system` and
+  `calendar`; they are never added to the default collection set. Unknown
   hardware yields null or no tile. CPU percentage needs two samples; the first
   is null. `--watch` produces live JSON lines until terminated (fast initial results,
   then a one-second cadence). The
@@ -25,10 +27,16 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   Volume and brightness accept 0–100 or signed adjustments; they use the same
   OSD route as keys. `panel NAME` opens the matching native panel. The three
   dangerous foot actions open the System route (WULING power cards when enabled); this command never performs logout, reboot or poweroff directly.
+  `profile` accepts an available `power-saver`, `balanced` or `performance`.
+  Audio actions take JSON with numeric `id` and `serial`; `audio-volume` also
+  takes `value` (0–100). Current public PipeWire identity is revalidated before
+  acting. `system-copy` sends a fresh information snapshot to the clipboard via
+  stdin; `system-fastfetch` and `performance-monitor` use native TUI launchers.
 - `wuling status --spectrum`: optional 20-cell cava frames, at most 20 per
   second. No cava returns `available: false`; the caller owns its lifetime.
 - `wuling terminal open|close|toggle`: the Field Terminal on the focused output.
-  `wuling terminal open comms` opens its history page.
+  `wuling terminal open PAGE` opens `comms`, `performance`, `power`, `audio`,
+  `system` or `calendar`.
 - `wuling notifications compatibility|state|boot|terminals|open-history|fallback`:
   internal notification bridge and diagnostics. `compatibility` checks the
   installed native modules. `persist` accepts bounded JSON lines on stdin and

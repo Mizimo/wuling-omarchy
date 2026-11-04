@@ -6,14 +6,18 @@ Escape, outside clicks and handoff to the next panel. It also runs under the
 native bar. The native square frame is retained.
 
 Open it with `wuling terminal open|close|toggle` or Super+Ctrl+G.
-`wuling terminal open comms` opens its history page on the focused output.
+`wuling terminal open PAGE` opens `comms`, `performance`, `power`, `audio`,
+`system` or `calendar` on the focused output.
 Tab/Shift+Tab switch panels. Up/Down select a control; Enter/Space activate it.
-Escape, Left and Backspace return from Comms; a second Escape closes Terminal.
+Escape, Left and Backspace return from a page; a second Escape closes Terminal.
+Power uses Left/Right to select an available profile, Enter to apply; Backspace
+returns. Performance uses S to sort and Enter to open btop. System uses C to
+copy and F for Fastfetch. Calendar uses PageUp/PageDown and T for today.
 Closing forgets the page. Left/Right and Home/End adjust a focused level.
-Level drags and wheel changes call the native command and OSD used by keys.
+Overview level drags and wheel changes call the native command and OSD used by keys.
 
-`wuling status --watch` starts while open and stops on close. Entering Comms
-replaces the collection set with clock and history only. Pending probes and
+`wuling status --watch` starts while open and stops on close. Entering a page
+replaces the collection set with the configured clock and that page only. Pending probes and
 subprocess descendants stop with their collector. State and bounded telemetry
 history are discarded on close. Native agent display records are read, never
 credentials, and no agent collector is started. Missing hardware hides its
@@ -42,7 +46,7 @@ notification service. Actions are revalidated there, including expiry and
 the installed native action rules. Unchanged samples retain delegates while
 a pointer is held down. The detail page covers the footer, preserves the
 clock and releases its row objects after closing.
-The footer's dangerous actions currently open native System, never execute
+The footer's dangerous actions open the System route, never execute
 logout, reboot or shutdown directly.
 
 Settings: `terminal.sections`, `labels`, `motion`, `language`, and theme preset,
@@ -63,7 +67,7 @@ Changes to `terminal.sections` restart the open collector with the new selection
 an empty selection stops collection. A native panel absent from the bar returns
 `panel_unavailable`; the Terminal stays open with a translated explanation.
 
-Native boundary on both supported versions: clicking the clock while Terminal
+Native bar boundary on both supported versions: clicking its clock while Terminal
 is open closes Terminal on the first click; the second opens the calendar.
 The same behavior occurs under Omarchy's own bar. WULING does not alter it.
 
@@ -73,3 +77,28 @@ fixtures. Night is available when the native toggle and hyprsunset are installed
 a stopped service reads Off and the same native toggle starts it on demand.
 Agent labels omit parenthetical details and share a measured column capped at
 66 design pixels. The default-agent tag reads only native display metadata.
+
+The overview clock opens Calendar, the user label opens System, telemetry
+values open Performance, battery cells and the profile tile open Power, and
+the volume icon opens Audio. Brightness keeps the native monitor panel.
+Performance reads `/proc` deltas, bounds its CPU history to 60 samples, and
+retains both process rankings; changing sort needs no extra reader. Power uses
+UPower's pack energy and charge history and the official profile helper.
+No lid or idle policy is inferred.
+
+Audio projects public PipeWire device/stream state. Device selection uses
+Omarchy's native helpers, including moving existing streams; active output
+levels follow its DSP-aware physical sink selection. Sliders retain delegates
+while levels change, discard them on identity/topology changes, and coalesce
+queued changes by node ID and serial. Volume uses PipeWire's cubic amplitude
+mapping. No microphone peak monitor is created: on 4.0.6 that monitor itself
+activates the native recording indicator. Input selection, volume and mute
+remain available. Playback streams exclude the shell and native tuning nodes.
+
+System reads local host/session information and installed `release.json`.
+Installation records the checkout's commit, exact tag (or `unreleased`) and
+commit date; source archives may provide the same three fields. No repository
+means unknown values rather than a guessed version. Clipboard text goes over
+stdin with no inherited capture pipes. Successful native TUI launches close
+the panel; a failed launch stays on the page. Calendar is a local Monday-first
+month grid with ISO weeks, calculated at noon to avoid daylight-saving shifts.

@@ -18,11 +18,12 @@ Ui.Panel {
     property string hostname: ""
     property string pageName: ""
     property string pageNumber: "08"
+    property string pageSection: "comms"
     readonly property string screenName: QsWindow.window && QsWindow.window.screen ? QsWindow.window.screen.name : ""
     property var logRows: []
     FileView { path: "/etc/hostname"; printErrors: false; onLoaded: terminal.hostname = text().trim().toUpperCase() }
     readonly property var sections: Kit.Runtime.setting("terminal.sections")
-    readonly property var activeSections: pageName === "comms" ? sections.filter(key => key === "clock" || key === "comms") : sections
+    readonly property var activeSections: pageName ? sections.filter(key => key === "clock").concat([pageName]) : sections
     onSectionsChanged: { if(pageName === "comms" && sections.indexOf("comms")<0)backPage(); else restartCollector(); }
     onPageNameChanged: restartCollector()
     function restartCollector() {
@@ -53,15 +54,17 @@ Ui.Panel {
     function history() {
         return openPage("comms");
     }
-    function openPage(name) {
-        if(name!=="comms" || sections.indexOf("comms")<0 || bar && bar.barHidden)return "off";
-        pageNumber=String((shown.indexOf("comms")>=0?shown.indexOf("comms"):sections.indexOf("comms"))+2).padStart(2,"0");
+    function openPage(name, source) {
+        const section=source || ({comms:"comms",performance:"telemetry",power:"telemetry",audio:"levels",system:"clock",calendar:"clock"})[name];
+        if(!section || name==="comms" && sections.indexOf("comms")<0 || bar && bar.barHidden)return "off";
+        const index=shown.indexOf(section)>=0?shown.indexOf(section):sections.indexOf(section);
+        pageNumber=String(Math.max(0,index)+2).padStart(2,"0");pageSection=section;
         pageName=name;scroll.contentY=0;actionError="";open();Kit.Runtime.cue("select");
-        body.forceActiveFocus();return "ok";
+        body.resetNavigation();return "ok";
     }
     function backPage() {
         if(!pageName)return false;
-        pageName="";actionError="";Kit.Runtime.cue("close");body.forceActiveFocus();return true;
+        pageName="";actionError="";Kit.Runtime.cue("close");body.resetNavigation();return true;
     }
     IpcHandler {
         enabled: terminal.screenName !== ""
@@ -69,13 +72,13 @@ Ui.Panel {
         function geometry(): string { return JSON.stringify(terminal.geometry()); }
         function history(): string { return terminal.history(); }
         function page(name: string): string { return terminal.openPage(name); }
-        function state(): string { return JSON.stringify({open:terminal.opened,page:terminal.pageName,sections:terminal.opened?terminal.collectingSections:[],historyRows:terminal.logRows.length,spectrum:signalPanel.inspection()}); }
+        function state(): string { return JSON.stringify({open:terminal.opened,page:terminal.pageName,sections:terminal.opened?terminal.collectingSections:[],historyRows:terminal.logRows.length,detailLoaded:detail.loaded,spectrum:signalPanel.inspection()}); }
     }
     function act(name, value) {
         const next = ["wuling", "action", name]; if (value !== undefined) next.push(String(value));
         // Slider drags retain the latest pending value, not a queue of stale
         // commands. Discrete clicks remain ordered and bounded.
-        let queue = actionQueue.filter(row => !(["volume", "brightness"].indexOf(name) >= 0 && row[2] === name));
+        let queue = actionQueue.filter(row => !(["volume", "brightness"].indexOf(name) >= 0 && row[2] === name || name==="audio-volume" && row[2]===name && JSON.parse(row[3]).id===JSON.parse(value).id && JSON.parse(row[3]).serial===JSON.parse(value).serial));
         actionQueue = queue.concat([next]).slice(-16); runNext();
     }
     function runNext() {
@@ -97,7 +100,7 @@ Ui.Panel {
     onOpenedChanged: {
         Kit.Runtime.cue(opened ? "open" : "close");
         if (!opened) { collector.running = false; restartingCollector = false; pageName="";state = ({});overviewComms.expandedKeys=({}); }
-        else { actionError = ""; startCollector(); }
+        else { actionError = ""; startCollector(); body.resetNavigation(); }
         reportGeometry();
     }
     onScreenNameChanged: reportGeometry()
@@ -122,6 +125,7 @@ Ui.Panel {
                 try { const response = JSON.parse(text); terminal.actionError = response.error ? Kit.Runtime.tr(response.error.code === "panel_unavailable" ? "panel-unavailable" : "action-failed") : ""; }
                 catch (_) { terminal.actionError = Kit.Runtime.tr("unavailable"); }
                 if (terminal.actionError) Kit.Runtime.cue("deny");
+                else if(["performance-monitor","system-fastfetch"].indexOf(actionProcess.command[2])>=0)terminal.close();
             }
         }
         onExited: Qt.callLater(terminal.runNext)
@@ -170,10 +174,19 @@ Ui.Panel {
                 if (item.activeFocusOnTab) result.push(item);
                 for (let i = 0; i < item.children.length; i++) controls(item.children[i], result);
             }
+            function resetNavigation() {
+                function blur(item) {
+                    item.focus=false;
+                    for(let i=0;i<item.children.length;i++)blur(item.children[i]);
+                }
+                blur(body);body.forceActiveFocus();
+            }
             function move(direction) {
                 let list = [];
                 if(terminal.pageName)controls(detail.controls,list);else { controls(contents,list);controls(foot,list); }
-                const index = list.findIndex(item => item.activeFocus);
+                // A focused child and its FocusScope can both be active.
+                // Continue from the deepest control, not its enclosing level.
+                let index=-1;for(let i=0;i<list.length;i++)if(list[i].activeFocus)index=i;
                 if (!list.length) return;
                 const next = index < 0 ? (direction > 0 ? 0 : list.length - 1) : (index + direction + list.length) % list.length;
                 const target = list[next]; target.forceActiveFocus();
@@ -182,6 +195,9 @@ Ui.Panel {
                 if(point.y>=0 && point.y<area.contentHeight)area.contentY=Math.max(0,Math.min(area.contentHeight-area.height,point.y-area.height/2));
             }
             Keys.onPressed: event => {
+                event.accepted=false;
+                if(terminal.pageName)detail.key(event);
+                if(event.accepted)return;
                 if (event.key === Qt.Key_Escape) { if(!terminal.backPage())terminal.close(); event.accepted = true; }
                 else if(terminal.pageName && (event.key===Qt.Key_Left || event.key===Qt.Key_Backspace)) { terminal.backPage();event.accepted=true; }
                 else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) { terminal.switchPanel(event.key === Qt.Key_Backtab || event.modifiers & Qt.ShiftModifier ? -1 : 1); event.accepted = true; }
@@ -222,7 +238,11 @@ Ui.Panel {
                         property Column layout: Column {
                             parent: part; width: part.width
                             Kit.Section {
-                                width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey === "signal" && !terminal.state.signal ? "no-signal-head" : part.sectionKey); detail: part.sectionKey === "clock" ? Quickshell.env("USER") : ""
+                                width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey === "signal" && !terminal.state.signal ? "no-signal-head" : part.sectionKey); detail: ""
+                                Kit.Button {
+                                    visible:part.sectionKey==="clock";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(4)
+                                    height:Kit.Runtime.px(22);text:Quickshell.env("USER");labelSize:8;borderVisible:false;onClicked:terminal.openPage("system")
+                                }
                                 Rectangle {
                                     visible:part.sectionKey==="comms";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(6)
                                     width:headingActions.implicitWidth;height:Kit.Runtime.px(20);color:Kit.Runtime.c("ink-2")
@@ -253,6 +273,12 @@ Ui.Panel {
                         sectionKey: "clock"
                         Item {
                             width: parent.width; height: Kit.Runtime.g("terminal_clock_size") * .9 + Kit.Runtime.px(2)
+                            activeFocusOnTab:true
+                            Accessible.role:Accessible.Button;Accessible.name:Kit.Runtime.tr("calendar")
+                            Keys.onReturnPressed:terminal.openPage("calendar")
+                            Keys.onEnterPressed:terminal.openPage("calendar")
+                            Rectangle { anchors.fill:parent;color:"transparent";border.width:parent.activeFocus?1:0;border.color:Kit.Runtime.c("accent-ink") }
+                            MouseArea { anchors.fill:parent;cursorShape:Qt.PointingHandCursor;onClicked:terminal.openPage("calendar") }
                             Kit.Label { id: hours; x: Kit.Runtime.px(14); anchors.bottom: parent.bottom; anchors.bottomMargin: Kit.Runtime.px(2); height: Kit.Runtime.g("terminal_clock_size") * .9; text: terminal.state.clock ? terminal.state.clock.time.slice(0, 5) : "—:—"; font.family: Kit.Runtime.display; font.weight: Font.DemiBold; font.pixelSize: Kit.Runtime.g("terminal_clock_size"); color: Kit.Runtime.c("paper-1") }
                             Kit.Label { x: hours.x + hours.width + Kit.Runtime.px(5); anchors.bottom: hours.bottom; anchors.bottomMargin: Kit.Runtime.px(4); text: terminal.state.clock ? terminal.state.clock.time.slice(5) : ""; font.family: Kit.Runtime.display; font.pixelSize: Kit.Runtime.px(18); font.weight: Font.DemiBold; height: Kit.Runtime.px(18); color: Kit.Runtime.c("accent-ink") }
                             Column {
@@ -275,7 +301,7 @@ Ui.Panel {
                                     width: (contents.width - Kit.Runtime.px(40)) / 3; height: Kit.Runtime.px(52)
                                     selected: modelData.active
                                     Accessible.name: Kit.Runtime.tr(modelData.id)
-                                    onClicked: terminal.act(modelData.action)
+                                    onClicked: modelData.id==="power"?terminal.openPage("power","link"):terminal.act(modelData.action)
                                     onRightClicked: terminal.act("panel", modelData.id)
                                     Kit.Icon { x: Kit.Runtime.px(8); y: Kit.Runtime.px(7); name: ({wifi:"wifi",bluetooth:"bluetooth",tailscale:"hub",dnd:"do_not_disturb_on",night:"bedtime",power:"speed"})[parent.modelData.id]; color: parent.foreground; font.pixelSize: Kit.Runtime.px(15) }
                                     Kit.Micro { anchors.right: parent.right; anchors.rightMargin: Kit.Runtime.px(8); y: Kit.Runtime.px(10); text: ({wifi:"WI-FI", bluetooth:"BT", tailscale:"TAILNET", dnd:"DND", night:"NIGHT", power:"POWER"})[parent.modelData.id]; color: parent.foreground; pixels: 7.5 }
@@ -286,8 +312,8 @@ Ui.Panel {
                     }
                     Part {
                         sectionKey: "levels"
-                        Kit.Level { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); visible: !!terminal.state.levels && !!terminal.state.levels.volume; name: Kit.Runtime.tr("volume"); icon: terminal.state.levels && terminal.state.levels.volume && terminal.state.levels.volume.muted ? "volume_off" : "volume_up"; value: terminal.state.levels && terminal.state.levels.volume ? terminal.state.levels.volume.percent : 0; onAdjusted: percent => terminal.act("volume", Math.round(percent)) }
-                        Kit.Level { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); visible: !!terminal.state.levels && terminal.state.levels.brightness !== null; name: Kit.Runtime.tr("brightness"); icon: "brightness_6"; fill: Kit.Runtime.c("paper-2"); value: terminal.state.levels && terminal.state.levels.brightness !== null ? terminal.state.levels.brightness : 0; onAdjusted: percent => terminal.act("brightness", Math.round(percent)) }
+                        Kit.Level { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); visible: !!terminal.state.levels && !!terminal.state.levels.volume; name: Kit.Runtime.tr("volume"); iconNavigation:true; onIconClicked:terminal.openPage("audio"); icon: terminal.state.levels && terminal.state.levels.volume && terminal.state.levels.volume.muted ? "volume_off" : "volume_up"; value: terminal.state.levels && terminal.state.levels.volume ? terminal.state.levels.volume.percent : 0; onAdjusted: percent => terminal.act("volume", Math.round(percent)) }
+                        Kit.Level { x: Kit.Runtime.px(14); width: parent.width - Kit.Runtime.px(28); visible: !!terminal.state.levels && terminal.state.levels.brightness !== null; name: Kit.Runtime.tr("brightness"); iconNavigation:true; onIconClicked:terminal.act("panel","night"); icon: "brightness_6"; fill: Kit.Runtime.c("paper-2"); value: terminal.state.levels && terminal.state.levels.brightness !== null ? terminal.state.levels.brightness : 0; onAdjusted: percent => terminal.act("brightness", Math.round(percent)) }
                     }
                     Part {
                         sectionKey: "signal"
@@ -360,9 +386,14 @@ Ui.Panel {
                             x: Kit.Runtime.px(14); spacing: Kit.Runtime.px(10)
                             Repeater {
                                 model: ["cpu", "memory", "temperature"]
-                                Column {
+                                Item {
                                     required property string modelData
-                                    width: (contents.width - Kit.Runtime.px(48)) / 3; spacing: Kit.Runtime.px(4)
+                                    width: (contents.width - Kit.Runtime.px(48)) / 3;implicitHeight:telemetryContent.implicitHeight
+                                    activeFocusOnTab:true;Accessible.role:Accessible.Button;Accessible.name:Kit.Runtime.tr(modelData)
+                                    Keys.onReturnPressed:terminal.openPage("performance")
+                                    Keys.onEnterPressed:terminal.openPage("performance")
+                                    Column {
+                                        id:telemetryContent;width:parent.width;spacing:Kit.Runtime.px(4)
                                     Kit.Micro { text: ({cpu:"CPU", memory:"MEM", temperature:"TEMP"})[modelData] + (Kit.Runtime.language === "en" ? "" : " " + Kit.Runtime.tr(modelData)) }
                                     Row {
                                         height: Kit.Runtime.px(16); spacing: Kit.Runtime.px(3)
@@ -370,10 +401,13 @@ Ui.Panel {
                                         Kit.Label { visible: modelData === "memory" && !!terminal.state.telemetry; anchors.bottom: parent.bottom; height: Kit.Runtime.px(9); font.pixelSize: Kit.Runtime.px(9); font.weight: Font.Medium; color: Kit.Runtime.c("mist-4"); text: terminal.state.telemetry ? "/ " + (terminal.state.telemetry.memory_total / 1073741824).toFixed(1) + "G" : "" }
                                     }
                                     Kit.Spark { width: Math.min(parent.width, Kit.Runtime.px(96)); height: Kit.Runtime.px(16); samples: terminal.state.telemetry ? terminal.state.telemetry.history[modelData] : []; ink: Kit.Runtime.c(modelData === "cpu" ? "accent-ink" : modelData === "memory" ? "paper-2" : "jade") }
+                                    }
+                                    Rectangle { anchors.fill:parent;color:"transparent";border.width:parent.activeFocus?1:0;border.color:Kit.Runtime.c("accent-ink") }
+                                    MouseArea { anchors.fill:parent;cursorShape:Qt.PointingHandCursor;onClicked:terminal.openPage("performance") }
                                 }
                             }
                         }
-                        BatteryCells { x:Kit.Runtime.px(14);width:parent.width-Kit.Runtime.px(28);rows:terminal.state.batteries || [] }
+                        BatteryCells { x:Kit.Runtime.px(14);width:parent.width-Kit.Runtime.px(28);rows:terminal.state.batteries || [];onOpen:terminal.openPage("power") }
                     }
                     Part {
                         id:commsPart;sectionKey:"comms"
@@ -412,6 +446,10 @@ Ui.Panel {
             }
             DetailFrame {
                 id:detail;y:header.height+(clockPart.visible?clockPart.height:0);width:parent.width;height:Math.max(0,parent.height-y)
+                pageName:terminal.pageName;terminalOpen:terminal.opened
+                snapshot:terminal.state[retainedPage] || ({})
+                crumb:retainedPage==="comms"?Kit.Runtime.label("comms-page"):Kit.Runtime.label(terminal.pageSection)+" › "+Kit.Runtime.label(retainedPage)
+                onCommand:(name,value)=>terminal.act(name,value || undefined)
                 showing:terminal.opened && terminal.pageName!=="";rows:terminal.logRows;number:terminal.pageNumber;error:terminal.actionError
                 onBack:terminal.backPage()
                 onClear:terminal.act("comms-clear")

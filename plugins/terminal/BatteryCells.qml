@@ -4,6 +4,7 @@ import "kit" as Kit
 Flow {
     id: packs
     property var rows: []
+    signal open()
     spacing: Kit.Runtime.px(6)
     topPadding: rows.length ? Kit.Runtime.px(10) : 0
     Repeater {
@@ -13,7 +14,11 @@ Flow {
             readonly property bool present:modelData.present && modelData.percent!==null
             readonly property color ink:!present?Kit.Runtime.c("mist-5"):modelData.percent<=8?Kit.Runtime.c("vermilion"):modelData.state==="charging"?Kit.Runtime.c("jade"):Kit.Runtime.c("paper-2")
             width:(packs.width-Kit.Runtime.px(6))/2;height:Kit.Runtime.px(40)
-            color:"transparent";border.width:1;border.color:Kit.Runtime.c("line")
+            color:"transparent";border.width:1;border.color:activeFocus?Kit.Runtime.c("accent-ink"):Kit.Runtime.c("line")
+            activeFocusOnTab:true;Accessible.role:Accessible.Button;Accessible.name:modelData.name
+            Keys.onReturnPressed:packs.open()
+            Keys.onEnterPressed:packs.open()
+            MouseArea { anchors.fill:parent;cursorShape:Qt.PointingHandCursor;onClicked:packs.open() }
             Kit.Micro { x:Kit.Runtime.px(8);y:Kit.Runtime.px(5);width:parent.width-Kit.Runtime.px(70);text:modelData.name;pixels:8 }
             Kit.Micro { x:Kit.Runtime.px(8);y:Kit.Runtime.px(23);width:parent.width-Kit.Runtime.px(16);text:Kit.Runtime.label("battery-"+modelData.state).toUpperCase();color:parent.ink;pixels:7 }
             Row {

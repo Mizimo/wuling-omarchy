@@ -129,6 +129,15 @@ def prepare_payload(destination):
     for name in ("LICENSE",):
         if (ROOT / name).is_file():
             shutil.copy2(ROOT / name, destination / name)
+    raw_release = read_json(ROOT / "release.json", {})
+    release = {key: str(raw_release.get(key, ""))[:128] for key in ("version", "commit", "date")} if isinstance(raw_release, dict) else {}
+    if (ROOT / ".git").exists():
+        from .status import probe
+        commit = probe(["git", "-C", str(ROOT), "rev-parse", "HEAD"])
+        if commit and re.fullmatch(r"[0-9a-f]{40,64}", commit):
+            release = {"commit": commit, "version": probe(["git", "-C", str(ROOT), "describe", "--tags", "--exact-match"]) or "unreleased",
+                       "date": probe(["git", "-C", str(ROOT), "show", "-s", "--format=%cs", "HEAD"]) or ""}
+    (destination / "release.json").write_text(json.dumps(release, ensure_ascii=False)+"\n")
 
 
 def plan_install(previous=None):

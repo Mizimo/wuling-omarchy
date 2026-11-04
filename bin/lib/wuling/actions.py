@@ -2,10 +2,13 @@
 
 import json
 import re
+import subprocess
 from . import Error, SCHEMA, command
 from . import status
 
 FIXED = {
+    "performance-monitor": ["omarchy-launch-tui", "btop"],
+    "system-fastfetch": ["omarchy-launch-about"],
     "comms-clear": ["omarchy-shell", "notifications", "clear"],
     "bluetooth": ["omarchy-bluetooth-power", "toggle"],
     "tailscale": ["omarchy-shell", "omarchy.tailscale", "toggleTailscale"],
@@ -22,8 +25,8 @@ FIXED = {
 }
 PANELS = {"wifi": "omarchy.network", "bluetooth": "omarchy.bluetooth", "tailscale": "omarchy.tailscale",
           "night": "omarchy.monitor", "power": "omarchy.power", "audio": "omarchy.audio", "agent": "omarchy.agents"}
-NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action")
-PAGES = ("comms",)
+NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action", "profile", "audio-default", "audio-volume", "audio-mute", "system-copy")
+PAGES = ("comms", "performance", "power", "audio", "system", "calendar")
 
 
 class PanelUnavailable(Error):
@@ -58,6 +61,39 @@ def checked_route(action, target, payload):
 
 
 def plan(name, value=None):
+    if name == "system-copy":
+        if value is not None:
+            raise Error("system-copy does not take a value")
+        return ["wl-copy"]
+    if name == "profile":
+        profiles = (status.probe(["omarchy-powerprofiles-list"]) or "").splitlines()
+        if value not in ("power-saver", "balanced", "performance") or value not in profiles:
+            raise Error("The requested power profile is unavailable")
+        return ["omarchy-powerprofiles-set", "autodetect", value]
+    if name in ("audio-default", "audio-volume", "audio-mute"):
+        from . import details
+        try:
+            data = json.loads(value)
+            if not isinstance(data, dict) or set(data) != ({"id", "serial", "value"} if name == "audio-volume" else {"id", "serial"}):
+                raise ValueError()
+            if type(data["id"]) is not int or type(data["serial"]) is not int:
+                raise ValueError()
+            if name == "audio-volume" and (type(data["value"]) not in (int, float) or not 0 <= data["value"] <= 100):
+                raise ValueError()
+        except (ValueError, TypeError, KeyError):
+            raise Error("Invalid audio action") from None
+        snapshot = details.audio()
+        targets = [(kind, row) for kind, rows in snapshot.items() for row in rows if row["id"] == data["id"] and row["serial"] == data["serial"]]
+        if len(targets) != 1:
+            raise Error("The audio device or stream is no longer available")
+        kind, target = targets[0]
+        if name == "audio-default":
+            if kind == "streams" or not target["available"] or not re.fullmatch(r"[\w][\w.:-]{0,255}", target["name"]):
+                raise Error("The audio device is unavailable")
+            return ["omarchy-audio-"+("output" if kind == "outputs" else "input")+"-set-default", str(target["id"]), target["name"]]
+        if kind == "outputs" and target["active"]:
+            target = next((row for row in snapshot["outputs"] if row["volume_target"]), target)
+        return ["wpctl", "set-volume", str(target["id"]), str(data["value"]/100)] if name == "audio-volume" else ["wpctl", "set-mute", str(target["id"]), "0" if target["muted"] else "1"]
     if name == "comms-action":
         try:
             data = json.loads(value)
@@ -113,7 +149,30 @@ def plan(name, value=None):
 
 def run(name, value=None):
     argv = plan(name, value)
-    result = command(argv)
+    if name == "system-copy":
+        from .details import System
+        try:
+            # The clipboard owner survives this action; never capture its pipes.
+            copied = subprocess.run(argv, input=json.dumps(System().read(), ensure_ascii=False, indent=2)+"\n",
+                                    text=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+            if copied.returncode:
+                raise Error("The system information could not be copied")
+        except (OSError, subprocess.TimeoutExpired):
+            raise Error("The clipboard is unavailable") from None
+        result = ""
+    elif name in ("performance-monitor", "system-fastfetch"):
+        from .dispatch import native_launch
+        if not native_launch(argv):
+            raise Error("The native terminal launcher is unavailable")
+        result = ""
+    else:
+        result = command(argv)
+    if name == "profile" and command(["powerprofilesctl", "get"]) != value:
+        raise Error("The power profile did not change")
+    if name == "audio-default":
+        from .details import audio
+        if not any(row["active"] and str(row["id"]) == argv[1] for rows in audio().values() for row in rows):
+            raise Error("The default audio device did not change")
     if name == "panel" and value in PANELS and result != "ok":
         raise PanelUnavailable("The requested native panel is unavailable in the current bar")
     if result == "unhandled":
