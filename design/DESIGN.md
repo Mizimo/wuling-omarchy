@@ -13,7 +13,7 @@ ask. Everything shown is draft data: no real names, addresses or hosts.
 
 1. **Daily use first.** A choice that looks good once and tires every day loses.
 2. **Omarchy's logic.** Where things live and which keys do what stay Omarchy's. WULING rebinds none of Omarchy's keys.
-   Its only new keys are Super+Ctrl+G (Terminal) and Super+D (Dispatch).
+   Its only new keys are Super+Ctrl+G (Terminal), Super+D (Dispatch) and Super+Ctrl+/ (Keymap).
 3. **Reuse before rewrite.** If Omarchy has the behaviour, host or call it. WULING writes what it draws, never a second
    copy of what Omarchy does.
 4. **Every part can go.** Switching a part off leaves Omarchy's own in its place.
@@ -64,6 +64,7 @@ contour lines. No painted landscapes. Every theme carries all three, so Omarchy'
 | `motion` | `full`, `reduced` | `full` |
 | `session.arrival` | `true`, `false`: the animation when a session starts (§8.9) | `true` |
 | `session.exit` | `true`, `false`: the animation for logout, reboot and shutdown (§8.9) | `true` |
+| `session.theme` | `true`, `false`: the wave on a theme switch (§8.11) | `true` |
 | `language` | `auto`, `en`, `zh-Hant`, `zh-Hans` | `auto` |
 | `login_music` | a path | unset |
 
@@ -388,6 +389,22 @@ in §8.5. Times run from the end of the hold.
 
 `wuling session preview arrival|exit` plays either one and runs nothing, so they can be judged and tuned on a machine that must not log out.
 
+### 8.10 Keymap — `wuling.keymap`
+
+Every key on one screen, as in the earlier WULING. An overlay plugin on **Super+Ctrl+/**, in the owned block of `bindings.lua`; Omarchy's Super+K list stays. Built only while it's open. Full screen on the focused output, over the live desktop: the theme's darkest ink at 86 %, the head `KEYMAP · 鍵位`, the vertical 鍵位 in Serif Black 64 with its yellow cut. The same in both presets. Reduced motion: a 90 ms fade.
+
+- **Layout:** groups in columns, by what the keys are for: `SHELL 介面`, `WINDOWS 視窗`, `NAVIGATE 導航`, `APPS 應用`, `SYSTEM 系統`, and `OTHER 其他` for a key that fits none, so none is dropped. A row: the description, then keycaps in mono with a 1 px border, Super a yellow cap `◆`. Too many for the screen: it scrolls. It fits 1366×768 and 4K alike.
+- **Data:** the keys bound right now, the user's own included, from the same source as Omarchy's `omarchy-menu-keybindings`. Hyprland's Lua provider reports Lua binds only as `__lua`, so `hyprctl binds` alone isn't enough. `wuling keymap --json` prints them and the QML displays them. A version that changes the source falls under §10: the overlay says it can't read the keys, and Omarchy's list is still there.
+- **Input:** typing filters, ↑↓ scrolls, Esc clears then closes, an outside click closes. Exclusive keyboard focus; pressing a listed key doesn't run it.
+
+### 8.11 Theme wave — part of `wuling.session`
+
+A theme switch, by any route, plays the wave of Arrival and Exit: the old look leaves in 16 × 9 cells from the top edge, threshold .55 · row + .35 · hash, cells at the threshold ghosting with a yellow tint and outline, 420 ms, `open` at half level, on every output. `session.theme` switches it off; reduced motion has none, and Omarchy's own transition runs.
+
+- **It never delays or blocks the switch.** If the overlay fails, the theme still changes, as Omarchy changes it.
+- **To be proven first.** The wave needs the old look on screen after the new palette applies, and Omarchy has no hook before the switch: `omarchy-theme-set` applies the palette early and runs `omarchy-hook theme-set` near the end. No wrapper around Omarchy's command and no capture running all the time. Omarchy's own theme picker must play it too, not only the Config page.
+- It doesn't play during Arrival, Exit or a lock, nor for a background change alone.
+
 ## 9. Keys
 
 | Key | Does | Whose |
@@ -398,8 +415,9 @@ in §8.5. Times run from the end of the hold.
 | Super+Ctrl+A, B, D, P, Alt+D, and W (N on 4.5) | Omarchy's panels, hosted in WULING's bar | Omarchy's binding |
 | **Super+Ctrl+G** | Terminal | **WULING, new** |
 | **Super+D** | Dispatch | **WULING, new** |
+| **Super+Ctrl+/** | Keymap | **WULING, new** |
 
-Both new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to overwrite a user's own binding of them.
+All three new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to overwrite a user's own binding of them.
 
 ## 10. Public standards
 

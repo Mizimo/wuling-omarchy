@@ -116,6 +116,10 @@ enable/disable of every part. **Final report to the owner.**
 
 DESIGN §8.2, the owner's decision of 2026-11-04. Build in this order, each landing on its own: the Comms log and page, battery cells, the full Signal; then Performance, Power, Audio, System, Calendar; then Wi-Fi, Bluetooth, Tailnet; then Config. **Acceptance:** every item reaches its page by pointer and by keyboard and comes back; four themes, three languages, 1366×768, a narrow output, 4K and a fractional scale. A closed Terminal runs no collector, leaving a page stops its own, and 200 page cycles show no steady growth. A failing action stays on its page with the old state. Network actions on simulated radios in a VM (`mac80211_hwsim` with `hostapd`, `btvirt` or the like; a fixture `tailscale`): connect, wrong passphrase, forget, disconnect, a released hold, discovery stopped on leaving; the passphrase absent from every process's argv and environment, the journal and every WULING file. Audio on a private null sink, no physical sound. On kujira **read only**: each page opens and shows real data; no connect, disconnect, radio, tailnet, device or volume change, no sound. **Report to the owner.**
 
+### H — Keymap and the theme wave
+
+DESIGN §8.10 and §8.11. The wave starts with an experiment: can it run for every route to a theme switch, Omarchy's picker included, without a wrapper or a standing capture? Bring the answer before building it. **Acceptance:** Keymap lists every bound key, the user's own and a key that fits no group included, on both versions; filter, Esc, outside click; a listed key pressed there doesn't run; nothing stays loaded after closing. The wave plays on every route and output, in all four themes, seen frame by frame from outside the VM; the switch never waits on it, and a failed overlay still changes the theme; off with `session.theme` and with reduced motion; no steady growth over 50 switches. Partial enable with `wuling.keymap` off. On kujira only with the owner's word.
+
 ## Verifying
 
 Start from the research's method: a disposable VM from the clean checkpoint, real input through QMP, before-and-after config inventories,

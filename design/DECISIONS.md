@@ -2,6 +2,12 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-04 — Keymap and the theme wave come back; the bar gets no readout cells
+
+Asked what else the rebuild had dropped without asking, the owner chose the Keymap overlay and the ink wave on a theme switch. Keymap takes one new key, **Super+Ctrl+/**, because Super+/ is Omarchy's.
+
+Shown the bar with CPU, memory and network cells added beside Omarchy's widgets, the owner chose **not to add them**, nor the player cell: those readings live in the Terminal.
+
 ## 2026-11-04 — the Terminal's detail pages come back
 
 Using the Terminal on kujira, the owner asked whether much of the earlier Terminal was gone, why items have no detail page, and why the notification log shows no content. It was gone because the design lead, during the rebuild, replaced the pages with "right-click opens Omarchy's panel" without asking, and the reports never said what had gone. The owner's rule from the earlier project still holds: "UI邏輯應該統一，點擊任何一項都應該有他自己的詳情頁面".
