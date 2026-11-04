@@ -112,8 +112,13 @@ a shell restart, theme switch, update, unlock or resume, nor on a first install 
 a cold shader cache, frame by frame from outside the VM, with no frame of wallpaper or WULING's bar before the ink (Omarchy 4.0.6's own empty bar may show first, see DESIGN §8.9); gone within 3.5 s; afterwards its windows and timers are gone, and repeated previews don't keep growing. Real logins in a VM; on kujira `wuling session preview arrival` only. Cue overlap bounded, tests on a private null sink with no physical sound. A 24-hour soak on kujira with no steady growth in PSS, CPU or handles, logging the notification writer's PID and exits. An Omarchy update survives, overrides intact. Partial
 enable/disable of every part. **Final report to the owner.**
 
+### G — The Terminal's pages
+
+DESIGN §8.2, the owner's decision of 2026-11-04. Build in this order, each landing on its own: the Comms log and page, battery cells, the full Signal; then Performance, Power, Audio, System, Calendar; then Wi-Fi, Bluetooth, Tailnet; then Config. **Acceptance:** every item reaches its page by pointer and by keyboard and comes back; four themes, three languages, 1366×768, a narrow output, 4K and a fractional scale. A closed Terminal runs no collector, leaving a page stops its own, and 200 page cycles show no steady growth. A failing action stays on its page with the old state. Network actions on simulated radios in a VM (`mac80211_hwsim` with `hostapd`, `btvirt` or the like; a fixture `tailscale`): connect, wrong passphrase, forget, disconnect, a released hold, discovery stopped on leaving; the passphrase absent from every process's argv and environment, the journal and every WULING file. Audio on a private null sink, no physical sound. On kujira **read only**: each page opens and shows real data; no connect, disconnect, radio, tailnet, device or volume change, no sound. **Report to the owner.**
+
 ## Verifying
 
 Start from the research's method: a disposable VM from the clean checkpoint, real input through QMP, before-and-after config inventories,
 captures inspected by eye. IPC success alone proves nothing: check the surface and the state. kujira is a test box, but
-it is shared with the owner's remote sessions: never touch them, never suspend or log out, and never leave it locked.
+it is shared with the owner's remote sessions: never touch them, never suspend or log out, and never leave it locked. Closing its lid must not
+lock it. The owner sometimes uses it in person: read its state first, and the design lead asks before anything runs on its desktop. Notification history there is real: never clear it.

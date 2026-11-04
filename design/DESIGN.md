@@ -126,6 +126,7 @@ veils. Staggers: rows 20, cards and tiles 45, sections 60 ms; at most 12 steps.
 | Value that changes (telemetry, clock) | Swaps within a frame | — |
 | Toast arrives | Slides 8 px and resolves, 200 ms | Strip slice |
 | OSD | Reveals in 160 ms, leaves in 120 ms | Scan line |
+| Terminal page | Slides 24 px in the direction of travel and resolves, 220 ms | Scan line |
 | Error | Vermilion border and a 300 ms shake | Glitch |
 
 Input is never held hostage: a surface takes input from its first frame, and typing during the build applies at once.
@@ -183,24 +184,47 @@ and `shell.json` keep working. All four edges. One window per output.
 
 ### 8.2 Terminal — `wuling.terminal`
 
-The Field Terminal: one panel for what is going on and the switches used most. A `bar-widget` plugin using
-`qs.Ui`'s panel, so it shares Omarchy's rules: one popout at a time, Esc, outside click, Tab to the next panel. It works
+The Field Terminal: one panel for what is going on, the switches used most, and a detail page for every item on it. A `bar-widget` plugin using
+`qs.Ui`'s panel, so it shares Omarchy's rules: one popout at a time, outside click, Tab to the next panel. It works
 under Omarchy's own bar too. Key: **Super+Ctrl+G**. 372 px wide, full height minus the bar and 10 px gaps.
 
 | # | Section | Shows | Source | Input |
 |---|---|---|---|---|
-| 02 | Terminal | Clock with seconds, date, zone, uptime | System | — |
-| 03 | Link | Tiles: Wi-Fi, Bluetooth, Tailscale, DND, Night, Power profile. A tile with no hardware or service hides. Wi-Fi shows the network's name when connected and Tailscale `Connected`; otherwise On or Off in the language's pair. Read without starting a scan. Night needs only Omarchy's toggle and `hyprsunset` installed, not running: the toggle starts it, so a stopped service shows Off | Quickshell modules, Omarchy commands | Left: toggle. Right: Omarchy's matching panel; where Omarchy has none mounted (Tailscale's exists only as its bar widget) the panel stays open and one line says so |
-| 04 | Levels | Volume, brightness, segmented | PipeWire, `omarchy-brightness-display` | Drag, wheel. Same OSD as the keys |
-| — | Signal | Now playing. Hidden when nothing plays | MPRIS | Play/pause, previous, next |
-| 05 | Agent | Per agent: plan, session and week meters, time to reset. A meter's label is the limit's name without its parenthesis, micro uppercase; the label column grows to the widest, up to 66 px, and the meter gives the room. Row: open the default agent, left aligned, its name as a micro tag at the right when known. Hidden when no agent has usage | `~/.local/state/omarchy/agents/usage/*.json` | Row: `omarchy-agent --pick`. Agent: Omarchy's agents panel |
-| 06 | Telemetry | CPU, memory, temperature with sparklines. Sampled only while open | `/proc`, hwmon | — |
-| 07 | Comms log | The newest rows that fit above the foot, at least 3; a `+N` row opens the rest and the body scrolls. Head: the count. Hidden while `wuling.notifications` is off | `wuling.notifications`' state file | Click: the row's stored `omarchy-exec-argv`, validated again. A row without one doesn't react |
+| 02 | Terminal | Clock with seconds, date, zone, uptime. Head right: the user, then `⋮` | System | Clock: Calendar. User: System. `⋮`: Config |
+| 03 | Link | Tiles: Wi-Fi, Bluetooth, Tailscale, DND, Night, Power profile. A tile with no hardware or service hides. A radio that is only soft-blocked still has hardware, so its tile stays and shows Off: a ThinkPad's Bluetooth adapter leaves USB while blocked. Wi-Fi shows the network's name when connected and Tailscale `Connected`; otherwise On or Off in the language's pair. Read without starting a scan. Night needs only Omarchy's toggle and `hyprsunset` installed, not running: the toggle starts it, so a stopped service shows Off | Quickshell modules, Omarchy commands, rfkill | **Wi-Fi, Bluetooth, Tailscale, Power: left opens the page, and the switch lives there**, so a stray click can't cut a remote machine off. DND, Night: left toggles. Right: Omarchy's matching panel, as before; Tailscale's exists only as its bar widget, so right opens its page too |
+| 04 | Levels | Volume, brightness, segmented | PipeWire, `omarchy-brightness-display` | Drag, wheel. Same OSD as the keys. Volume's icon: Audio. Brightness's icon: Omarchy's monitor panel |
+| 05 | Signal | Art 64, title and artist, progress hairline, times, transport (play in yellow), 20-cell jade spectrum. No player: head `NO SIGNAL · 無訊號`, dashed art, `--:--`, outlined transport without yellow, flat cells; it crossfades to the live layout, 220 ms | MPRIS; `cava` if installed | Previous, play/pause, next |
+| 06 | Agent | Per agent: plan, session and week meters, time to reset. A meter's label is the limit's name without its parenthesis, micro uppercase; the label column grows to the widest, up to 66 px, and the meter gives the room. Row: open the default agent, left aligned, its name as a micro tag at the right when known. Hidden when no agent has usage | `~/.local/state/omarchy/agents/usage/*.json` | Row: `omarchy-agent --pick`. Agent: Omarchy's agents panel |
+| 07 | Telemetry | CPU, memory, temperature with sparklines. One cell per battery pack: % and the state word. A pack whose full energy is 0 shows `— 未裝 N/A`, muted; at 8 % or less, vermilion and static, because one empty pack beside a healthy one is information, not an alarm. Sampled only while open | `/proc`, hwmon, UPower | CPU, memory, temperature: Performance. A pack: Power |
+| 08 | Comms log | The newest rows that fit above the foot, at least 3. A row: source and time, then the summary, then the body in up to 2 lines. Head: the count, `CLEAR ALL 清除`. Hidden while `wuling.notifications` is off | `wuling.notifications`' state file | Click: the row opens in place, full body, and its action button if it has one, validated again before running. `+N`: Comms |
 | | Foot | Lock, Sleep; Exit, Reboot, Off | Omarchy's commands | Dangerous ones open the power menu |
 
 Section numbers follow what is shown. Too tall: the body scrolls, its last 14 px fade into the panel's ground, and the foot stays, so a cut row never reads as a glitch against the foot. Sections can be switched off in
 overrides. Data comes from commands printing JSON (`wuling status --json`); the QML only displays it. Share one
 collection schedule with Omarchy's agents panel; never start collectors per view, never log account contents.
+
+The spectrum needs `cava`, which stock Omarchy doesn't ship. WULING never installs it. If it's there, it runs at nice 19 only while the panel is open and something plays. Without it the cells follow the stream's peak through PipeWire, or stay flat if that isn't available.
+
+**Detail pages.** Every item opens its own page inside the panel (DECISIONS, 2026-11-04). The clock section stays; the page slides over everything below it, the foot included, 220 ms and 24 px in the direction of travel, `hud` with its scan line, reduced motion a 90 ms fade; first row readable within 320 ms. Head: `‹ BACK · 返回` and at the right the crumb, `03 LINK › WI-FI · 無線網路`, the number in the accent. Foot: key hints. Behind the content a watermark glyph at 4.5 %. Too tall: it scrolls, with the same 14 px fade.
+
+- **Getting around.** ↑↓ select, Enter activates, ← or Backspace goes back outside a text field. Esc steps back, then closes, as in Dispatch. `wuling terminal open <page>` goes straight there: `performance power audio system calendar wifi bluetooth tailnet comms config`. Closing the panel forgets the page. Cues: `select` going in, `close` coming back, `toggle` when a hold completes, `deny` on a failure.
+- **Data.** Each page is a section of `wuling status`, started when the page opens and stopped when it closes. A closed Terminal still runs nothing. Reading never changes state; each action is a fixed argv in `wuling action`, never through a shell.
+- **The same backends as Omarchy's panels:** NetworkManager through `nmcli` and `Quickshell.Networking`, `Quickshell.Bluetooth`, `Quickshell.Services.Pipewire`, UPower, `powerprofilesctl`, and the `tailscale` command when it's installed. No new dependency. Anything that imports an Omarchy module goes through the check in §10.
+- **Failures stay on the page.** The row says what failed in one line, `deny` plays, the old state stays. What a service answered isn't logged.
+- **A hold guards what can cut you off:** 0.8 s of Enter or pointer, release cancels, the Power menu's bar. Wi-Fi off, disconnect, Tailnet stop. Remote access rides on them.
+
+| Page | Shows | Does |
+|---|---|---|
+| Performance 效 | CPU % large, load 1 · 5 · 15, temperature, frequency, uptime. 60 s sparkline. One 24-cell bar per thread, yellow above 80 %, two columns past 8 threads. Memory: a 24-cell bar of used, cache and free, a legend, swap. Processes: name, CPU %, RSS | `S` sorts by CPU or memory. Enter: `btop` in the default terminal |
+| Power 電 | Combined % large, state in jade while charging, time to full or empty, watts, supply. 24 h level sparkline from UPower's history. One card per pack: state word, gauge, %, health | Profile: `SAVER 省電 · BALANCED 平衡 · PERFORMANCE 效能`, ←→ moves it |
+| Audio 音 | Output devices: the active one a card with a jade rail, a level and mute; the others rows. The input device with its level and a live meter. `STREAMS`: one level per app | Choose the device, drag or wheel a level, mute. The meter runs only while this page is open; if it lights Omarchy's microphone indicator, it comes out and the delivery says so |
+| System 系 | The emblem and the hostname large. `HOST`: host, OS, kernel, CPU, GPU, disk. `SESSION`: Omarchy, Hyprland and Quickshell versions, uptime, display, input method. `RELEASE`: WULING version, commit, date | `COPY 複製`, `FASTFETCH` in the default terminal |
+| Calendar 曆 | A month, Monday first, ISO week numbers; today a yellow tag, Sundays vermilion-light, other months muted. `TODAY`: date, ISO week, day of year, zone | ‹ ›, `TODAY · 今天`. Omarchy's clock panel stays on the bar |
+| Wi-Fi 網 | `RADIO`, interface, an OFF\|ON switch. `● LINKED · 已連線` in jade: signal bars, name, lock, band; IPv4, gateway, rate and security, signal; `hub` + `TAILNET · 遠端經此` when the tailnet goes through this link. `AVAILABLE · n`, the list's age, `↻ SCAN`: signal bars, name, lock or `OPEN · 開放`, band, `SAVED · 已存` | Enter connects. A secured unsaved network opens `PASSPHRASE` in place, hidden with a `visibility` toggle. The passphrase goes to `nmcli` on stdin, as in Omarchy's panel: never in argv, the environment, a log or a state file. Enterprise networks hand over to Omarchy's panel. `DISCONNECT` (hold), `FORGET`. `S` scans; opening the page doesn't, it shows what NetworkManager already has |
+| Bluetooth 藍 | `RADIO` and its switch. `● CONNECTED · 已連接`, `PAIRED · 已配對`, `AVAILABLE · 可用`: type icon, name, battery % when reported. Empty: `NO DEVICES · 尚無裝置` | Connect, disconnect, pair, forget. `S` discovers, and leaving the page stops it. Turning the radio on clears a soft block too |
+| Tailnet 鏈 | State, this machine's name and address, exit node. `n/m ONLINE`; peers, online first: name, `DIRECT` or `RELAY`. `NEEDS LOGIN · 需要登入` or `STOPPED · 已停止` when that's the case | Start, stop (hold), with the same commands as Omarchy's widget. Missing `tailscale`: the tile hides, no page |
+| Comms 訊 | Every row with its full content and action, newest first | The action button, `CLEAR ALL 清除`. Omarchy's `showHistory` lands here |
+| Config 設 | WULING's own: `THEME` and `BACKGROUND` through Omarchy's switchers; `LANGUAGE`, `SOUNDS`, `MOTION`, `LABELS`, `MENU`; `SECTIONS`, one switch each; `ARRIVAL`, `EXIT`, `LOGIN MUSIC` | Each writes with `wuling config set`. `DISPLAY`, `INPUT`, `FONT`, `KEYS`, `DEFAULT APPS` hand over to Omarchy's menu or tool: nothing Omarchy has is rebuilt |
 
 ### 8.3 Notifications — `wuling.notifications`
 
@@ -237,7 +261,7 @@ scripts and keys reach it unchanged.
 - **Saving can't fail quietly.** One writer process saves the state. A change counts as saved only when the writer answers ok; until then the newest full state is kept and
   sent again. If the writer exits or fails to start while the shell runs, it gets three restarts, after 1, 5 and 30 s; the first failure doesn't count against them. If the third restart also dies, all within 10
   minutes of that first failure, it stops trying, `wuling doctor` fails with the reason, and one low toast says history isn't being saved, once per session. A writer that outlives those 10 minutes starts a new count. Shell teardown still never waits for it.
-- **`showHistory`** opens the Terminal at the log, all rows showing. If the Terminal or its log section is off, it replays the newest 6 as toasts and
+- **`showHistory`** opens the Terminal's Comms page. If the Terminal or its log section is off, it replays the newest 6 as toasts and
   changes no setting. Like Omarchy's replay this ignores DND: the user asked, and it is how to see what DND held back. A replay records nothing new.
   With nothing to show, a low toast says `No recent notifications`, not a dead key.
 - Verify handoff by receipt and dismissal, not by the D-Bus name: it stays owned by the same process.

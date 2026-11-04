@@ -2,6 +2,12 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-04 — the Terminal's detail pages come back
+
+Using the Terminal on kujira, the owner asked whether much of the earlier Terminal was gone, why items have no detail page, and why the notification log shows no content. It was gone because the design lead, during the rebuild, replaced the pages with "right-click opens Omarchy's panel" without asking, and the reports never said what had gone. The owner's rule from the earlier project still holds: "UI邏輯應該統一，點擊任何一項都應該有他自己的詳情頁面".
+
+**All of it comes back, inside the Terminal panel:** Performance, Power, Audio, System, Calendar; Wi-Fi, Bluetooth, Tailnet; a Config page for WULING's own settings, which hands over to Omarchy for what Omarchy already has; the full player; the battery cells; the notification log with its content. Nothing runs while the panel is closed. Omarchy's keys and panels stay as they are.
+
 ## 2026-11-03 — the repository goes public
 
 Asked after the final report, with the history audit in hand, the owner chose to publish. Before that, the audit runs once more on the final commit: authors, addresses, credentials, accounts, personal paths, and every image ever committed.
