@@ -204,6 +204,8 @@ Section numbers follow what is shown. Too tall: the body scrolls, its last 14 px
 overrides. Data comes from commands printing JSON (`wuling status --json`); the QML only displays it. Share one
 collection schedule with Omarchy's agents panel; never start collectors per view, never log account contents.
 
+Signal's player is the one Omarchy selected, and the transport goes through Omarchy's media IPC. Omarchy doesn't expose that player's length and position, so `wuling status` reads them over public MPRIS, only when exactly one player matches its identity, desktop entry and track. Two identical players or data that disagrees: times show `--:--` and the progress stays empty, everything else as usual. It never picks one.
+
 The spectrum needs `cava`, which stock Omarchy doesn't ship. WULING never installs it. If it's there, it runs at nice 19 only while the panel is open and something plays. Without it the cells follow the stream's peak through PipeWire, or stay flat if that isn't available.
 
 **Detail pages.** Every item opens its own page inside the panel (DECISIONS, 2026-11-04). The clock section stays; the page slides over everything below it, the foot included, 220 ms and 24 px in the direction of travel, `hud` with its scan line, reduced motion a 90 ms fade; first row readable within 320 ms. Head: `‹ BACK · 返回` and at the right the crumb, `03 LINK › WI-FI · 無線網路`, the number in the accent. Foot: key hints. Behind the content a watermark glyph at 4.5 %. Too tall: it scrolls, with the same 14 px fade.
