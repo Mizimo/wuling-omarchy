@@ -22,6 +22,7 @@ Item {
     readonly property alias flickable: scroll
     readonly property bool loaded:pageLoader.item!==null
     signal command(string name,string value)
+    signal setting(string key,string value)
     signal credential(string value,string secret)
     signal discovery()
     signal back()
@@ -67,7 +68,7 @@ Item {
                 Loader {
                     id:pageLoader;width:parent.width
                     active:frame.terminalOpen && frame.visible && frame.retainedPage!=="comms"
-                    source:({performance:"PerformancePage.qml",power:"PowerPage.qml",audio:"AudioPage.qml",system:"SystemPage.qml",calendar:"CalendarPage.qml",wifi:"WifiPage.qml",bluetooth:"BluetoothPage.qml",tailnet:"TailnetPage.qml"})[frame.retainedPage] || ""
+                    source:({performance:"PerformancePage.qml",power:"PowerPage.qml",audio:"AudioPage.qml",system:"SystemPage.qml",calendar:"CalendarPage.qml",wifi:"WifiPage.qml",bluetooth:"BluetoothPage.qml",tailnet:"TailnetPage.qml",config:"ConfigPage.qml"})[frame.retainedPage] || ""
                     onLoaded: {
                         item.snapshot=Qt.binding(()=>frame.snapshot);
                         if(item.busy!==undefined)item.busy=Qt.binding(()=>frame.busy);
@@ -77,6 +78,7 @@ Item {
                 Connections {
                     target:pageLoader.item;ignoreUnknownSignals:true
                     function onAction(name,value) { frame.command(name,value); }
+                    function onSetting(key,value) { frame.setting(key,value); }
                     function onCredential(value,secret) { frame.credential(value,secret); }
                     function onDiscovery() { frame.discovery(); }
                     function onFocusMoved(control) {

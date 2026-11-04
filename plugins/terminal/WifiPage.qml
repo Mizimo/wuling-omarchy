@@ -53,7 +53,7 @@ Column {
                 width:parent.width;spacing:Kit.Runtime.px(6)
                 WifiBars { strength:page.linked.signal || 0;anchors.verticalCenter:parent.verticalCenter;ink:Kit.Runtime.c("jade") }
                 Kit.Label { width:parent.width-Kit.Runtime.px(95);text:page.linked.name || "";elide:Text.ElideRight;font.family:Kit.Runtime.sans;font.weight:Font.DemiBold;font.pixelSize:Kit.Runtime.px(13) }
-                Kit.Icon { name:page.linked.security==="open"?"lock_open":"lock";font.pixelSize:Kit.Runtime.px(12) }
+                Kit.Icon { visible:["open","owe"].indexOf(page.linked.security)<0;name:"lock";font.pixelSize:Kit.Runtime.px(12) }
                 Kit.Micro { text:page.linked.band || "";pixels:8 }
             }
             Grid {
@@ -75,7 +75,7 @@ Column {
     }
     Row {
         width:parent.width;height:Kit.Runtime.px(30)
-        Kit.Micro { width:parent.width-scan.width;anchors.verticalCenter:parent.verticalCenter;text:Kit.Runtime.label("available")+" · "+(page.snapshot.networks===undefined?"—":page.networks.length)+(page.snapshot.age===null || page.snapshot.age===undefined?"":" · "+page.snapshot.age+"s");pixels:8 }
+        Kit.Micro { width:parent.width-scan.width;anchors.verticalCenter:parent.verticalCenter;text:Kit.Runtime.label("available")+" · "+(page.snapshot.networks===undefined?"—":page.networks.length)+(page.snapshot.age===null || page.snapshot.age===undefined?"":" · "+Format.age(page.snapshot.age));pixels:8 }
         Kit.Button { id:scan;text:Kit.Runtime.tr("scan");icon:"refresh";height:parent.height;enabled:page.snapshot.enabled===true && !page.busy;onClicked:page.send("wifi-scan",null) }
     }
     Repeater {

@@ -194,13 +194,13 @@ def detached(argv, cwd=None):
                      stderr=subprocess.DEVNULL, start_new_session=True)
 
 
-def native_launch(argv):
+def native_launch(argv, new_session=False):
     # wl-copy deliberately outlives its caller. Inherited capture pipes keep
     # communicate() waiting after the helper has already returned; no output
     # is needed here, only the launcher status.
     try:
         result = subprocess.run(argv, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL, timeout=15)
+                                stderr=subprocess.DEVNULL, timeout=15, start_new_session=new_session)
         return result.returncode == 0
     except (OSError, subprocess.TimeoutExpired):
         return False

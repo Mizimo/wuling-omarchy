@@ -11,11 +11,14 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 - `wuling config set KEY VALUE`: validate and atomically edit one setting.
   Booleans are `true`/`false`; sections accept a quoted space-separated list or
   a JSON array. Menu selection regenerates installed WULING themes and
-  reapplies the active one while preserving the selected background. An empty `login_music` disables the optional file.
+  reapplies the active one while preserving the selected background. An empty
+  `login_music` disables the optional file. A nonempty assignment needs an
+  existing audio file readable by pw-play's libsndfile decoder, with an absolute
+  path or `~/`. Validation never plays it; rejection preserves the old setting.
 - `wuling status --json [--sections SECTION ...]`: an on-demand snapshot of
   `clock`, `link`, `levels`, `signal`, `agent`, `telemetry` and `comms` by default.
   Opt-in detail sections are `performance`, `power`, `audio`, `system`,
-  `calendar`, `wifi`, `bluetooth` and `tailnet`; they are never added to the default collection set. Unknown
+  `calendar`, `wifi`, `bluetooth`, `tailnet` and `config`; they are never added to the default collection set. Unknown
   hardware yields null or no tile. CPU percentage needs two samples; the first
   is null. `--watch` produces live JSON lines until terminated (fast initial results,
   then a one-second cadence). The
@@ -39,11 +42,13 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
   `tailnet start|stop` uses the native command and login-browser handoff.
   Destructive radio actions require the panel's hold; direct CLI callers are
   responsible for confirming their intent.
+  `config-native` accepts `theme`, `background`, `display`, `input`, `font`,
+  `keys` or `default-apps`; these hand over to Omarchy's existing entry points.
 - `wuling status --spectrum`: optional 20-cell cava frames, at most 20 per
   second. No cava returns `available: false`; the caller owns its lifetime.
 - `wuling terminal open|close|toggle`: the Field Terminal on the focused output.
   `wuling terminal open PAGE` opens `comms`, `performance`, `power`, `audio`,
-  `system`, `calendar`, `wifi`, `bluetooth` or `tailnet`.
+  `system`, `calendar`, `wifi`, `bluetooth`, `tailnet` or `config`.
 - `wuling notifications compatibility|state|boot|terminals|open-history|fallback`:
   internal notification bridge and diagnostics. `compatibility` checks the
   installed native modules. `persist` accepts bounded JSON lines on stdin and

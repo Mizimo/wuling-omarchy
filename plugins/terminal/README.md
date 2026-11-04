@@ -114,8 +114,25 @@ remain available. Playback streams exclude the shell and native tuning nodes.
 
 System reads local host/session information and installed `release.json`.
 Installation records the checkout's commit, exact tag (or `unreleased`) and
-commit date; source archives may provide the same three fields. No repository
-means unknown values rather than a guessed version. Clipboard text goes over
+commit date; source archives may provide the same three fields in a root
+`release.json`. Without either source, installation writes `unreleased` and
+leaves commit/date empty. Clipboard text goes over
 stdin with no inherited capture pipes. Successful native TUI launches close
 the panel; a failed launch stays on the page. Calendar is a local Monday-first
 month grid with ISO weeks, calculated at noon to avoid daylight-saving shifts.
+
+Config is reached by the head's three-dot button or `wuling terminal open config`.
+The head remains when clock or every section is disabled. Settings use
+`wuling config set`, preserving the existing transaction and ownership checks;
+an error retains the page and old stored value. Menu selection reapplies the
+native theme without changing the background. A submitted transaction finishes
+if the panel closes; the page collector still stops immediately. LOGIN MUSIC
+accepts a path, APPLY (also Enter), or CLEAR; validation does not play audio.
+Its decoder is pw-play's existing libsndfile dependency. Missing/non-audio paths
+are rejected before modifying configuration. Removing an already configured
+file does not break unrelated settings.
+
+THEME, BACKGROUND and FONT use installed native menu routes, selected by menu
+content rather than version. DISPLAY, INPUT and KEYS open the corresponding
+native Lua file through Omarchy's config editor; DEFAULT APPS opens its menu.
+WULING does not reproduce these editors or providers.

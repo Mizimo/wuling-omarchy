@@ -130,7 +130,9 @@ def prepare_payload(destination):
         if (ROOT / name).is_file():
             shutil.copy2(ROOT / name, destination / name)
     raw_release = read_json(ROOT / "release.json", {})
-    release = {key: str(raw_release.get(key, ""))[:128] for key in ("version", "commit", "date")} if isinstance(raw_release, dict) else {}
+    release = {key: raw_release.get(key, "")[:128] if isinstance(raw_release, dict) and isinstance(raw_release.get(key), str) else ""
+               for key in ("version", "commit", "date")}
+    release["version"] = release["version"] or "unreleased"
     if (ROOT / ".git").exists():
         from .status import probe
         commit = probe(["git", "-C", str(ROOT), "rev-parse", "HEAD"])
@@ -361,6 +363,8 @@ def uninstall(yes=False):
 
 def set_config(key, raw):
     value = settings.parse_value(key, raw)
+    if key == "login_music" and value:
+        settings.check_music(value)
     with owned.locked():
         owned.recover()
         path = paths()["config"] / "overrides.toml"

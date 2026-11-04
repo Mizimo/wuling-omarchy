@@ -71,6 +71,13 @@ class DispatchTests(IsolatedHome):
         launch.assert_called_once_with(["omarchy", "agent", "prompt", "Synthetic question"])
         self.assertEqual(dispatch.history()["ask"], [])
 
+    def test_config_editor_setsid_handoff_does_not_wait_for_the_window(self):
+        # Native editor helpers end in setsid; it must fork rather than keep
+        # the action waiting for the lifetime of the editor window.
+        start = time.monotonic()
+        self.assertTrue(dispatch.native_launch(["setsid", "sleep", "0.5"], new_session=True))
+        self.assertLess(time.monotonic()-start, .35)
+
     def test_jsonc_never_rewrites_comma_or_comment_syntax_inside_a_string(self):
         source = '{/* note */ "system": {"action":' + json.dumps('printf ",}" // literal') + '}, // keep\n "array":[1,2,],}'
         self.assertEqual(jsonc.loads(source)["system"]["action"], 'printf ",}" // literal')

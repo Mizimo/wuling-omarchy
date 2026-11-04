@@ -4,6 +4,11 @@ function number(value, digits) { return value === null || value === undefined ||
 function bytes(value) { return value === null || value === undefined ? "—" : value >= 1073741824 ? number(value/1073741824,1)+" GiB" : number(value/1048576,0)+" MiB"; }
 function uptime(value) { return value === null || value === undefined ? "—" : Math.floor(value/86400)+"D "+Math.floor(value/3600)%24+"H "+Math.floor(value/60)%60+"M"; }
 function duration(value) { return value ? Math.floor(value/3600)+"H "+Math.floor(value/60)%60+"M" : "—"; }
+function age(value) {
+    if(value<=90)return Math.floor(value)+"s";
+    const days=Math.floor(value/86400),hours=Math.floor(value/3600)%24,minutes=Math.floor(value/60)%60;
+    return (days?days+"D ":"")+(hours || days?hours+"H ":"")+minutes+"M";
+}
 function isoWeek(date) {
     const day = new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));
     day.setUTCDate(day.getUTCDate()+4-(day.getUTCDay() || 7));

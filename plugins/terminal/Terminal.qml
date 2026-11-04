@@ -44,7 +44,7 @@ Ui.Panel {
         actionError=response.error?Kit.Runtime.tr(response.error.code==="panel_unavailable"?"panel-unavailable":"action-failed"):"";
         detail.result(name,!response.error);
         if(actionError)Kit.Runtime.cue("deny");
-        else if(["performance-monitor","system-fastfetch"].indexOf(name)>=0)close();
+        else if(["performance-monitor","system-fastfetch","config-native"].indexOf(name)>=0)close();
         else if(radioAction(name) && opened)restartCollector();
     }
     function restartCollector() {
@@ -60,7 +60,7 @@ Ui.Panel {
         collector.command = ["wuling", "status", "--watch", "--sections"].concat(collectingSections);
         collector.running = true;
     }
-    readonly property var shown: sections.filter(key => key !== "agent" || (state.agent || []).length > 0)
+    readonly property var shown: ["clock"].concat(sections.filter(key=>key!=="clock")).filter(key => key !== "agent" || (state.agent || []).length > 0)
         .filter(key => key !== "link" || (state.link || []).length > 0)
         .filter(key => key !== "comms" || !!state.comms && state.comms.available)
         .filter(key => key !== "levels" || !!state.levels && (state.levels.volume !== null || state.levels.brightness !== null))
@@ -76,7 +76,7 @@ Ui.Panel {
         return openPage("comms");
     }
     function openPage(name, source) {
-        const section=source || ({comms:"comms",performance:"telemetry",power:"telemetry",audio:"levels",system:"clock",calendar:"clock",wifi:"link",bluetooth:"link",tailnet:"link"})[name];
+        const section=source || ({comms:"comms",performance:"telemetry",power:"telemetry",audio:"levels",system:"clock",calendar:"clock",wifi:"link",bluetooth:"link",tailnet:"link",config:"clock"})[name];
         if(!section || name==="comms" && sections.indexOf("comms")<0 || bar && bar.barHidden)return "off";
         const index=shown.indexOf(section)>=0?shown.indexOf(section):sections.indexOf(section);
         pageNumber=String(Math.max(0,index)+2).padStart(2,"0");pageSection=section;
@@ -102,6 +102,10 @@ Ui.Panel {
         // commands. Discrete clicks remain ordered and bounded.
         let queue = actionQueue.filter(row => !(["volume", "brightness"].indexOf(name) >= 0 && row[2] === name || name==="audio-volume" && row[2]===name && JSON.parse(row[3]).id===JSON.parse(value).id && JSON.parse(row[3]).serial===JSON.parse(value).serial));
         actionQueue = queue.concat([next]).slice(-16); runNext();
+    }
+    function configure(key,value) {
+        if(configProcess.running || !opened || pageName!=="config")return;
+        actionError="";configProcess.command=["wuling","config","set",key,value];configProcess.running=true;
     }
     function runNext() {
         if (actionProcess.running || !actionQueue.length) return;
@@ -142,11 +146,30 @@ Ui.Panel {
                 const data=JSON.parse(line);
                 if(terminal.opened && !terminal.restartingCollector && JSON.stringify(terminal.collectingSections)===JSON.stringify(terminal.activeSections) && data.schema_version===1) {
                     const page=terminal.pageName;
-                    if(["wifi","bluetooth","tailnet"].indexOf(page)>=0 && (data.pending || []).indexOf(page)>=0 && terminal.state[page])data[page]=terminal.state[page];
+                    if(["wifi","bluetooth","tailnet","config"].indexOf(page)>=0 && (data.pending || []).indexOf(page)>=0 && terminal.state[page])data[page]=terminal.state[page];
                     terminal.state=data;
                 }
             } catch (_) {} }
         }
+    }
+    Process {
+        id:configProcess
+        // A committed settings transaction finishes even if the panel closes.
+        // It is bounded work, and never leaves a watcher behind.
+        stdout:StdioCollector { onStreamFinished: {
+            if(!terminal.opened || terminal.pageName!=="config")return;
+            try {
+                const response=JSON.parse(text),key=configProcess.command[3];
+                terminal.actionError=response.error?Kit.Runtime.tr(response.error.code==="invalid_music"?"invalid-music":"action-failed"):"";
+                detail.result(key,!response.error);
+                if(response.error)Kit.Runtime.cue("deny");
+                else {
+                    const data=Object.assign({},terminal.state),config=Object.assign({},data.config || {});
+                    config.settings=Object.assign({},config.settings || {});config.settings[key]=response.value;data.config=config;terminal.state=data;
+                    terminal.restartCollector();
+                }
+            } catch(_) { terminal.actionError=Kit.Runtime.tr("action-failed");Kit.Runtime.cue("deny"); }
+        } }
     }
     Process {
         id: actionProcess
@@ -271,7 +294,7 @@ Ui.Panel {
                         id: part
                         property string sectionKey: ""
                         property bool revealed: false
-                        visible: terminal.has(sectionKey)
+                        visible: sectionKey==="clock" || terminal.has(sectionKey)
                         width: contents.width
                         opacity: revealed ? 1 : 0
                         function reveal() {
@@ -288,8 +311,13 @@ Ui.Panel {
                             Kit.Section {
                                 width: parent.width; number: terminal.number(part.sectionKey); title: Kit.Runtime.label(part.sectionKey === "signal" && !terminal.state.signal ? "no-signal-head" : part.sectionKey); detail: ""
                                 Kit.Button {
-                                    visible:part.sectionKey==="clock";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(4)
+                                    visible:part.sectionKey==="clock";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(44);y:Kit.Runtime.px(4)
                                     height:Kit.Runtime.px(22);text:Quickshell.env("USER");labelSize:8;borderVisible:false;onClicked:terminal.openPage("system")
+                                }
+                                Kit.Button {
+                                    visible:part.sectionKey==="clock";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(4)
+                                    width:Kit.Runtime.px(24);height:Kit.Runtime.px(22);text:"⋮";labelSize:17;borderVisible:false
+                                    Accessible.name:Kit.Runtime.tr("config");onClicked:terminal.openPage("config")
                                 }
                                 Rectangle {
                                     visible:part.sectionKey==="comms";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(6)
@@ -300,7 +328,7 @@ Ui.Panel {
                                     }
                                 }
                             }
-                            Column { id: sectionContent; width: parent.width; topPadding: Kit.Runtime.px(8) }
+                            Column { id: sectionContent; width: parent.width; visible:terminal.sections.indexOf(part.sectionKey)>=0 && terminal.has(part.sectionKey);height:visible?implicitHeight:0;topPadding:visible?Kit.Runtime.px(8):0 }
                         }
                         property Rectangle divider: Rectangle {
                             parent: part; anchors.bottom: parent.bottom; width: parent.width; height: 1
@@ -498,7 +526,8 @@ Ui.Panel {
                 snapshot:terminal.state[retainedPage] || ({})
                 crumb:retainedPage==="comms"?Kit.Runtime.label("comms-page"):Kit.Runtime.label(terminal.pageSection).toUpperCase()+" › "+Kit.Runtime.label(retainedPage==="bluetooth"?"bluetooth-page":retainedPage).toUpperCase()
                 onCommand:(name,value)=>terminal.act(name,value || undefined)
-                busy:actionProcess.running || credentialProcess.running
+                onSetting:(key,value)=>terminal.configure(key,value)
+                busy:actionProcess.running || credentialProcess.running || configProcess.running
                 scanning:terminal.scanning
                 onCredential:(value,secret)=>terminal.submitCredential(value,secret)
                 onDiscovery:terminal.scanning=!terminal.scanning

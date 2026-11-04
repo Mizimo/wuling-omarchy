@@ -16,7 +16,7 @@ import time
 from . import Error, SCHEMA, paths
 
 OVERVIEW_SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
-SECTIONS = OVERVIEW_SECTIONS + ("performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet")
+SECTIONS = OVERVIEW_SECTIONS + ("performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet", "config")
 PROC = Path("/proc")
 SYS = Path("/sys")
 _stopping = threading.Event()
@@ -340,6 +340,9 @@ class Collector:
                     self.latest[name] = reader.initial
         self.readers.update(audio=details.audio, calendar=details.calendar_today)
         self.readers.update(bluetooth=radios.bluetooth, tailnet=radios.tailnet)
+        if "config" in self.sections:
+            from .configuration import snapshot
+            self.readers["config"] = snapshot
         self.pool = ThreadPoolExecutor(max_workers=5)
         self.pending = {}
         self.due = {}

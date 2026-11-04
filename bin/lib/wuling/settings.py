@@ -13,6 +13,50 @@ ENUMS = {
 }
 
 
+class InvalidMusic(Error):
+    code = "invalid_music"
+
+
+def check_music(value):
+    """Inspect with pw-play's existing decoder; never play a validation stream.
+
+    Validate only a new assignment. A removed old file must not break the
+    settings reader, uninstall, or editing an unrelated key.
+    """
+    import ctypes
+    import os
+    import stat
+    from pathlib import Path
+    class Info(ctypes.Structure):
+        _fields_ = [("frames", ctypes.c_int64), ("samplerate", ctypes.c_int),
+                    ("channels", ctypes.c_int), ("format", ctypes.c_int),
+                    ("sections", ctypes.c_int), ("seekable", ctypes.c_int)]
+    try:
+        path = Path(value).expanduser()
+        if not path.is_absolute():
+            raise ValueError()
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        try:
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise ValueError()
+            library = ctypes.CDLL("libsndfile.so.1")
+            library.sf_open_fd.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.POINTER(Info), ctypes.c_int]
+            library.sf_open_fd.restype = ctypes.c_void_p
+            library.sf_close.argtypes = [ctypes.c_void_p]
+            library.sf_close.restype = ctypes.c_int
+            info = Info()
+            handle = library.sf_open_fd(fd, 0x10, ctypes.byref(info), 0)
+            if not handle:
+                raise ValueError()
+            library.sf_close(handle)
+            if info.frames <= 0 or info.channels <= 0 or info.samplerate <= 0:
+                raise ValueError()
+        finally:
+            os.close(fd)
+    except (OSError, ValueError, AttributeError):
+        raise InvalidMusic("Choose an existing audio file supported by pw-play, using an absolute path or ~/.") from None
+
+
 def tokens():
     data = read_json(ROOT / "tokens/wuling.json")
     if not data or data.get("schema_version") != 1:

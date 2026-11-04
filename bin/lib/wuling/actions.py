@@ -26,8 +26,8 @@ FIXED = {
 PANELS = {"wifi": "omarchy.network", "bluetooth": "omarchy.bluetooth", "tailscale": "omarchy.tailscale",
           "night": "omarchy.monitor", "power": "omarchy.power", "audio": "omarchy.audio", "agent": "omarchy.agents"}
 RADIOS = ("wifi-radio", "wifi-scan", "wifi-connect", "wifi-disconnect", "wifi-forget", "bluetooth-radio", "bluetooth-scan", "bluetooth-pair", "bluetooth-connect", "bluetooth-disconnect", "bluetooth-forget", "tailnet")
-NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action", "profile", "audio-default", "audio-volume", "audio-mute", "system-copy") + RADIOS
-PAGES = ("comms", "performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet")
+NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action", "profile", "audio-default", "audio-volume", "audio-mute", "system-copy", "config-native") + RADIOS
+PAGES = ("comms", "performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet", "config")
 
 
 class PanelUnavailable(Error):
@@ -62,6 +62,9 @@ def checked_route(action, target, payload):
 
 
 def plan(name, value=None):
+    if name == "config-native":
+        from .configuration import native
+        return native(value)
     if name == "system-copy":
         if value is not None:
             raise Error("system-copy does not take a value")
@@ -175,9 +178,12 @@ def run(name, value=None):
         except (OSError, subprocess.TimeoutExpired):
             raise Error("The clipboard is unavailable") from None
         result = ""
-    elif name in ("performance-monitor", "system-fastfetch"):
+    elif name in ("performance-monitor", "system-fastfetch", "config-native"):
         from .dispatch import native_launch
-        if not native_launch(argv):
+        # Config editor helpers end in setsid. A session leader lets that
+        # native helper fork its editor instead of waiting for the window.
+        launched = native_launch(argv, new_session=True) if name == "config-native" and value in ("display", "input", "keys") else native_launch(argv)
+        if not launched:
             raise Error("The native terminal launcher is unavailable")
         result = ""
     else:
