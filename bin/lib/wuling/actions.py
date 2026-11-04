@@ -25,6 +25,11 @@ FIXED = {
 }
 PANELS = {"wifi": "omarchy.network", "bluetooth": "omarchy.bluetooth", "tailscale": "omarchy.tailscale",
           "night": "omarchy.monitor", "power": "omarchy.power", "audio": "omarchy.audio", "agent": "omarchy.agents"}
+# These native commands may leave a long-lived process behind (Night starts
+# hyprsunset on first use; Lock backgrounds a password-manager lock helper).
+# A child that inherits capture pipes keeps the action queue waiting, so only
+# the exit status is checked.
+DETACHED = ("night", "lock")
 RADIOS = ("wifi-radio", "wifi-scan", "wifi-connect", "wifi-disconnect", "wifi-forget", "bluetooth-radio", "bluetooth-scan", "bluetooth-pair", "bluetooth-connect", "bluetooth-disconnect", "bluetooth-forget", "tailnet")
 NAMES = tuple(FIXED) + ("wifi", "power", "volume", "brightness", "panel", "comms-action", "profile", "audio-default", "audio-volume", "audio-mute", "system-copy", "config-native") + RADIOS
 PAGES = ("comms", "performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet", "config")
@@ -177,6 +182,15 @@ def run(name, value=None):
                 raise Error("The system information could not be copied")
         except (OSError, subprocess.TimeoutExpired):
             raise Error("The clipboard is unavailable") from None
+        result = ""
+    elif name in DETACHED:
+        try:
+            done = subprocess.run(argv, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL, timeout=30)
+        except (OSError, subprocess.TimeoutExpired):
+            raise Error(f"Cannot run {argv[0]}") from None
+        if done.returncode:
+            raise Error(f"{argv[0]} failed")
         result = ""
     elif name in ("performance-monitor", "system-fastfetch", "config-native"):
         from .dispatch import native_launch

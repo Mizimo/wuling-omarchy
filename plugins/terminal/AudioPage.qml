@@ -51,7 +51,7 @@ Column {
                     }
                     Kit.Level {
                         visible:card.expanded;x:Kit.Runtime.px(10);y:Kit.Runtime.px(35);width:parent.width-Kit.Runtime.px(20)
-                        name:card.row.label || "";icon:group.modelData==="inputs"?"mic":card.volumeRow.muted?"volume_off":"volume_up"
+                        name:card.row.label || "";icon:group.modelData==="inputs"?(card.volumeRow.muted?"mic_off":"mic"):card.volumeRow.muted?"volume_off":"volume_up"
                         value:card.volumeRow.volume || 0;enabled:card.volumeRow.volume!==null
                         fill:Kit.Runtime.c(card.volumeRow.muted?"mist-6":group.modelData==="inputs"?"paper-1":"fill")
                         onAdjusted:percent=>page.send("audio-volume",card.row,Math.round(percent))

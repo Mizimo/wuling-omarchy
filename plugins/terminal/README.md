@@ -62,6 +62,9 @@ The manifest declares the native `right` default section for re-enablement.
 Per-output `wuling.terminal.<output>` IPC exposes `geometry`, `history`, `page` and diagnostic `state` to
 the notification plugin. Geometry comes from the panel instance's public
 `cardOrigin` and content dimensions; no private child is traversed.
+`truncated` lists visible WULING text in the open panel that is elided or
+overflows its box, so a check can confirm that fixed labels wrap instead of
+being cut; it reads only WULING's own items and returns `[]` when closed.
 
 Changes to `terminal.sections` restart the open collector with the new selection;
 an empty selection stops collection. A native panel absent from the bar returns

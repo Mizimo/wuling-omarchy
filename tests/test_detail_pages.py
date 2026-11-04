@@ -85,6 +85,18 @@ class DetailPageTests(IsolatedHome):
             self.assertEqual(run.call_args.kwargs['stdout'],subprocess.DEVNULL)
             self.assertEqual(run.call_args.kwargs['stderr'],subprocess.DEVNULL)
 
+    def test_actions_that_leave_a_native_process_do_not_wait_for_it(self):
+        bin_dir=self.home/'fake-bin';bin_dir.mkdir()
+        for name,code in (('omarchy-toggle-nightlight',0),('omarchy-system-lock',3)):
+            # Like a cold Night: a daemon outlives the launcher and keeps its stdout.
+            (bin_dir/name).write_text(f'#!/bin/bash\nsleep 20 &\necho started\nexit {code}\n');(bin_dir/name).chmod(0o755)
+        with patch.dict('os.environ',{'PATH':str(bin_dir)+':/usr/bin:/bin'}):
+            started=time.monotonic()
+            self.assertTrue(actions.run('night')['ok'])
+            self.assertLess(time.monotonic()-started,5)
+            with self.assertRaises(Error):actions.run('lock')
+        subprocess.run(['pkill','-f','^sleep 20$'],check=False)
+
     def test_detail_collectors_are_opt_in_and_stop(self):
         with patch.object(details.Performance,'read',return_value={'cpu_percent':20}) as performance,patch.object(details,'audio') as audio:
             collector=status.Collector(['performance'])

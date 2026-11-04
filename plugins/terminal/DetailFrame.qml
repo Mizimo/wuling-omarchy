@@ -58,7 +58,7 @@ Item {
                 id:pageColumn;width:scroll.width;spacing:Kit.Runtime.px(8);topPadding:Kit.Runtime.px(12);bottomPadding:Kit.Runtime.px(14)
                 Row {
                     visible:frame.retainedPage==="comms";width:parent.width;height:Kit.Runtime.px(26)
-                    Kit.Micro { width:parent.width-clearButton.width;anchors.verticalCenter:parent.verticalCenter;text:frame.rows.length+" "+Kit.Runtime.tr("count-unit") }
+                    Kit.Micro { width:parent.width-clearButton.width;anchors.verticalCenter:parent.verticalCenter;text:(frame.rows.length+" "+Kit.Runtime.tr("count-unit")).trim() }
                     Kit.Button { id:clearButton;text:Kit.Runtime.label("clear-all");enabled:frame.rows.length>0;height:Kit.Runtime.px(26);onClicked:frame.clear() }
                 }
                 CommsList {
@@ -66,7 +66,9 @@ Item {
                     onAction:(key,index)=>frame.action(key,index)
                 }
                 Loader {
-                    id:pageLoader;width:parent.width
+                    // An unloaded Loader keeps the previous page's height; keep
+                    // it out of the Column so only the current page scrolls.
+                    id:pageLoader;width:parent.width;visible:item!==null
                     active:frame.terminalOpen && frame.visible && frame.retainedPage!=="comms"
                     source:({performance:"PerformancePage.qml",power:"PowerPage.qml",audio:"AudioPage.qml",system:"SystemPage.qml",calendar:"CalendarPage.qml",wifi:"WifiPage.qml",bluetooth:"BluetoothPage.qml",tailnet:"TailnetPage.qml",config:"ConfigPage.qml"})[frame.retainedPage] || ""
                     onLoaded: {

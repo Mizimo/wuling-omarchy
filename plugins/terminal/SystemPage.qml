@@ -13,9 +13,8 @@ Column {
     spacing:Kit.Runtime.px(6)
     Item {
         width:parent.width;height:Kit.Runtime.px(70)
-        Rectangle { width:Kit.Runtime.px(52);height:width;y:Kit.Runtime.px(8);color:Kit.Runtime.c("fill")
-            Image { anchors.fill:parent;anchors.margins:Kit.Runtime.px(10);source:"emblem.svg";fillMode:Image.PreserveAspectFit }
-        }
+        // Small marks use the simplified plate, as on the bar's menu cell.
+        Image { width:Kit.Runtime.px(52);height:width;y:Kit.Runtime.px(8);source:"emblem.svg";sourceSize.width:width;sourceSize.height:height }
         Column {
             x:Kit.Runtime.px(64);width:parent.width-x;y:Kit.Runtime.px(9);spacing:Kit.Runtime.px(5)
             Kit.Micro { text:Kit.Runtime.label("designation");pixels:7.5 }

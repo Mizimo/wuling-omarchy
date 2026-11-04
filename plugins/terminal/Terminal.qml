@@ -93,6 +93,7 @@ Ui.Panel {
         function geometry(): string { return JSON.stringify(terminal.geometry()); }
         function history(): string { return terminal.history(); }
         function page(name: string): string { return terminal.openPage(name); }
+        function truncated(): string { const result=[];if(terminal.opened)body.clipped(body,result);return JSON.stringify(result); }
         function state(): string { return JSON.stringify({open:terminal.opened,page:terminal.pageName,sections:terminal.opened?terminal.collectingSections:[],historyRows:terminal.logRows.length,detailLoaded:detail.loaded,spectrum:signalPanel.inspection()}); }
     }
     function act(name, value) {
@@ -245,6 +246,14 @@ Ui.Panel {
                 if (item.activeFocusOnTab) result.push(item);
                 for (let i = 0; i < item.children.length; i++) controls(item.children[i], result);
             }
+            // Visible text that is elided or overflows its box, for checking
+            // that fixed labels never get cut (reported through IPC).
+            function clipped(item, result) {
+                if (!item.visible) return;
+                if (item.truncated === true || item.text !== undefined && item.elide === Text.ElideNone && item.wrapMode === Text.NoWrap && item.width > 0 && item.implicitWidth > item.width + 1)
+                    result.push(String(item.text));
+                for (let i = 0; i < item.children.length; i++) clipped(item.children[i], result);
+            }
             function resetNavigation() {
                 function blur(item) {
                     item.focus=false;
@@ -323,7 +332,7 @@ Ui.Panel {
                                     visible:part.sectionKey==="comms";anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(6)
                                     width:headingActions.implicitWidth;height:Kit.Runtime.px(20);color:Kit.Runtime.c("ink-2")
                                     Row { id:headingActions;spacing:Kit.Runtime.px(5)
-                                    Kit.Micro { anchors.verticalCenter:parent.verticalCenter;text:terminal.logRows.length+" "+Kit.Runtime.tr("count-unit");pixels:7.5 }
+                                    Kit.Micro { anchors.verticalCenter:parent.verticalCenter;text:(terminal.logRows.length+" "+Kit.Runtime.tr("count-unit")).trim();pixels:7.5 }
                                     Kit.Button { height:Kit.Runtime.px(20);text:Kit.Runtime.label("clear-all");labelSize:8;borderVisible:false;enabled:terminal.logRows.length>0;onClicked:terminal.act("comms-clear") }
                                     }
                                 }

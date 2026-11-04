@@ -47,12 +47,12 @@ Column {
         Rectangle {
             required property var modelData
             readonly property color ink:Kit.Runtime.c(!modelData.present?"mist-5":modelData.percent<=8?"vermilion":modelData.state==="charging"?"jade":"paper-1")
-            width:page.width;height:Kit.Runtime.px(94);color:Kit.Runtime.c("ink-3");border.width:1;border.color:Kit.Runtime.c("line")
+            width:page.width;height:Math.max(Kit.Runtime.px(94),health.y+health.height+Kit.Runtime.px(8));color:Kit.Runtime.c("ink-3");border.width:1;border.color:Kit.Runtime.c("line")
             Kit.Micro { x:Kit.Runtime.px(10);y:Kit.Runtime.px(10);text:modelData.name;color:parent.ink }
             Kit.Micro { anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(10);y:Kit.Runtime.px(10);text:Kit.Runtime.label("battery-"+modelData.state);pixels:7;color:parent.ink }
             Kit.Label { x:Kit.Runtime.px(10);y:Kit.Runtime.px(24);text:Format.number(modelData.percent)+"%";font.family:Kit.Runtime.display;font.pixelSize:Kit.Runtime.px(28);color:parent.ink }
             DetailGauge { x:parent.width*.3;y:Kit.Runtime.px(34);width:parent.width-x-Kit.Runtime.px(12);value:modelData.present?modelData.percent || 0:0;ink:parent.ink }
-            DetailValue { x:Kit.Runtime.px(10);y:Kit.Runtime.px(65);width:parent.width-Kit.Runtime.px(20);label:Kit.Runtime.label("health");value:Format.number(modelData.health)+"% · "+Format.number(modelData.full,1)+" Wh" }
+            DetailValue { id:health;x:Kit.Runtime.px(10);y:Kit.Runtime.px(65);height:implicitHeight;width:parent.width-Kit.Runtime.px(20);label:Kit.Runtime.label("health");value:Format.number(modelData.health)+"% · "+Format.number(modelData.full,1)+" Wh" }
         }
     }
     DetailHeading { width:parent.width;text:Kit.Runtime.label("profile") }

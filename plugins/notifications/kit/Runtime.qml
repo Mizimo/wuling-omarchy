@@ -33,8 +33,11 @@ Item {
     function duration(role) { return reduced ? 90 : Tokens.data.motion[role]; }
     function setting(key) { return resolved.settings && resolved.settings[key] ? resolved.settings[key].value : Tokens.data.defaults[key]; }
     function icon(name) { return Tokens.icons[name] || ""; }
-    function tr(key) { return translated[key] || english[key] || key; }
-    function label(key) { const en = english[key] || key; return language === "en" ? en : en + " · " + tr(key); }
+    // An empty string is a real translation (English has no count unit);
+    // fall back only when the catalog lacks the key.
+    function has(table, key) { return Object.prototype.hasOwnProperty.call(table, key) && typeof table[key] === "string"; }
+    function tr(key) { return has(translated, key) ? translated[key] : has(english, key) ? english[key] : key; }
+    function label(key) { const en = has(english, key) ? english[key] : key; return language === "en" ? en : en + " · " + tr(key); }
     function cue(name, level) {
         if(setting("sounds")==="off" || setting("sounds")!=="full" && /^(tick|hover)/.test(name))return;
         Quickshell.execDetached(["omarchy-shell","-q","wuling.sound","play",name,String(level===undefined?1:level)]);

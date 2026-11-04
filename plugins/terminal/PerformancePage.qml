@@ -15,13 +15,13 @@ Column {
     }
     spacing:Kit.Runtime.px(6)
     Item {
-        width:parent.width;height:Kit.Runtime.px(88)
+        width:parent.width;height:Math.max(Kit.Runtime.px(88),stats.height)
         Kit.Micro { text:"CPU";y:Kit.Runtime.px(5) }
         Kit.Label { y:Kit.Runtime.px(15);text:Format.number(page.snapshot.cpu_percent)+"%";font.family:Kit.Runtime.display;font.pixelSize:Kit.Runtime.px(46);font.weight:Font.DemiBold;color:Kit.Runtime.c("paper-1") }
         Column {
-            x:parent.width*.43;width:parent.width-x
+            id:stats;x:parent.width*.43;width:parent.width-x
             Repeater {
-                model:[{label:"LOAD 1 · 5 · 15",value:(page.snapshot.load || []).map(v=>Format.number(v,2)).join(" · ")},
+                model:[{label:"LOAD 1\u00a0·\u00a05\u00a0·\u00a015",value:(page.snapshot.load || []).map(v=>Format.number(v,2)).join(" · ")},
                     {label:Kit.Runtime.label("temperature"),value:Format.number(page.snapshot.temperature_c)+" °C"},
                     {label:Kit.Runtime.label("frequency"),value:Format.number(page.snapshot.frequency_mhz/1000,2)+" GHz"},
                     {label:"UPTIME",value:Format.uptime(page.snapshot.uptime_seconds)}]
