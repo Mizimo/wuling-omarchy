@@ -1,0 +1,162 @@
+{
+  "file": "cycles-1793813430372214553.jsonl",
+  "complete": true,
+  "cycles": 200,
+  "elapsedSec": 265.91104435920715,
+  "maxSampleGapSec": 2.105163097381592,
+  "identityStable": true,
+  "noClosedCollectorDescendants": true,
+  "baseline": {
+    "count": 21,
+    "pssMedianMiB": 585.958984375,
+    "pssRangeMiB": [
+      584.119140625,
+      588.021484375
+    ],
+    "fd": [
+      141,
+      144
+    ],
+    "threads": [
+      16,
+      19
+    ],
+    "maps": [
+      2177,
+      2185
+    ],
+    "cpuOneCorePct": 0.04836556198151038
+  },
+  "idle": {
+    "count": 21,
+    "pssMedianMiB": 598.001953125,
+    "pssRangeMiB": [
+      596.865234375,
+      602.787109375
+    ],
+    "fd": [
+      145,
+      145
+    ],
+    "threads": [
+      20,
+      20
+    ],
+    "maps": [
+      2316,
+      2327
+    ],
+    "cpuOneCorePct": 0.09659227063828182
+  },
+  "cycleQuartiles": [
+    {
+      "count": 50,
+      "pssMedianMiB": 580.673828125,
+      "pssRangeMiB": [
+        577.287109375,
+        587.591796875
+      ],
+      "fd": [
+        141,
+        145
+      ],
+      "threads": [
+        16,
+        20
+      ],
+      "maps": [
+        2107,
+        2324
+      ],
+      "cpuOneCorePct": 28.806812882141624
+    },
+    {
+      "count": 50,
+      "pssMedianMiB": 587.765625,
+      "pssRangeMiB": [
+        584.255859375,
+        592.658203125
+      ],
+      "fd": [
+        145,
+        145
+      ],
+      "threads": [
+        20,
+        20
+      ],
+      "maps": [
+        2135,
+        2331
+      ],
+      "cpuOneCorePct": 29.80946166843214
+    },
+    {
+      "count": 50,
+      "pssMedianMiB": 596.26953125,
+      "pssRangeMiB": [
+        589.271484375,
+        600.693359375
+      ],
+      "fd": [
+        145,
+        145
+      ],
+      "threads": [
+        20,
+        20
+      ],
+      "maps": [
+        2122,
+        2328
+      ],
+      "cpuOneCorePct": 29.098897249329042
+    },
+    {
+      "count": 50,
+      "pssMedianMiB": 597.798828125,
+      "pssRangeMiB": [
+        595.021484375,
+        598.982421875
+      ],
+      "fd": [
+        145,
+        145
+      ],
+      "threads": [
+        20,
+        20
+      ],
+      "maps": [
+        2122,
+        2327
+      ],
+      "cpuOneCorePct": 29.473140409727208
+    }
+  ],
+  "last100SlopeMiBPerCycle": 0.05888552917791779,
+  "tenCycleMedianMiB": [
+    579.5390625,
+    579.373046875,
+    580.255859375,
+    583.705078125,
+    585.0390625,
+    585.0546875,
+    587.09375,
+    587.44921875,
+    590.111328125,
+    590.650390625,
+    590.87109375,
+    592.05859375,
+    598.78515625,
+    599.072265625,
+    597.462890625,
+    597.857421875,
+    597.587890625,
+    598.568359375,
+    597.6328125,
+    597.79296875
+  ],
+  "last50SlopeMiBPerCycle": -0.004311036914765906,
+  "note": "PSS+SwapPSS footprint; Linux USER_HZ=100 verified separately. CPU is one-core percent. Observer runs outside shell."
+}
