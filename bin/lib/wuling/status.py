@@ -16,7 +16,7 @@ import time
 from . import Error, SCHEMA, paths
 
 OVERVIEW_SECTIONS = ("clock", "link", "levels", "signal", "agent", "telemetry", "comms")
-SECTIONS = OVERVIEW_SECTIONS + ("performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet", "config")
+SECTIONS = OVERVIEW_SECTIONS + ("performance", "power", "audio", "system", "calendar", "wifi", "bluetooth", "tailnet", "config", "layout")
 PROC = Path("/proc")
 SYS = Path("/sys")
 _stopping = threading.Event()
@@ -321,6 +321,16 @@ def comms():
         return {"available": True, "items": [], "error": "Notification history is unavailable"}
 
 
+def layout():
+    """Which optional overview sections would show, so a page opened directly
+    can number its heading as the overview does. Read once per collector."""
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        link, level, agent, log = (pool.submit(fn) for fn in (links, levels, agent_usage, comms))
+        level = level.result()
+        return {"link": bool(link.result()), "levels": level["volume"] is not None or level["brightness"] is not None,
+                "agent": bool(agent.result()), "comms": bool(log.result().get("available"))}
+
+
 class Collector:
     def __init__(self, sections=None):
         _stopping.clear()
@@ -331,7 +341,7 @@ class Collector:
             self.sections.add("batteries")
         self.telemetry = Telemetry()
         self.latest = {}
-        self.readers = {"link": links, "levels": levels, "signal": media, "agent": agent_usage, "comms": comms, "batteries": battery_rows}
+        self.readers = {"link": links, "levels": levels, "signal": media, "agent": agent_usage, "comms": comms, "batteries": battery_rows, "layout": layout}
         for name, factory in (("performance", details.Performance), ("power", details.Power), ("system", details.System), ("wifi", radios.Wifi)):
             if name in self.sections:
                 reader = factory()
@@ -368,7 +378,7 @@ class Collector:
                     self.latest[name] = None
                 del self.pending[name]
                 self.serial += 1
-                self.due[name] = now + (1 if name in ("signal", "comms", "performance", "audio") else 2 if name in ("levels", "power", "wifi", "bluetooth", "tailnet") else 30 if name == "calendar" else 5)
+                self.due[name] = now + (1 if name in ("signal", "comms", "performance", "audio") else 2 if name in ("levels", "power", "wifi", "bluetooth", "tailnet") else 30 if name == "calendar" else 3600 if name == "layout" else 5)
         if "clock" in self.sections and now >= self.due.get("clock", 0):
             self.latest["clock"] = clock()
             self.due["clock"] = now + 1

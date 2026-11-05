@@ -47,7 +47,7 @@ Item {
         Kit.Button { id:backButton;x:Kit.Runtime.px(14);y:Kit.Runtime.px(8);height:Kit.Runtime.px(24);text:Kit.Runtime.label("back");icon:"chevron_left";sound:"";onClicked:frame.back() }
         Row {
             anchors.right:parent.right;anchors.rightMargin:Kit.Runtime.px(14);y:Kit.Runtime.px(16);spacing:Kit.Runtime.px(5)
-            Kit.Micro { text:frame.number;color:Kit.Runtime.c("accent-ink");pixels:8 }
+            Kit.Micro { visible:text!=="";text:frame.number;color:Kit.Runtime.c("accent-ink");pixels:8 }
             Kit.Micro { text:frame.crumb || Kit.Runtime.label("comms-page");width:Math.min(implicitWidth,pageBody.width-Kit.Runtime.px(117));elide:Text.ElideLeft;pixels:8 }
         }
         Rectangle { y:Kit.Runtime.px(39);width:parent.width;height:1;color:Kit.Runtime.c("line") }

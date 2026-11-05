@@ -12,6 +12,13 @@ from wuling import actions, status
 
 
 class StatusTests(IsolatedHome):
+    def test_layout_reports_which_optional_overview_sections_show(self):
+        with patch.object(status,'links',return_value=[{'id':'dnd'}]),patch.object(status,'levels',return_value={'volume':None,'brightness':None}),\
+             patch.object(status,'agent_usage',return_value=[]),patch.object(status,'comms',return_value={'available':True,'items':[]}):
+            self.assertEqual(status.layout(),{'link':True,'levels':False,'agent':False,'comms':True})
+            self.assertEqual(status.collect(['clock','power','layout'])['layout'],{'link':True,'levels':False,'agent':False,'comms':True})
+        self.assertIn('layout',status.SECTIONS)
+
     def test_night_is_available_without_a_running_service(self):
         with patch.object(status, "probe", return_value=None), patch.object(status, "probe_json", return_value={"temperature": None}), patch.object(status.shutil, "which", return_value="installed"):
             night = next(row for row in status.links() if row["id"] == "night")

@@ -20,13 +20,18 @@ Ui.Panel {
     property var collectingSections: []
     property string hostname: ""
     property string pageName: ""
-    property string pageNumber: "08"
+    property string pageNumber: ""
     property string pageSection: "comms"
     readonly property string screenName: QsWindow.window && QsWindow.window.screen ? QsWindow.window.screen.name : ""
     property var logRows: []
     FileView { path: "/etc/hostname"; printErrors: false; onLoaded: terminal.hostname = text().trim().toUpperCase() }
     readonly property var sections: Kit.Runtime.setting("terminal.sections")
-    readonly property var activeSections: pageName ? sections.filter(key => key === "clock").concat([pageName]) : sections
+    // A page's number counts the overview sections shown before it. Only Link,
+    // Levels, Agent and Comms can be hidden; a page after any of them also reads
+    // `layout` once so a direct open knows them too.
+    readonly property var optionalSections: ["link", "levels", "agent", "comms"]
+    function needsLayout(section) { const order=["clock"].concat(sections.filter(key=>key!=="clock"));return order.slice(0,order.indexOf(section)).some(key=>optionalSections.indexOf(key)>=0); }
+    readonly property var activeSections: pageName ? sections.filter(key => key === "clock").concat([pageName]).concat(needsLayout(pageSection) ? ["layout"] : []) : sections
     onSectionsChanged: { if(pageName === "comms" && sections.indexOf("comms")<0)backPage(); else restartCollector(); }
     onPageNameChanged: { stopRadioWork();restartCollector(); }
     function radioAction(name) { return name.indexOf("wifi-")===0 || name.indexOf("bluetooth-")===0 || name==="tailnet"; }
@@ -65,6 +70,27 @@ Ui.Panel {
         .filter(key => key !== "comms" || !!state.comms && state.comms.available)
         .filter(key => key !== "levels" || !!state.levels && (state.levels.volume !== null || state.levels.brightness !== null))
     function number(key) { return String(shown.indexOf(key) + 2).padStart(2, "0"); }
+    function presence(data) {
+        if (data.layout) return data.layout;
+        const known = {};
+        if (data.link !== undefined) known.link = (data.link || []).length > 0;
+        if (data.levels !== undefined) known.levels = !!data.levels && (data.levels.volume !== null || data.levels.brightness !== null);
+        if (data.agent !== undefined) known.agent = (data.agent || []).length > 0;
+        if (data.comms !== undefined) known.comms = !!data.comms && data.comms.available;
+        return known;
+    }
+    // The overview's number for a section, or "" while a section before it is
+    // still unknown: the head never shows a guess that changes later.
+    function sectionNumber(section, data) {
+        const order = ["clock"].concat(sections.filter(key => key !== "clock")), known = presence(data);
+        let value = 2;
+        for (const key of order.slice(0, Math.max(0, order.indexOf(section)))) {
+            if (optionalSections.indexOf(key) < 0) { value++; continue; }
+            if (known[key] === undefined) return "";
+            if (known[key]) value++;
+        }
+        return String(value).padStart(2, "0");
+    }
     function has(key) { return shown.indexOf(key) >= 0; }
     function geometry() { return {open:opened, x:panel.cardOrigin.x, y:panel.cardOrigin.y, width:panel.contentWidth, height:panel.contentHeight}; }
     function reportGeometry() { geometryChanged.restart(); }
@@ -78,8 +104,7 @@ Ui.Panel {
     function openPage(name, source) {
         const section=source || ({comms:"comms",performance:"telemetry",power:"telemetry",audio:"levels",system:"clock",calendar:"clock",wifi:"link",bluetooth:"link",tailnet:"link",config:"clock"})[name];
         if(!section || name==="comms" && sections.indexOf("comms")<0 || bar && bar.barHidden)return "off";
-        const index=shown.indexOf(section)>=0?shown.indexOf(section):sections.indexOf(section);
-        pageNumber=String(Math.max(0,index)+2).padStart(2,"0");pageSection=section;
+        pageNumber=sectionNumber(section, state);pageSection=section;
         pageName=name;scroll.contentY=0;actionError="";open();Kit.Runtime.cue("select");
         body.resetNavigation();return "ok";
     }
@@ -94,7 +119,7 @@ Ui.Panel {
         function history(): string { return terminal.history(); }
         function page(name: string): string { return terminal.openPage(name); }
         function truncated(): string { const result=[];if(terminal.opened)body.clipped(body,result);return JSON.stringify(result); }
-        function state(): string { return JSON.stringify({open:terminal.opened,page:terminal.pageName,sections:terminal.opened?terminal.collectingSections:[],historyRows:terminal.logRows.length,detailLoaded:detail.loaded,spectrum:signalPanel.inspection()}); }
+        function state(): string { return JSON.stringify({open:terminal.opened,page:terminal.pageName,number:terminal.pageNumber,sections:terminal.opened?terminal.collectingSections:[],historyRows:terminal.logRows.length,detailLoaded:detail.loaded,spectrum:signalPanel.inspection()}); }
     }
     function act(name, value) {
         if(name==="bluetooth-scan") { scanning=!scanning;return; }
@@ -134,6 +159,7 @@ Ui.Panel {
     onScreenNameChanged: reportGeometry()
     Component.onDestruction: if (screenName) Quickshell.execDetached(["omarchy-shell", "-q", "wuling.notifications", "terminal", screenName, '{"open":false,"width":0}'])
     onStateChanged: {
+        if (pageName && !pageNumber) pageNumber = sectionNumber(pageSection, state);
         if(opened && state.comms===undefined)return;
         const rows=state.comms && state.comms.available ? state.comms.items : [];
         // Unchanged status samples must not destroy a row underneath a press.

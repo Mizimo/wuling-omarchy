@@ -18,7 +18,9 @@ nonzero. Arguments are passed as argv, never evaluated as shell text.
 - `wuling status --json [--sections SECTION ...]`: an on-demand snapshot of
   `clock`, `link`, `levels`, `signal`, `agent`, `telemetry` and `comms` by default.
   Opt-in detail sections are `performance`, `power`, `audio`, `system`,
-  `calendar`, `wifi`, `bluetooth`, `tailnet` and `config`; they are never added to the default collection set. Unknown
+  `calendar`, `wifi`, `bluetooth`, `tailnet` and `config`; they are never added to the default collection set.
+  `layout` reports, once per collection, which of `link`, `levels`, `agent` and `comms` the overview would show, so
+  a page opened directly can number its heading as the overview does. Unknown
   hardware yields null or no tile. CPU percentage needs two samples; the first
   is null. `--watch` produces live JSON lines until terminated (fast initial results,
   then a one-second cadence). The
