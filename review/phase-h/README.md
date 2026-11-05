@@ -235,3 +235,76 @@ removed, the original verified checkpoint and firmware restored;
 `qemu-img check` clean, sole snapshot `verified-clean-b`. During the first
 4.0.6 run, my use of `omarchy bar position` left `shell.json` at mode 0600
 with unchanged content; the inventory caught it and I set it back to 0644.
+
+## H-V1 retest
+
+Inbox v184; product `3ba6c49` on main (the fix is `4f41f22`). The same
+method: both VMs restored from the clean checkpoint, one at a time, WULING
+installed from a clean `git archive` of `3ba6c49`, real QMP input, an
+external 60 fps recording of the whole run, a guest-side poller reading the
+Terminal's `state` and the collector's argv every ≈50 ms. Theme `wuling`,
+English, 1280×800, default sections, the synthetic fixtures and 8 Comms rows,
+so the overview numbers 02 TERMINAL, 03 LINK, 04 LEVELS, 05 SIGNAL,
+06 TELEMETRY, 07 COMMS. **H-V1 is fixed on both versions.**
+
+### Every route
+
+| Route | Pages | 4.0.6 | 4.5.0-rc2 |
+|---|---|---|---|
+| `wuling terminal open <page>`, panel closed and collector gone | power, performance, comms, wifi, system, audio, calendar, bluetooth, tailnet, config | 06, 06, 07, 03, 02, 04, 02, 03, 03, 02 | same |
+| `wuling terminal open <page>` over an open Performance page | power, comms, wifi, system, audio | 06, 07, 03, 02, 04 | same |
+| Real click on a settled overview | Power tile, Telemetry, Wi-Fi tile | 03 (the tile's own section, as before), 06, 03 | same |
+| Real click about 0.5 s after a cold open, the overview still fading in | Telemetry | 06 | same |
+| Omarchy's notification key Super+Shift+Alt+comma (`showHistory`), panel closed | comms | 07 | same |
+| Same key over an open Performance page | comms | 07 | same |
+
+Every head matches the overview, by eye on the settled captures and in
+`state.number`.
+
+### Never a wrong number
+
+For each of the 21 opens per version I cropped the head row from the
+external recording, every frame from 0.1 s before the request to 1.75 s after,
+and read the strips by eye; yellow-pixel masks against the settled number
+pointed out every frame where the number area changed. In all 42 opens the
+head shows either no number or the right one. Frames classed "other" by the
+mask are the slide-in and fade (the right number, partly drawn) or the
+previous page and the overview behind the new page. Where a section before the
+page can be hidden, the head waits without a number for 0.15–0.28 s after
+the page is readable: Comms, Audio, Power and Performance opened directly,
+and the notification key (4.0.6 0.17 s, 4.5 0.18 s). Wi-Fi, System and the
+other pages with no optional section before them, and every click from the
+overview, show their number with the page.
+
+### What is read, and when
+
+| Check | 4.0.6 | 4.5.0-rc2 |
+|---|---|---|
+| Collector on a directly opened Performance page | `wuling status --watch --sections clock performance layout` | same |
+| After Back to the overview | overview sections, no `layout` | same |
+| Panel closed | no collector | same |
+| `RequestScan` calls to NetworkManager (D-Bus monitor) in 30 s idle; 12 opens of Performance, Power, Comms, Audio; 6 of System, Calendar; 3 overviews; 2 Wi-Fi pages | 0 in every phase | 0 |
+| Control: `nmcli device wifi rescan` | 1 caught | 1 caught |
+
+NetworkManager's `LastScan` also changed a few times in these runs, every
+64–95 s and with no request on D-Bus: those are its own background scans
+while the fixture radio is not connected, not WULING's. From the source,
+`layout` asks `nmcli` only for device status, radio state and the active
+connection, and is read once per collector (its next read is due in an
+hour); I didn't count reads from outside.
+
+### Regression
+
+Comms count `8`, `8 則`, `8 则`, with `07 COMMS` in the head in all three
+languages; the Keymap head has no `06` and starts below the bar; Comms scrolled
+to the end after Tailnet, Config, System and a direct open ends on
+`Matrix content 0` above the foot. Both versions, by eye.
+
+### Cleanup
+
+As above, on both VMs: the inventory after `wuling uninstall --yes` differs
+from before installation only in my `~/.config/wuling`, removed; fixture
+player stopped after an exact argv check; normal shutdown, containers
+removed, checkpoint and firmware restored, `qemu-img check` clean, sole
+snapshot `verified-clean-b`. 4.0.6 was booted twice; the second boot only ran
+the D-Bus scan check.
