@@ -126,3 +126,5 @@ Start from the research's method: a disposable VM from the clean checkpoint, rea
 captures inspected by eye. IPC success alone proves nothing: check the surface and the state. kujira is a test box, but
 it is shared with the owner's remote sessions: never touch them, never suspend or log out, and never leave it locked. Closing its lid must not
 lock it. The owner sometimes uses it in person: read its state first, and the design lead asks before anything runs on its desktop. Notification history there is real: never clear it.
+
+**Open until Omarchy 4.5 is stable (G-V7).** On 4.5.0-rc2 in the VM, moving between the Terminal's pages grows the shell by about 0.1 MiB a visit. No WULING object holds it: the memory sits in Qt's text and rendering resources (font faces, glyph caches, GPU buffers) under the VM's virgl and llvmpipe, and three WULING-side changes didn't stop it (`research/phase-g.2.md`). 4.0.6 holds flat. Accepted for the release candidate. When 4.5 is stable, its update first runs the 200-page-cycle test in the VM and, with the owner's word, on kujira's hardware; growth there reopens G-V7.
