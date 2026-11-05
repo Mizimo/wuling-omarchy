@@ -2,6 +2,10 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-05 — a short screen scrolls the Terminal
+
+Shown the Terminal on kujira at 1366×768, where the overview is taller than the screen and the Comms log sits below Telemetry, out of first view, the owner chose **to keep it as it is**: the body scrolls as §8.2 says, the Comms log stays last, and nothing is compacted on short screens. Sections can still be switched off in Config.
+
 ## 2026-11-04 — Keymap and the theme wave come back; the bar gets no readout cells
 
 Asked what else the rebuild had dropped without asking, the owner chose the Keymap overlay and the ink wave on a theme switch. Keymap takes one new key, **Super+Ctrl+/**, because Super+/ is Omarchy's.
