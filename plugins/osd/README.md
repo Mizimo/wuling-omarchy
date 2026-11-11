@@ -16,4 +16,4 @@ Disable with `omarchy plugin disable wuling.osd`; the native clone restoration
 record returns the previously enabled Omarchy OSD. An update preserves that
 choice. If the native OSD was already disabled before installation, disabling
 WULING leaves it disabled too. `wuling uninstall` removes unchanged owned
-artifacts and entries. Supported versions: 4.0.6 and 4.5.0-rc2.
+artifacts and entries. Supported versions: 4.0.6 and 4.5.0.

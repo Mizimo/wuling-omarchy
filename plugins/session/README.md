@@ -52,7 +52,7 @@ lease, an exit lock and (for external themes) a temporary recoloured mark.
 Settings: `session.arrival`, `session.exit`, `session.theme`, `motion`. Internal IPC:
 `wuling.session begin/finish/state` and `arrival/inspect`; tokens reject stale
 exit replies.
-Supported: Omarchy 4.0.6 and 4.5.0-rc2. Disable with the official plugin command;
+Supported: Omarchy 4.0.6 and 4.5.0. Disable with the official plugin command;
 Power still executes its native actions.
 
 The optional theme wave watches only `current/` at idle. A new `next-theme`

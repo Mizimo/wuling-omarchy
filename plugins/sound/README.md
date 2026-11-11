@@ -20,5 +20,5 @@ The default is unset. Music is not copied, stored or distributed by WULING.
 Previewing Arrival never requests login music. Session motion may request it at
 arming; a one-second fallback covers a disabled session component.
 
-Supported: Omarchy 4.0.6 and 4.5.0-rc2. Test on a private null sink only. Restore
+Supported: Omarchy 4.0.6 and 4.5.0. Test on a private null sink only. Restore
 the test default sink and remove the null sink afterward.

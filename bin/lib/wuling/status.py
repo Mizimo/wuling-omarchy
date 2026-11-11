@@ -304,7 +304,7 @@ def comms():
             return html.unescape(re.sub(r"<[^>]*>", "", value))
         def deeds(row):
             result = [{"index": -1, "label": ""}] if row["execArgv"] else []
-            if marker.get("contract") == "4.5.0-rc2":
+            if marker.get("contract") == "4.5.0":
                 try:
                     extra = json.loads(row["execActions"] or "[]")
                     if isinstance(extra, list) and len(extra) <= 3:

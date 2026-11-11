@@ -27,7 +27,7 @@ and raw results outside git. For phase B:
 7. Restore the original theme and only fixture-created configuration, shut
    down normally and retain the baseline plus newest clean checkpoint.
 
-Run this on both 4.0.6 and 4.5.0-rc2. Physical hardware and the optional next
+Run this on both 4.0.6 and 4.5.0. Physical hardware and the optional next
 boot's Plymouth screen require the separate verifier/owner workflow in BRIEF.
 
 For phase C also exercise the registered-widget host contract with actual

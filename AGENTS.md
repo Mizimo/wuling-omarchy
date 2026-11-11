@@ -3,7 +3,7 @@
 WULING is a set of Omarchy themes and independent omarchy-shell plugins. Read
 `design/DECISIONS.md`, then `design/DESIGN.md`, then `docs/BRIEF.md`. Decisions
 take precedence. `research/omarchy-shell-api.md` records the tested 4.0.6 and
-4.5.0-rc2 boundaries; observations are not promises about later releases.
+4.5.0 boundaries; observations are not promises about later releases.
 
 ## Ownership
 

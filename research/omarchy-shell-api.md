@@ -761,6 +761,53 @@ These are independent experiments, not a product implementation or approval to
 use internal APIs indefinitely. Evidence below is local under `wa2/`; no logs,
 raw JSON, screenshots or theme images are in git.
 
+### 4.5.0 release (phase I)
+
+Omarchy 4.5.0 replaces the release candidate as the tested 4.5 version. The
+signed x86 ISO installs `omarchy 4.5.0-3`, the stable repository's version at
+the time, with Hyprland 0.56.2-4, Quickshell 0.3.2.r7, Qt 6.12.0 and Mesa
+26.2.5, the same as rc2. Of the files in `/usr/share/omarchy` that are also in
+the `v4.5.0` tag, all match it except `install/helpers/logging.sh`, which only
+the installer uses. Between `v4.5.0-rc2` and `v4.5.0`, 130 commits change 27
+files under `shell/`. None of them is in `shell/Commons`, `shell.qml`, the
+panel host (`Ui/Panel`, `Ui/KeyboardPanel`, `Ui/PluginBarApi`,
+`Ui/OverlayWindow`), the bar widget registry or the plugin shell facade, and no
+IPC method WULING calls changed signature. The rc2 observations below still
+hold for those files.
+
+The content gates check file hashes, not the version string:
+
+| Gate | Installed files hashed | 4.0.6 | 4.5.0 |
+|---|---|---|---|
+| Notifications (`plugins/notifications/native-modules.json`) | `shell/plugins/notifications/` `NotificationLogic.js` (4.0.6); `Store.js`, `Security.js`, `Delivery.js`, `Markup.js`, `Detect.js` (4.5) | contract `4.0.6` | contract `4.5.0`: the rc2 hashes, unchanged in the release |
+| Theme wave (`plugins/session/native-theme.json`) | `bin/omarchy-theme-set`, `shell/Commons/Color.qml`, `shell/Commons/Style.qml`, `shell/plugins/background/Background.qml` | contract `4.0.6` | contract `4.5.0`. Two files differ from rc2, neither in a still background's timing: `omarchy-theme-set` sends the intro's output to `/dev/null`, and `Background` keeps the last still when a video background is chosen, until OWE takes over |
+
+`omarchy version` prints `4.5.0-3`; the installer and `wuling doctor` treat
+`4.5.0` with any package release as tested, and a release candidate as
+untested.
+
+Changes in 4.5.0 that WULING follows:
+
+- **Transient notifications.** The native store no longer keeps a card with
+  the `transient` hint, live or in history (`shell/plugins/notifications/Service.qml`
+  `storePut`). `omarchy-notification-send --transient` is new, and
+  `omarchy-migrate-notify` sends its reminder with it at every login. WULING's
+  service shows such a card and keeps nothing of it on 4.5.0.
+- **The bar under a full-screen window.** The native bar fades and takes no
+  input on a workspace with a real full-screen window, because Hyprland 0.56
+  lifts layers back above full screen; its tooltip stays transparent until the
+  surface has the bar's fractional scale (`shell/plugins/bar/Bar.qml`).
+- **Region-capture binds.** The screenshot selection now binds its keys only
+  for the selection and leaves them disabled afterwards
+  (`default/hypr/bindings/`).
+
+Changes with no effect on WULING: the clock widget's `WallClock` timer (the
+members the bar skin reads remain), `omarchy-toggle-nightlight` (same
+`--status` output), `omarchy-hibernation-available` (also requires `disk` in
+`/sys/power/state`, which the power cards follow), the plugin registry's clone
+restore (WULING's clones have one kind each), the media service's idle-player
+choice, and install and remove entries in the menu.
+
 ### RC update and differences affecting WULING
 
 The independent RC disk completed official `omarchy channel set rc` and

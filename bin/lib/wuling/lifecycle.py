@@ -13,7 +13,7 @@ OWNER = "org.wuling.desktop"
 PAYLOAD = ("bin", "tokens", "theme", "fonts", "skills", "kit", "plugins", "sounds")
 SKILL_DIRS = (".agents/skills", ".claude/skills", ".codex/skills", ".pi/agent/skills", ".hermes/skills")
 DESKTOP_KEYS = ("color-scheme", "gtk-theme", "icon-theme")
-TESTED_VERSIONS = ("4.0.6", "4.5.0-rc2")
+TESTED_VERSIONS = ("4.0.6", "4.5.0")
 DESKTOP_VALUES = {
     "color-scheme": ("'prefer-dark'", "'prefer-light'"),
     "gtk-theme": ("'Adwaita-dark'", "'Adwaita'"),
@@ -40,8 +40,8 @@ def compatibility():
     version = command(["omarchy", "version"])
     if re.fullmatch(r"4\.0\.6(?:-[0-9.]+)?", version):
         boundary = "4.0.6"
-    elif re.fullmatch(r"4\.5\.0-?rc2(?:-[0-9.]+)?", version):
-        boundary = "4.5.0-rc2"
+    elif re.fullmatch(r"4\.5\.0(?:-[0-9.]+)?", version):
+        boundary = "4.5.0"
     else:
         boundary = None
     return {"installed": version, "boundary": boundary, "tested": boundary is not None,

@@ -21,4 +21,4 @@ names and hold state for diagnostics. With the plugin disabled, the CLI opens
 the existing native System submenu through the official generic shell method
 IPC, bypassing the extension action to avoid recursion. Uninstall restores the
 exact original System entry when unchanged and preserves subsequent user edits.
-Native files remain untouched. Supported: Omarchy 4.0.6 and 4.5.0-rc2.
+Native files remain untouched. Supported: Omarchy 4.0.6 and 4.5.0.

@@ -39,7 +39,7 @@ def compatibility():
                           for name, contract in contracts.items()}
             raise Error("Installed notification modules do not match one known contract: " + json.dumps(mismatches))
         contract_name = matches[0]
-        template = ROOT / "plugins/notifications" / {"4.0.6": "Rules406.qml.in", "4.5.0-rc2": "Rules450.qml.in"}[contract_name]
+        template = ROOT / "plugins/notifications" / {"4.0.6": "Rules406.qml.in", "4.5.0": "Rules450.qml.in"}[contract_name]
         qml = template.read_text()
         for name in contracts[contract_name]:
             qml = qml.replace("@" + name + "@", json.dumps((upstream / name).resolve().as_uri()))
@@ -114,7 +114,7 @@ def normalise(data, now=None):
 def native_dnd(gate):
     if not gate.get("ok"):
         return False
-    relative = {"4.0.6": "notifications.json", "4.5.0-rc2": "notifications/quiet.json"}.get(gate.get("contract"))
+    relative = {"4.0.6": "notifications.json", "4.5.0": "notifications/quiet.json"}.get(gate.get("contract"))
     if not relative:
         return False
     path = paths()["home"] / ".local/state/omarchy" / relative

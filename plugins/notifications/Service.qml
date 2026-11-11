@@ -130,7 +130,7 @@ Item {
         closeToast(key,"closed");
     }
     function archive(r, reason) {
-        if (r.replay) return;
+        if (r.replay || !rules.kept(r)) return;
         const entry=rules.persisted(r,4096); entry.closed_ts=Date.now()/1000; entry.closed_reason=reason;
         history=[entry].concat(history.filter(x => x.key !== r.key && x.closed_ts > Date.now()/1000-86400)).slice(0,100);
         saveSoon();
@@ -260,7 +260,7 @@ Item {
     function queueSave() {
         if(!ready || stopping)return;
         const rows=[];
-        for(let i=0;i<live.count;i++) { const r=row(live.get(i).key); if(!r.replay)rows.push(rules.persisted(r,16384)); }
+        for(let i=0;i<live.count;i++) { const r=row(live.get(i).key); if(!r.replay && rules.kept(r))rows.push(rules.persisted(r,16384)); }
         writer.enqueue(JSON.stringify({schema_version:1,dnd:doNotDisturb,live:rows,history:history})+"\n");
     }
     function writerHealth() { return writer.health(); }

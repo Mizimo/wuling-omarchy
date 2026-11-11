@@ -67,7 +67,7 @@ class DetailDataTests(IsolatedHome):
                  "ts":now-2,"closed_ts":now,"execArgv":'["true"]',"execActions":'[{"label":"View","argv":["true"]}]'},
                 {"key":"second", "app":"Example", "summary":"Latest", "body":"Details", "ts":now-1,"closed_ts":now}]
         notifications.write({"schema_version":1,"dnd":False,"live":[],"history":rows})
-        for contract, count in (("4.0.6",1),("4.5.0-rc2",2)):
+        for contract, count in (("4.0.6",1),("4.5.0",2)):
             with patch.object(status, "probe_json", return_value={"provider":"wuling.notifications","contract":contract}):
                 result = status.comms()["items"]
             self.assertEqual([row["key"] for row in result], ["second","first"])

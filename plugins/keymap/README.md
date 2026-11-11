@@ -22,7 +22,7 @@ Escape clears the filter, then closes. The view takes exclusive keyboard
 focus and uses the stock Wayland ShortcutInhibitor while open; outside clicks
 dismiss it. A compositor cancellation also closes the overlay. Theme, type scale, language, sounds and
 reduced motion follow the shared WULING settings. The supported hosts are
-Omarchy 4.0.6 and 4.5.0-rc2; no runtime packages are added.
+Omarchy 4.0.6 and 4.5.0; no runtime packages are added.
 
 The native list is primary. A plain `hyprctl binds` snapshot adds only missing
 chords to OTHER, including the physical Copilot code. Active XKB and platform

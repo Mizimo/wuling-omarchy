@@ -53,6 +53,12 @@ class IntegrationTests(InstallHome):
         lifecycle.uninstall(True)
         self.assertEqual(bindings.read_text(), '-- personal before\n-- personal after\n')
 
+    def test_only_released_tested_versions_are_tested(self):
+        for version, boundary in (("4.0.6-1", "4.0.6"), ("4.5.0-3", "4.5.0"), ("4.5.0", "4.5.0"),
+                                  ("4.5.0rc2-1", None), ("4.5.0-rc2", None), ("4.5.1-1", None)):
+            with self.subTest(version=version), patch("wuling.lifecycle.command", return_value=version):
+                self.assertEqual(lifecycle.compatibility()["boundary"], boundary)
+
     def test_untested_version_requires_normal_consent_and_preserves_update_choices(self):
         original = self.fake_command
         def untested(argv, **kwargs):
@@ -62,7 +68,7 @@ class IntegrationTests(InstallHome):
                 lifecycle.install(False, False)
             self.assertIsNone(lifecycle.manifest())
             self.assertIn("has not been tested", output.getvalue())
-            self.assertIn("4.0.6, 4.5.0-rc2", output.getvalue())
+            self.assertIn("4.0.6, 4.5.0", output.getvalue())
             self.assertIn("may remain native", output.getvalue())
             lifecycle.install(True)
             shell, _ = integration.locations()

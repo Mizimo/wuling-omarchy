@@ -4,7 +4,7 @@
 contract. It runs in the existing shell process and owns the `notifications`
 IPC target and D-Bus notification server while enabled. There is no extra shell.
 
-The tested boundaries are Omarchy 4.0.6 and 4.5.0-rc2. Rules are imported from
+The tested boundaries are Omarchy 4.0.6 and 4.5.0. Rules are imported from
 the installed native JavaScript modules; `native-modules.json` records their
 SHA-256 hashes. The installed modules select the contract, Rules adapter and
 DND state path, independently of the reported Omarchy version. Nothing from
@@ -33,7 +33,9 @@ Private state is `$XDG_STATE_HOME/wuling/notifications.json` (normally
 `~/.local/state/wuling/notifications.json`), mode 0600 in a 0700 directory.
 It holds DND, at most 100 live cards and 100 history rows retained for 24 hours.
 Verification text is redacted before writing; images and detected links are
-excluded. Live state survives shell restarts. Persistence uses one bounded
+excluded. Live state survives shell restarts. On 4.5.0, as in Omarchy's own
+store, a card with the `transient` hint is shown but never kept, in or out of
+DND: it is neither restored nor recorded. Persistence uses one bounded
 stdin writer and coalesced event-driven updates, with no idle polling.
 The verification-code privacy guarantee covers WULING's own files. If a sender
 puts a code in an image filename that fails to load, Qt can include that path in

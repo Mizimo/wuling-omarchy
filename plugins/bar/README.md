@@ -23,7 +23,7 @@ native widget text; keep diagnostic captures private. No user data is logged
 by the plugin. Native widgets receive the full host contract; third-party
 widgets receive the installed scoped facade.
 
-Compatibility is limited to Omarchy 4.0.6 and 4.5.0-rc2. The central boundary
+Compatibility is limited to Omarchy 4.0.6 and 4.5.0. The central boundary
 is the installer gate and the host contract in `research/bar-host-contract.md`:
 six layout sections, the transparent/background setting and optional popout
 callbacks. The installer and removal restart the shell officially, since

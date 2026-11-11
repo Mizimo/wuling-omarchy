@@ -14,6 +14,7 @@ QtObject {
     function ephemeral(row) { return row.transient || Native.isEphemeralApp(row.app); }
     function actions(row, sent) { return sent.map(a => ({kind:"action", value:a.id, label:a.text})); }
     function persisted(row, limit) { return row; } // Python applies the common private projection.
+    function kept(row) { return true; }
     function execAction(row, index) { return null; }
     function restored(row) { row.bodyRich = Native.styledBody(row.body || "", row.app, row.appIcon); return row; }
     function destination(row) { return false; }

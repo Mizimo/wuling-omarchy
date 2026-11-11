@@ -18,12 +18,12 @@ class NotificationStateTests(IsolatedHome):
         native = self.home / "native/shell/plugins/notifications"
         native.mkdir(parents=True)
         contracts = {"4.0.6": {"Old.js": hashlib.sha256(b"old fixture").hexdigest()},
-                     "4.5.0-rc2": {"New.js": hashlib.sha256(b"new fixture").hexdigest()}}
+                     "4.5.0": {"New.js": hashlib.sha256(b"new fixture").hexdigest()}}
         (source / "native-modules.json").write_text(json.dumps({"contracts": contracts}))
         (source / "Rules406.qml.in").write_text('import @Old.js@ as Old')
         (source / "Rules450.qml.in").write_text('import @New.js@ as New')
         with patch.object(notifications, "ROOT", root), patch.dict(os.environ, {"OMARCHY_PATH": str(self.home / "native")}), patch("wuling.lifecycle.command", side_effect=AssertionError("Version command must not select a module contract")):
-            for name, payload, contract in (("Old.js", b"old fixture", "4.0.6"), ("New.js", b"new fixture", "4.5.0-rc2")):
+            for name, payload, contract in (("Old.js", b"old fixture", "4.0.6"), ("New.js", b"new fixture", "4.5.0")):
                 file = native / name
                 file.write_bytes(payload)
                 gate = notifications.compatibility()
@@ -77,7 +77,7 @@ assert(!acknowledge(t,ok));
         self.assertEqual(len(list(directory.iterdir())),1)
 
     def test_first_dnd_uses_compatible_native_state_without_writing_it(self):
-        for version, relative in (("4.0.6", "notifications.json"), ("4.5.0-rc2", "notifications/quiet.json")):
+        for version, relative in (("4.0.6", "notifications.json"), ("4.5.0", "notifications/quiet.json")):
             with self.subTest(version=version):
                 native = self.home / ".local/state/omarchy" / relative
                 native.parent.mkdir(parents=True, exist_ok=True)

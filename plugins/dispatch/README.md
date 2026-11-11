@@ -27,4 +27,4 @@ Settings: language, motion, palette and native font size. No idle collector.
 clipboard text. Disabling `wuling.dispatch` leaves Omarchy's menu intact; the
 owned shortcut reports an unavailable-panel error. Uninstall removes only the
 unchanged binding block and plugin resources. Supported: Omarchy 4.0.6 and
-4.5.0-rc2. Entry point and copied-kit provenance are in the manifests.
+4.5.0. Entry point and copied-kit provenance are in the manifests.

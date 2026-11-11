@@ -10,6 +10,8 @@ QtObject {
     function ephemeral(row) { return Delivery.isEphemeral(row); }
     function actions(row, sent) { return Delivery.deeds(row, sent); }
     function persisted(row, limit) { return Store.persistable(row, limit); }
+    // As the native store: a transient card is shown but neither restored nor recorded.
+    function kept(row) { return row.transient !== true; }
     function execAction(row, index) { const actions = Security.parseExecActions(row.execActions); return actions && actions[index] ? actions[index].argv : null; }
     function restored(row) { return Store.restored(row); }
     function destination(row) { return !!Markup.hostname(row.source) || !!Security.safeExternalUrl(row.link || ""); }

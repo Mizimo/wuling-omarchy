@@ -4,7 +4,7 @@
     "4.0.6": {
       "NotificationLogic.js": "99e82df6524ee1ee1d52673b2a1496f62b14b220288f186c41fd8deed77a69bd"
     },
-    "4.5.0-rc2": {
+    "4.5.0": {
       "Store.js": "187240713ae27ee52f23d7b5516fb194456da9040845dc58c8a0434030c931a8",
       "Security.js": "a36017c79810820a985dad06e38a2c9e547e8e650dec413b2f2cbecd063e5c95",
       "Delivery.js": "f4f266e7bcf603ab9f34b276cfc1bf3a6eace6c0489189f09f21cc6d3cf43e5c",

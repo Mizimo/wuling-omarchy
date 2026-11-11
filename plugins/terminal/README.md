@@ -54,7 +54,7 @@ palette and native font scale. This plugin persists nothing itself. Actions
 are fixed argv commands in `bin/lib/wuling/actions.py`; errors appear in the
 panel without logging native service responses. Pending level actions coalesce.
 
-Supported versions: Omarchy 4.0.6 and 4.5.0-rc2, through the installed panel and
+Supported versions: Omarchy 4.0.6 and 4.5.0, through the installed panel and
 scoped bar API. Disable with `omarchy plugin disable wuling.terminal`; native
 panels and shortcuts remain. The owned new key is removed by
 `wuling uninstall`, which preserves edited user bindings and settings.
