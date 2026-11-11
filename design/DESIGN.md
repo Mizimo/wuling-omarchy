@@ -125,7 +125,7 @@ veils. Staggers: rows 20, cards and tiles 45, sections 60 ms; at most 12 steps.
 |---|---|---|
 | Panel or menu opens | Backdrop cuts on; shell focuses in (150 ms), then content resolves in reading order; first row readable ≤ 320 ms | Sections stagger with a scan line |
 | Closes | Wash-out, 120–140 ms linear | — |
-| Hover | The plate changes at once, 100 ms linear; the label and icon change ink at the midpoint, so they never sit dark on a still-dark plate. Every frame keeps the label at 3:1 against its plate or better, and a hovered cell reads at least as well as the same cell at rest | — |
+| Hover | The plate and its label change together, in one frame, as the chamfered plates already do. A fade would pass through a grey where neither ink reads: every frame keeps the label at 3:1 against its plate or better, and a hovered cell reads at least as well as the same cell at rest | — |
 | Selection | Fill settles from the leading edge, 240 ms snap | — |
 | Value that accumulates (level, progress) | Segments fill cell by cell | Hot leading cell |
 | Value that changes (telemetry, clock) | Swaps within a frame | — |
