@@ -14,7 +14,7 @@ kujira was not touched.
 | Base | installed by me from `omarchy-4.5.0-x86.iso` (sha256 `5d6288bc…`) in its own TUI; English, us layout, UTC, no disk encryption; I typed `sudo systemctl enable --now sshd` and `sudo ufw allow 22/tcp` at the console for the harness; checkpoint `verified-clean-b` | my verified clean checkpoint from earlier rounds |
 | Omarchy | 4.5.0-3 | 4.0.6-1 |
 | Hyprland / Quickshell | 0.56.2-4 / 0.3.2.r7 | same |
-| Renderer, vCPU | virtio-gpu, llvmpipe in the guest; 12 | same; 8 |
+| Renderer, vCPU | virtio-gpu, llvmpipe in the guest; 8 (first written as 12; corrected in the second half) | same; 8 |
 | Output | Virtual-1 1280×800, scale 1.25 where stated | same |
 
 The raw records, captures and videos are kept privately (`wi2/verifier-claude-v186`).
@@ -168,3 +168,215 @@ before-install only in the harness's sound override, my bindings fixture
 container removed, the verified checkpoint and firmware restored, and
 `verified-clean-b` the only snapshot. The runtime image
 `wuling-verifier-c186-runtime:1` is kept.
+
+# Second half
+
+Inbox v188; WULING `462e9c7` (the theme wave's per-switch recheck is
+`6916b61`). Later commits on main (`8031022`, `dde370e`, `89ee3bd`) are not
+included. Same two VMs, each from its verified checkpoint, one at a time,
+WULING from a clean `git archive` with `./install`, doctor clean on both.
+Real QMP keyboard and pointer. Wave recordings are 60 fps lossless x11grab
+of the VM display from outside the guest, analyzed as in phase H: the bar is
+cut into 16 cells, each frame's cells are classed old or new, and any old cell
+after a new one counts as a violation. Strips and full frames were checked
+by eye.
+
+## Result
+
+- **Theme wave on 4.5.0: safe, and it rarely plays.** It played 6 of 117
+  switches (5%): 4 of 100 in a run of switches and 2 of 17 recorded on the
+  four routes. Every skip is clean: the switch is Omarchy's own, no WULING
+  cover is drawn, no wave layer stays, and no old frame appears after the new
+  one in any recording. The per-switch recheck runs in the shell in 3–10 ms
+  as claimed; a changed byte makes the full gate run and turns the wave off.
+  The implementer saw a higher rate (15 of 120); in my VM the native palette
+  usually arrives before the cover is up.
+- **4.0.6:** the wave played 50 of 50 in the run and 15 of 16 on the routes.
+  The one skip, through Omarchy's picker, was clean.
+- **G-V7:** the shell still grows by about 0.05–0.07 MiB per Terminal open on
+  4.5.0. The two key points from `research/phase-i.md` hold only in part: with
+  battery fixtures, one page is flat and Performance/Power alternating grows,
+  but slowly (+4.5 MiB in 200, not +27). Without batteries, one page grew as
+  much as alternating. The panel host maps a fresh `omarchy-keyboard-panel`
+  layer on every open and releases it on every close.
+- **G/H matrix on 4.5.0:** no finding. Every reachable page was entered and
+  left by keyboard and by mouse. The views are uncut in four themes, three
+  languages and text size 16. Keymap, notifications, OSD, Dispatch and the
+  power menu work by real input, and the same real-input pass on 4.0.6 also
+  passes.
+
+## Theme wave on 4.5.0
+
+**Rate.** 100 `omarchy theme set` switches rotating the four WULING themes on
+one shell, 2.5 s apart:
+
+| | Played | Skipped | Skip reasons | Played per 25 | Switch time |
+|---|---:|---:|---|---|---|
+| 4.5.0 | 4 | 96 | late palette 50, late capture 46 | 1, 2, 0, 1 | 3.125 s median, max 3.307 |
+| 4.0.6 (50 switches) | 50 | 0 | | 25, 25 | 3.362 s median, max 3.408 |
+
+Timing from each switch's own record on 4.5.0 (17 recorded switches): the
+gate recheck finished at 3–10 ms (median 4), the lock check at 30–93 ms and
+the capture at 34–81 ms. A skip was decided at 81–241 ms. In the two played
+switches the palette arrived at 151 and 195 ms, the wave started at 235 and
+295 ms, and the switch was done by 661 and 720 ms. On 4.0.6 the palette
+arrives at 400–830 ms, which leaves the cover plenty of time.
+
+**Routes, recorded.** Omarchy's picker (Super+Shift+Ctrl+Space), the theme
+menu (Super+Space), Config's THEME and `omarchy theme set`, by keyboard,
+landing on WULING and native themes:
+
+| Route | 4.5.0 played | 4.0.6 played | Old after new (both) | Largest frame gap |
+|---|---:|---:|---:|---|
+| Picker | 0 of 3 | 7 of 8 | 0 | 24 ms / 35 ms |
+| Theme menu | 2 of 3 | 2 of 2 | 0 | 55 ms / 34 ms |
+| Config THEME | 0 of 3 | 2 of 2 | 0 | 22 ms / 17 ms |
+| `omarchy theme set` | 0 of 8 | 4 of 4 | 0 | 22 ms / 17 ms |
+
+By eye:
+
+- **Played.** The 16 × 9 cells sweep down with the yellow ghost outline, and
+  the bar ends fully new; this is the same as phase H's 4.0.6 wave.
+- **Skipped on 4.5.0.** The bar flips in one or two frames, then the
+  background changes in one frame. No WULING cover is drawn and no old frame
+  returns.
+- **Control.** With `session.theme false`, which gives Omarchy's own path,
+  the change has the same shape: background in one frame, bar after, 0
+  violations.
+- **The 4.0.6 skip.** The capture was ready only at 489 ms, because Omarchy's
+  picker was still on screen. The switch then fell back to Omarchy's slanted
+  wipe, with no cover and no old frame after the new.
+
+**Content gate.** With the shell running, I changed one character of the
+installed `/usr/share/omarchy/bin/omarchy-theme-set` (`theme` to `thEme` in
+its summary comment), as root in the VM:
+
+1. `wuling doctor` at once: `session:theme-compatibility` fails, "Installed
+   theme modules do not match a tested contract".
+2. First switch: the in-shell digest differed, so the full gate started.
+   That switch was skipped as late palette at 158 ms, before the gate
+   answered, and no cover was drawn.
+3. Second switch: skipped `unknown-contract`.
+4. Every later switch: no attempt at all. Omarchy changed the themes, with
+   no wave.
+5. With the byte restored (same SHA-256 as the contract), doctor passes. The
+   wave stays off until the shell restarts; after `omarchy restart shell` it
+   attempts again, with the fast recheck at 3–7 ms.
+
+**Memory over the 100 switches (4.5.0):** 312.6 MiB before; medians per 25
+switches 339.0, 351.5, 352.7, 356.6; idle after 355.6. FDs 209–211, one
+shell process throughout. This is the warm-up shape phase H measured on 4.0.6.
+
+## G-V7 on 4.5.0
+
+Each cycle runs `wuling terminal open PAGE`, waits 0.45 s, checks the page
+and the `omarchy-keyboard-panel` layer, closes, and 0.3 s later samples the
+shell's PSS+SwapPSS. Idle is 21 s of samples after the last close. Two
+sessions, each on a freshly restarted shell:
+
+| Session | Run | Before | Medians per 50 cycles | Idle after | Slope, last 100 (MiB/cycle) |
+|---|---|---:|---|---:|---:|
+| No battery fixture | Performance ×200 | 321.2 | 321.9, 325.4, 327.7, 330.8 | 331.5 | 0.055 |
+| | Performance/Power ×200 | 337.3 | 336.0, 335.7, 338.2, 339.6 | 342.2 | 0.037 |
+| | Power ×200 | 347.9 | 343.9, 342.8, 344.9, 345.9 | 353.1 | 0.025 |
+| | Performance/Power ×200 | 360.5 | 350.3, 360.1, 363.2, 364.2 | 365.1 | 0.027 |
+| | Performance ×200 | 372.4 | 369.2, 371.7, 373.5, 375.1 | 376.7 | 0.037 |
+| Synthetic UPower, three packs (as the implementer's) | warm-up Performance/Power ×50 | 325.9 | 334.1 | 344.7 | |
+| | Performance ×200 | 344.3 | 349.5, 353.0, 352.8, 353.2 | 359.1 | 0.009 |
+| | Performance/Power ×200 | 358.6 | 356.0, 355.5, 358.5, 360.5 | 366.9 | 0.043 |
+| | Power ×200 | 370.7 | 362.6, 366.0, 365.6, 365.2 | 372.2 | 0.027 |
+
+- **One page flat.** Yes with batteries: Performance and Power each hold
+  after their first 50 cycles. Without batteries, a warm Performance run grew
+  about as much as alternating did, so I can't confirm that one page is
+  always flat.
+- **Two pages alternating grow.** Yes, but slowly: about 4.5 MiB in 200
+  cycles (0.03–0.04 MiB per cycle). The implementer's 466 → 493 MiB did not
+  reproduce here.
+- **Overall.** The shell went 321 → 377 MiB over 1,000 opens in the first
+  session and 326 → 372 MiB over 650 in the second, about 0.05–0.07 MiB per
+  open. Each run's idle sat 5–8 MiB above its last cycles, so the growth
+  doesn't show only right after a close. G-V7 stays open on 4.5.0, with
+  roughly the rc2 rate.
+- **The panel host.** In all 1,650 opens of complete runs, exactly one
+  `omarchy-keyboard-panel` layer was mapped while open, and none was left
+  after closing. Two addresses alternate. FDs stayed 203–209, and the
+  shell's GPU buffer mappings went down as well as up (for example 252 →
+  212). This matches the implementer's finding: a fresh surface per open,
+  released on close.
+
+Once in about 2,250 state calls, `omarchy-shell`'s 2 s IPC timeout expired.
+The shell logged the peer closing, and kept running as the same process. I
+added one retry and reran; the rerun had no miss.
+
+## G and H on 4.5.0, reduced to what differs from rc2
+
+**Ten pages by real input.** Each page was entered from the overview opened
+by Super+Ctrl+G, by keyboard (Down to the control, Enter), and left with
+Left or Backspace, then Esc. Each was also entered by mouse, from the
+overview opened by clicking the bar's TERMINAL cell: a click on the control,
+a click on BACK, and an outside click to close.
+
+| Page | Entry | Crumb | Keyboard | Mouse |
+|---|---|---|---|---|
+| System | user name chip | 02 TERMINAL › SYSTEM | ok | ok |
+| Config | ⋮ | 02 TERMINAL › CONFIG | ok | ok |
+| Calendar | clock | 02 TERMINAL › CALENDAR | ok | ok |
+| Power | LINK's POWER tile | 03 LINK › POWER | ok (Left selects a profile, Backspace returns, as documented) | ok |
+| Audio | volume icon | 04 LEVELS › AUDIO | ok | ok |
+| Performance | CPU | 06 TELEMETRY › PERFORMANCE | ok | ok |
+| Comms | "+N more" | 07 COMMS › HISTORY | ok | ok (after scrolling) |
+
+Each entry opened the named page, with the crumb matching the overview's
+section number. Each return reached the overview, and each Esc or outside
+click closed the Terminal. The VM has no Wi-Fi, Bluetooth or Tailscale, so
+their overview controls are hidden, as DESIGN says. `wuling terminal open
+wifi` and `bluetooth` show "Unavailable" and "No devices". `tailnet` refuses
+with "Tailnet is not installed". These pages were verified with fixtures on
+rc2, and 4.5.0 didn't change them.
+
+**Themes, languages, text size.** At 1366×768 I captured the ten views
+(Tailnet excluded, plus the bottoms of System, Comms and Config) in all four
+themes × English, Traditional and Simplified Chinese: 144 captures. I also
+captured 640×480, 3840×2160, 1920×1080 at 1.25, and 800×600 at text size 16:
+192 views in all, checked by eye on contact sheets, with no overlap,
+overflow or misplaced control. Separately, the Terminal's own `truncated()`
+over the overview and every page, field and HUD presets, text sizes 12 and
+16, three languages at 1366×768: 0 of 120 views cut. At size 16 the panel
+grows to 496 px, so the size does apply.
+
+**Real input, once each (4.5.0 and 4.0.6):**
+
+- **Notification:** a card shown, then dismissed with Omarchy's Super+comma;
+  `live` went 1 → 0.
+- **OSD:** the volume keys show WULING's OSD.
+- **Dispatch:** Super+D opens it; typing filters; the first Esc clears and
+  the second closes; Enter on "Foot" launches it and closes Dispatch.
+- **Power menu:** Super+Esc opens it; Right moves the selection; Esc closes.
+- **Keymap:**
+  - Super+Ctrl+/ opens it, and typing filters ("volume" leaves the four
+    volume binds).
+  - Super+Return while it is open runs nothing (no window).
+  - Esc clears, then closes.
+  - An outside click closes it.
+  - After closing, Super+Return opens a terminal.
+
+## Limits
+
+One output, llvmpipe in a VM. The wave rate depends on how fast this VM
+renders the cover against Omarchy's palette; the implementer's VM and real
+hardware may differ, and kujira's rate is still unknown. The G-V7 runs use
+`wuling terminal open`, as G-V7 always has, with the panel layer and the
+pages checked on every cycle. The keyboard and mouse pass covers the seven
+pages this VM can reach. The gate change was made as root inside the VM to
+stand in for a changed Omarchy file.
+
+## Cleanup
+
+The battery fixture was stopped and UPower restored, the gated file's
+original byte restored (checked by hash), and text size, language and theme
+returned. WULING was uninstalled on both VMs; the inventories differ from
+before-install only in the harness's sound override and dconf's user
+database. Each VM ended with a normal shutdown, my container removed, the
+verified checkpoint and firmware restored, and `verified-clean-b` the only
+snapshot. The runtime image is kept. kujira was not touched.
