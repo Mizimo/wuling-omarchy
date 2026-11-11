@@ -18,7 +18,13 @@ FocusScope {
     property var registeredHost: null
     readonly property bool hovered: mouse.containsMouse
     readonly property bool highlighted: selected || hovered || activeFocus
-    readonly property color foreground: accent ? Runtime.c("on-accent") : highlighted ? Runtime.c("ink-2") : baseForeground
+    // The flat plate fades in over the hover duration; turn the ink with it at
+    // its midpoint, so the label never sits dark on a still-dark plate.
+    // A chamfered plate repaints at once, and so does its ink.
+    property bool lit: false
+    onHighlightedChanged: if (chamfer > 0) lit = highlighted; else litDelay.restart()
+    Timer { id: litDelay; interval: Runtime.duration("hover") / 2; onTriggered: button.lit = button.highlighted }
+    readonly property color foreground: accent ? Runtime.c("on-accent") : lit ? Runtime.c("ink-2") : baseForeground
     signal clicked()
     signal rightClicked()
     signal middleClicked()
@@ -39,7 +45,7 @@ FocusScope {
         if (host) host.registerClickTarget(button);
     }
     onHostChanged: registerHost()
-    Component.onCompleted: registerHost()
+    Component.onCompleted: { registerHost(); lit = highlighted; }
     Component.onDestruction: { if (registeredHost && typeof registeredHost.unregisterClickTarget === "function") registeredHost.unregisterClickTarget(button); }
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) { clicked(); event.accepted = true; }

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "files": {
-    "Button.qml": "41949afd8c11f22bcd3e65b12e55407f77e18d2d770472c34421a9165bb3233a",
+    "Button.qml": "393f27ffcfcda676918bf340aaa8074df5be293bb9b388b2c6b48c4114d0965e",
     "Hazard.qml": "e5bcb2a379527d24a20e6f1b61663db7aca1ee94ecada27f498707e38a6637a7",
     "Icon.qml": "61111d6ae3c00f09dc2d4d18da8ba721375feca07be09403b663df560ba9e16f",
     "Label.qml": "706511f9f576ad22f08d51d2e7c648ae052baed298dc2723a5160307cc9d07d0",
