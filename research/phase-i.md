@@ -120,6 +120,31 @@ panel's window alive across opens; keeping pages built roughly halved the rate
 in G.2 and contradicts building a page only while it is open. G-V7 stays open
 with this cause.
 
+## The bar after a shell restart
+
+The verifier found WULING's bar back 1.7–3.7 s after Omarchy's on each
+official shell restart (`review/phase-i/upgrade-from-4.0.6.md`). Timed from
+`omarchy restart shell` to each layer mapping, polled every 20 ms in the guest,
+with real restarts only:
+
+| Host | Omarchy's bar | Empty fixture bar plugin | WULING's bar, only the bar enabled | WULING's bar, all parts |
+|---|---|---|---|---|
+| 4.5.0 | 0.63–0.78 s | 1.80–2.21 s | 1.97–2.01 s | 2.05–2.79 s, median 2.14 |
+| 4.0.6 | 0.54–0.66 s | 1.37–1.57 s | | 1.76–2.10 s |
+
+The shell builds its built-in bar before anything else. A bar from a plugin
+waits for the plugin registry's scan, and on 4.5.0 that scan's result also
+starts Omarchy's first-party services, about 1.2 s of main-thread work in the
+journal, while the plugin bar's loader is asynchronous. Meanwhile Omarchy maps
+its own bar layer, empty, from about 0.7 s until the plugin bar replaces it, so
+a 60 fps recording shows the background without a bar. The registry's two
+scripts take 17 and 38 ms when timed alone. An empty one-window bar plugin,
+installed only for this test, arrives within 0.2 s of WULING's on 4.5.0 and
+0.4 s on 4.0.6, so nearly all of the wait is the plugin-bar path that any
+replacement bar takes. WULING's own share, its host's widgets and its other
+parts, is 0.1–0.5 s. Nothing was changed: what WULING could shorten is small
+against the rest.
+
 ## Matrix
 
 - Cut text: the overview and all ten pages, two presets, three languages, text
