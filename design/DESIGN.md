@@ -425,7 +425,7 @@ A theme switch, by any route, plays the wave of Arrival and Exit: the old look l
 | **Super+D** | Dispatch | **WULING, new** |
 | **Super+Ctrl+/** | Keymap | **WULING, new** |
 
-All three new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to overwrite a user's own binding of them.
+All three new keys are free in 4.0.6 and 4.5.0. The installer refuses to overwrite a user's own binding of them.
 
 ## 10. Public standards
 
@@ -434,7 +434,7 @@ All three new keys are free in 4.0.6 and 4.5.0-rc2. The installer refuses to ove
   16:9, 16:10, 3:2 and 21:9 all show (`design/src/wallpaper.py`). `design/render.sh bg` rebuilds them.
 - **Monitors:** a bar per output. Terminal, power menu, Dispatch and OSD on the focused output. Arrival and the exit on all. Handle hotplug.
 - **Languages:** zh-Hant, zh-Hans, en. English documentation.
-- **Versions:** Omarchy 4.0.6 (stable) now. Keep the 4.5 differences behind one small boundary (the table in
+- **Versions:** Omarchy 4.0.6 and 4.5.0, both stable. Keep the 4.5 differences behind one small boundary (the table in
   `research/omarchy-shell-api.md` §17): six bar sections, notification methods, `style.*` → `appearance.*`, `background`
   instead of `transparent`, `Ui.OverlayWindow`, i18n.
 - **An Omarchy we haven't tested.** Omarchy updates on its own schedule, so a newer version must never leave someone with a broken desktop.

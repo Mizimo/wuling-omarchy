@@ -2,6 +2,10 @@
 
 Owner decisions that bind the design. Newest first.
 
+## 2026-11-11 — WULING moves to Omarchy 4.5
+
+Omarchy 4.5.0 is stable since 2026-11-05, and the owner said to go ahead with it. WULING supports 4.5.0 as fully as 4.0.6, someone on 4.0.6 with WULING can take Omarchy's own update without a broken desktop at any moment, and kujira follows once the VMs pass, with the owner's word at that step. G-V7 is measured on 4.5.0 as part of this, not left for later.
+
 ## 2026-11-05 — a short screen scrolls the Terminal
 
 Shown the Terminal on kujira at 1366×768, where the overview is taller than the screen and the Comms log sits below Telemetry, out of first view, the owner chose **to keep it as it is**: the body scrolls as §8.2 says, the Comms log stays last, and nothing is compacted on short screens. Sections can still be switched off in Config.
