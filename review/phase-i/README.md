@@ -380,3 +380,59 @@ before-install only in the harness's sound override and dconf's user
 database. Each VM ended with a normal shutdown, my container removed, the
 verified checkpoint and firmware restored, and `verified-clean-b` the only
 snapshot. The runtime image is kept. kujira was not touched.
+
+## Button hover (inbox v189, `89ee3bd`)
+
+`dde370e` turns a flat plate's ink at the fade's midpoint. Chamfered plates
+keep the immediate change. Method:
+
+- WULING `89ee3bd`, installed fresh on each VM.
+- Recorded at 60 fps from outside the VM. The pointer was moved by real QMP
+  events to a corner of each button, clear of the label, held 0.7 s, then
+  moved away. Each transition was repeated three times.
+- In every frame I measured the label's contrast against its own plate: WCAG
+  luminance ratio of the label's most distinct 6% of pixels against the
+  box's median. For comparison, I measured the same buttons on `462e9c7`
+  (before the fix), updated over the top on the same 4.5.0 VM.
+- I also looked at zoomed strips of every distinct frame.
+
+Lowest contrast during the 300 ms after the pointer enters or leaves, with
+rest values (rest → lowest → hovered):
+
+| Button | Before the fix, 4.5.0 `wuling` | After, 4.5.0 `wuling` | After, 4.0.6 `wuling` | After, paper themes (both versions) |
+|---|---|---|---|---|
+| Bar TERMINAL cell, in | 9.5 → **1.0** (4 frames under 1.6) → 12.3 | 9.5 → 2.0 → 12.3 | 9.5 → 2.0 → 12.3 | 7.7 → 3.3 → 12.0 |
+| Bar TERMINAL cell, out | 12.3 → 1.2 → 9.5 | 12.3 → 2.7 → 9.5 | 12.3 → 2.7–4.6 → 9.5 | 12.0 → 2.9 → 7.7 |
+| Terminal BACK, in / out | 1.0 / 1.2 | 2.1 / 2.8 | 2.1 / 2.8 | 3.3–3.6 / 3.1 |
+| Config segments, in / out | 1.1 / 1.2–1.3 | 2.1–2.3 / 2.7–2.8 | 2.1–2.3 / 2.7–2.8 | 2.9–3.6 / 2.8–3.0 |
+| Bar workspace 02, in | 3.5 → **1.0** (5 frames) → 2.2 | 3.5 → **1.2–1.4** (1–2 frames) → 2.2 | same | 2.5–2.7 → 1.4 → 1.9 |
+| Bar workspace 02, out | 2.2 → 1.6 (0–1 frame) → 3.5 | 2.2 → **1.3–1.5** (1–2 frames) → 3.5 | same | 1.9 → 1.4–1.6 → 2.5–2.7 |
+
+By eye, the TERMINAL cell, BACK and the Config segments now show their label
+in every frame: as the plate fades, the label stays light until the plate is
+mid-gray, then turns dark. The before-fix blank frames are gone. HUD themes
+give the same result for BACK and the segments, which are flat there too.
+
+**Unchanged, as intended.** The HUD TERMINAL cell and the menu cell are
+chamfered accent plates, and hovering doesn't change them at all, before or
+after: the label holds 12.2:1 (HUD) and 11.6:1 (HUD paper) in every frame.
+Dispatch's tabs and rows and the power cards aren't `Kit.Button`s and don't
+react to hover on either version; the only change on screen is the cursor
+itself.
+
+### P3: a workspace cell's label still nearly disappears for a frame or two
+
+**Workspace cells are only partly fixed.** An unfocused workspace's label is
+dim at rest (3.5:1), and its hover plate settles at mid-gray, not paper, so
+hovered it reads only 2.2:1. When the ink turns at the fade's midpoint, that
+plate is still dark. In all four themes, on both versions:
+
+- In, "02" falls to 1.2–1.4:1 for one or two frames (about 0.10–0.12 s after
+  the pointer arrives).
+- Out, it falls to 1.3–1.6:1 for one or two frames (about 0.07–0.09 s).
+
+Before the fix, hover-in was worse (1.0:1 for five frames). Hover-out was
+slightly better (one frame at about 1.6:1). The zoomed strips show the same
+thing: at those frames, "02" is a dark shape on a dark plate, hard to make
+out. It lasts 17–33 ms, so it's a P3, but the rule "the label is visible in
+every frame" isn't met for workspace cells.
