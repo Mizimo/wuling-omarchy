@@ -79,6 +79,29 @@ Item {
     }
     FileView { path: "/etc/hostname"; printErrors: false; onLoaded: host.hostname = text().trim().toUpperCase() }
 
+    // Behaviour that isn't WULING's look follows the installed Omarchy's bar.
+    // Since 4.5 it takes no input under a full-screen window, because
+    // Hyprland 0.56 lifts a remapped top layer back above full screen, and its
+    // tooltips stay transparent until their scale matches the bar's. 4.0.6's
+    // bar does neither, so neither do we there.
+    property bool nativeFullscreenRules: false
+    Process {
+        running: true
+        command: ["omarchy", "version"]
+        stdout: StdioCollector { onStreamFinished: host.nativeFullscreenRules = /^\d/.test(text.trim()) && !/^4\.0\./.test(text.trim()) }
+    }
+    // Hyprland's window list doesn't follow full screen on its own.
+    Connections {
+        target: Hyprland
+        enabled: host.nativeFullscreenRules
+        function onRawEvent(event) { if (event && String(event.name) === "fullscreen") Hyprland.refreshToplevels(); }
+    }
+    function fullscreenOn(screen) {
+        const monitor = Hyprland.monitorFor(screen), workspace = monitor ? monitor.activeWorkspace : null;
+        return !!workspace && Hyprland.toplevels.values.some(t => t && t.workspace && t.workspace.id === workspace.id
+            && t.lastIpcObject && (Number(t.lastIpcObject.fullscreen) & 2) !== 0);
+    }
+
     // Visibility belongs to the replacement host. Native overlay facades read
     // it from us; the shell does not inject the native bar's toggle state.
     function syncHidden() {
@@ -223,6 +246,8 @@ Item {
                     return {text:String(t.text||""),tooltip:String(t.tooltipText||""),screen:w.screen.name,x:p.x,y:p.y,width:t.width,height:t.height};
                 }),
                 tooltip: host.tooltipText, tooltipReady: !!host.tooltipTarget && !tipDelay.running,
+                nativeFullscreenRules: host.nativeFullscreenRules,
+                underFullscreen: surfaces.instances.filter(w => w.underFullscreen).map(w => w.screen.name),
                 active: host.slots.filter(s => s.widget && s.widget.opened).map(s => s.widgetId),
                 slots: host.slots.map(s => {
                     const p = s.mapToItem(s.window.contentItem,0,0);
@@ -472,6 +497,7 @@ Item {
         }
     }
     Variants {
+        id: surfaces
         model: Quickshell.screens
         PanelWindow {
             id: surface
@@ -489,6 +515,9 @@ Item {
             WlrLayershell.namespace: "wuling-bar"
             WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            readonly property bool underFullscreen: host.nativeFullscreenRules && host.fullscreenOn(screen)
+            mask: underFullscreen ? noInput : null
+            Region { id: noInput }
             readonly property real axisLength: host.vertical ? height : width
             readonly property real centerStart: Math.max(0, Math.min(axisLength - center.length, axisLength / 2 - Math.min(center.anchorOffset, center.length)))
             Item {
@@ -558,6 +587,13 @@ Item {
                 anchor.edges: Edges.Top | Edges.Left
                 anchor.gravity: Edges.Bottom | Edges.Right
                 anchor.adjustment: PopupAdjustment.Slide
+                // Each show maps a fresh surface at a whole-number scale before
+                // Qt has the output's fractional one; at a whole-number scale
+                // the ratio dips to 1 after the first frame, so only hiding resets.
+                readonly property bool scaleReady: visible && Math.round(devicePixelRatio * 120) === Math.round(surface.devicePixelRatio * 120)
+                property bool revealed: false
+                onVisibleChanged: if (!visible) revealed = false
+                onScaleReadyChanged: if (scaleReady) Qt.callLater(() => { if (tip.scaleReady) tip.revealed = true; })
                 anchor.rect.x: {
                     const t=host.tooltipTarget;
                     if(!t || !host.targetBelongsToWindow(t,surface)) return 0;
@@ -568,7 +604,7 @@ Item {
                     if(!t || !host.targetBelongsToWindow(t,surface)) return 0;
                     return t.mapToItem(surface.contentItem,0,0).y + (host.position==="top"?t.height+4:host.position==="bottom"?-tip.height-4:t.height/2-tip.height/2);
                 }
-                Rectangle { anchors.fill:parent; color:Commons.Color.tooltip.background; border.color:Commons.Color.tooltip.border
+                Rectangle { anchors.fill:parent; opacity:!host.nativeFullscreenRules || tip.revealed ? 1 : 0; color:Commons.Color.tooltip.background; border.color:Commons.Color.tooltip.border
                     Text { id:tipText; anchors.centerIn:parent; text:host.tooltipText; textFormat:Text.PlainText; color:Commons.Color.tooltip.text; font.family:host.fontFamily; font.pixelSize:12 }
                 }
             }

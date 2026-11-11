@@ -13,6 +13,13 @@ panel shortcut reveals its anchor. The clock's input layer is the original
 widget at zero opacity; a changed internal clock contract falls back to the
 visible original. Vertical bars always use that original clock.
 
+Behaviour that isn't WULING's look follows the installed Omarchy's bar. Since
+4.5 the bar takes no input while its workspace holds a real full-screen
+window, so a click meant for the top of that window never lands on the bar,
+even after Hyprland lifts a remapped bar above it; its tooltip stays
+transparent until it has the bar's fractional scale. On 4.0.6 the bar does
+neither, as Omarchy's own doesn't. `omarchy version` decides once at load.
+
 Settings are resolved by the generated kit: palette, preset, font scaling,
 `labels`, `motion` and `language`. The generated `kit/` contains copies of our
 shared code, with hashes; Omarchy code is imported at runtime, never copied.
