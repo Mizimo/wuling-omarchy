@@ -18,7 +18,9 @@ class ThemeWaveTests(IsolatedHome):
         source.write_text("fixture early staging contract\n")
         target.write_text(json.dumps({"contracts": {"tested": {"files": {"bin/omarchy-theme-set": hashlib.sha256(source.read_bytes()).hexdigest()}, "background_ms":420, "scaled_duration":False, "settle_ms":67}}}))
         with patch.object(theme_wave, "ROOT", root), patch.dict(os.environ, {"OMARCHY_PATH": str(native)}):
-            self.assertEqual(theme_wave.compatibility()["contract"], "tested")
+            gate = theme_wave.compatibility()
+            self.assertEqual(gate["contract"], "tested")
+            self.assertEqual(gate["recheck"], {str(source): hashlib.md5(source.read_bytes()).hexdigest()})
             source.write_text("different staging order\n")
             self.assertFalse(theme_wave.compatibility()["ok"])
             source.unlink()

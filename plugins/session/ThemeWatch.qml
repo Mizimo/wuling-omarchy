@@ -26,6 +26,7 @@ Item {
     property real progress:0
     property var captured:({})
     property var swaps:({})
+    property var checks:({})
     property var outputs:[]
     property int attempts:0
     property int played:0
@@ -38,6 +39,18 @@ Item {
     onOutputNamesChanged:if(active)finish("outputs-changed")
     function name() { themeName.reload();return themeName.text().trim(); }
     FileView { id:themeName;path:watch.stateRoot+"/theme.name";preload:false;blockAllReads:true;printErrors:false }
+    // The gated files, read only when a switch starts. The startup gate gave
+    // their digests; any difference falls back to the full gate.
+    FileView { id:gated;preload:false;blockAllReads:true;printErrors:false }
+    function unchanged() {
+        const sums=contract.recheck;
+        if(!sums || !Object.keys(sums).length)return false;
+        for(const path in sums) {
+            gated.path=path;gated.reload();
+            if(Qt.md5(gated.text())!==sums[path])return false;
+        }
+        return true;
+    }
     // No theme-file watch or capture at idle. The staging directory is the
     // early signal shared by the CLI and Omarchy's own picker.
     FolderListModel {
@@ -66,8 +79,10 @@ Item {
         if(!allowed || !contract.ok)return;
         attempts++;previous=name();next="";phase="capture";started=Date.now();
         palette=false;paletteAt=0;waveAt=0;progress=0;cover=false;covered=false;rechecked=false;lockChecked=false;
-        captured=({});swaps=({});outputs=Quickshell.screens.map(s=>s.name);
-        active=true;deadline.restart();gate.cancelled=false;gate.running=true;lockQuery.running=true;
+        captured=({});swaps=({});checks=({});outputs=Quickshell.screens.map(s=>s.name);
+        active=true;deadline.restart();lockQuery.running=true;
+        if(unchanged()) { rechecked=true;checks={gate:Date.now()}; }
+        else { gate.cancelled=false;gate.running=true; }
     }
     function ready(output) {
         if(!active || phase!=="capture")return;
@@ -139,7 +154,7 @@ Item {
     function finish(reason) {
         if(!active)return;
         if(phase!=="wave")skipped++;
-        last={reason:reason,started:started,finished:Date.now(),captured:captured,swaps:swaps,palette:paletteAt,wave:waveAt};
+        last={reason:reason,started:started,finished:Date.now(),captured:captured,swaps:swaps,checks:checks,palette:paletteAt,wave:waveAt};
         active=false;phase="idle";cover=false;covered=false;captured=({});swaps=({});outputs=[];
         deadline.stop();committed.stop();gate.cancelled=true;gate.running=false;lockQuery.running=false;
     }
@@ -152,7 +167,7 @@ Item {
             onStreamFinished: {
                 if(!watch.active)return;
                 if(text.trim()!=="false")watch.finish("locked-or-unavailable");
-                else { watch.lockChecked=true;watch.considerCover(); }
+                else { watch.lockChecked=true;watch.checks=Object.assign({lock:Date.now()},watch.checks);watch.considerCover(); }
             }
         }
     }
@@ -165,7 +180,7 @@ Item {
                 try { watch.contract=JSON.parse(text); }catch(_) { watch.contract=({ok:false}); }
                 if(watch.active) {
                     if(!watch.contract.ok)watch.finish("unknown-contract");
-                    else { watch.rechecked=true;watch.considerCover(); }
+                    else { watch.rechecked=true;watch.checks=Object.assign({gate:Date.now()},watch.checks);watch.considerCover(); }
                 }
             }
         }

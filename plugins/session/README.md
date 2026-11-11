@@ -58,7 +58,10 @@ Power still executes its native actions.
 The optional theme wave watches only `current/` at idle. A new `next-theme`
 directory requests one capture per output. The installed theme-set, Color,
 Style and Background files must match one tested content contract, checked at
-startup and again before each cover. Unknown content disables this effect,
+startup and again before each cover. The startup check also returns each
+file's digest, so a switch rereads those files in the shell rather than
+starting the full check, which took longer than 4.5.0's palette; any
+difference runs the full check. Unknown content disables this effect,
 leaving the native theme command untouched; doctor reports the boundary.
 The installer owns a separate `wuling-theme-wave` no-animation layer rule.
 
@@ -70,7 +73,8 @@ preparation event. Same-theme refresh, failure, lock, Arrival, Exit, output
 changes, disabled settings and reduced motion cancel or bypass it. The reveal
 is a 420 ms, 16 by 9 cell wave with a half-level open cue. All captures, effect
 objects, windows and active timers unload afterwards. Only aggregate counters
-and the last timing record remain in memory (`wuling.session themeState`).
+and the last timing record remain in memory (`wuling.session themeState`),
+including when the content and lock checks completed.
 
 The native background has no public completion fence. The wave uses its
 content-gated reveal duration from the last palette assignment, plus 67 ms,
