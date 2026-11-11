@@ -30,7 +30,7 @@ Interface text comes in English, Traditional Chinese and Simplified Chinese.
 
 ## Install
 
-You need Omarchy 4. It's tested on 4.0.6 and 4.5.0-rc2. On any other version the installer says so and asks, and anything that depends on a changed part of Omarchy stays on Omarchy's own.
+You need Omarchy 4. It's tested on 4.0.6 and 4.5.0. On any other version the installer says so and asks, and anything that depends on a changed part of Omarchy stays on Omarchy's own.
 
 ```sh
 git clone https://github.com/Mizimo/wuling-omarchy.git
