@@ -162,7 +162,8 @@ Old §6 copy applies where a label is carried over.
 A `kinds: ["bar"]` plugin that draws the surface and layout, and hosts Omarchy's widgets from the registry. Read
 `research/bar-host-contract.md`: it lists every member the host must provide. Follow `bar.layout`, so `omarchy bar …`
 and `shell.json` keep working. All four edges. One window per output. What isn't WULING's look follows the installed Omarchy's
-bar: on 4.5.0 it fades under a full-screen window and takes no input there, and its tooltips wait until a fractional scale is ready.
+bar: on 4.5.0 it takes no input on a workspace with a full-screen window, even when Hyprland raises it above that window, and its tooltips
+wait until a fractional scale is ready. 4.0.6's bar does neither, so neither does WULING's there.
 
 | Section | Cell | Drawn by | Behaviour |
 |---|---|---|---|
