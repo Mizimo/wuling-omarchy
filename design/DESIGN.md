@@ -161,7 +161,8 @@ Old §6 copy applies where a label is carried over.
 
 A `kinds: ["bar"]` plugin that draws the surface and layout, and hosts Omarchy's widgets from the registry. Read
 `research/bar-host-contract.md`: it lists every member the host must provide. Follow `bar.layout`, so `omarchy bar …`
-and `shell.json` keep working. All four edges. One window per output.
+and `shell.json` keep working. All four edges. One window per output. What isn't WULING's look follows the installed Omarchy's
+bar: on 4.5.0 it fades under a full-screen window and takes no input there, and its tooltips wait until a fractional scale is ready.
 
 | Section | Cell | Drawn by | Behaviour |
 |---|---|---|---|
@@ -245,7 +246,9 @@ scripts and keys reach it unchanged.
 - **Levels:** normal has a jade edge. One with actions or a click command has a yellow edge. Critical has a vermilion edge.
 - **Keep Omarchy's rules**, from the installed version's own modules (`shell/plugins/notifications/`). Lifetimes: critical stays, low at
   least 5 s, normal at least 8 s, at most 30 s. DND lets through app `omarchy-action` and critical from `notify-send`, and on 4.5 a detected
-  verification code. Ephemeral ones (`transient` hint, `notify-send`, `omarchy-action`) silenced by DND are not recorded.
+  verification code. Ephemeral ones (`transient` hint, `notify-send`, `omarchy-action`) silenced by DND are not recorded. On 4.5.0 a
+  notification with the `transient` hint is shown and never kept, in or out of DND, as Omarchy's own store does: Omarchy's login
+  reminders use it, so keeping them would stack one more each session.
 - **Toast:** 340 px, header (`Comms · 通訊`, app, time, close), art, summary, body, actions, a life line. Stacks from the
   top right, newest on top, on the outputs Omarchy uses: every output on 4.0.6; on 4.5 the focused one, where the stack stays until it
   empties. Toasts keep that place unless the open Terminal's panel covers it. Then they sit to the panel's left; if 340 px doesn't fit there, to its right;
@@ -400,7 +403,7 @@ in §8.5. Times run from the end of the hold.
 Every key on one screen, as in the earlier WULING. An overlay plugin on **Super+Ctrl+/**, in the owned block of `bindings.lua`; Omarchy's Super+K list stays. Built only while it's open. Full screen on the focused output, over the live desktop: the theme's darkest ink at 86 %, the head `KEYMAP · 鍵位`, the vertical 鍵位 in Serif Black 64 with its yellow cut. The bar shows dimmed through the ink; the head, the filter and the columns start below it, so nothing of the overlay touches the bar. The same in both presets. Reduced motion: a 90 ms fade.
 
 - **Layout:** groups in columns, by what the keys are for: `SHELL 介面`, `WINDOWS 視窗`, `NAVIGATE 導航`, `APPS 應用`, `SYSTEM 系統`, and `OTHER 其他` for a key that fits none, so none is dropped. A row: the description, then keycaps in mono with a 1 px border, Super a yellow cap `◆`. Too many for the screen: it scrolls. It fits 1366×768 and 4K alike.
-- **Data:** the keys bound right now, the user's own included. Omarchy's public `omarchy-menu-keybindings --print` first; then `hyprctl binds` adds only what that list leaves out, into `OTHER`: Copilot (`code:201`), and a Lua bind without a description as `Lua binding · 無描述`, never guessed at. A keycode without a name shows as `code:N`. Switch events such as the lid aren't keys and aren't listed. `wuling keymap --json` prints them and the QML displays them. A version that changes the source falls under §10: the overlay says it can't read the keys, and Omarchy's list is still there.
+- **Data:** the keys bound right now, the user's own included. Omarchy's public `omarchy-menu-keybindings --print` first; then `hyprctl binds` adds only what that list leaves out, into `OTHER`: Copilot (`code:201`), and a Lua bind without a description as `Lua binding · 無描述`, never guessed at. A keycode without a name shows as `code:N`. Switch events such as the lid aren't keys and aren't listed. `wuling keymap --json` prints them and the QML displays them. A version that changes the source falls under §10: the overlay says it can't read the keys, and Omarchy's list is still there. Only keys that do something when pressed now: a bind Omarchy turns on for a moment, such as the 4.5.0 screenshot selection, isn't listed when public data tells it apart.
 - **Input:** typing filters, ↑↓ scrolls, Esc clears then closes, an outside click closes. Exclusive keyboard focus; pressing a listed key doesn't run it.
 
 ### 8.11 Theme wave — part of `wuling.session`
