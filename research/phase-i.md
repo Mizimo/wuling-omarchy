@@ -98,7 +98,7 @@ inspected frame by frame.
 ## G-V7 on 4.5.0
 
 The verifier's 200-page cycle, five runs on one freshly restarted shell, IPC
-timeout 10 s:
+timeout 10 s, with synthetic batteries and the Tailnet fixture:
 
 | Run | 1 | 2 | 3 | 4 | 5 |
 |---|---:|---:|---:|---:|---:|
@@ -107,18 +107,36 @@ timeout 10 s:
 
 File descriptors stay at 203–216. This is the rc2 shape (`phase-g.2.md`).
 
-Whether the panel host builds a new window and scene graph for each open
-without releasing the old: each open maps a new `omarchy-keyboard-panel` layer
-surface, which is gone after closing, its address reused. One page for 200
-cycles holds idle memory (464.0 → 460.3 MiB) and releases GPU buffer mappings
-(393 → 189); Performance and Power alternating grows (466.0 → 492.9). The
-panel host files are identical in rc2 and 4.5.0 and show and hide the window
-the same way as 4.0.6's. So the host does build a fresh surface, and per
-phase G.2's profile a fresh render context, on each open, and releases them;
-the growth follows changing content, as G.2 found. No public path keeps the
-panel's window alive across opens; keeping pages built roughly halved the rate
-in G.2 and contradicts building a page only while it is open. G-V7 stays open
-with this cause.
+Single pages and two alternating pages, measured twice: here on that same
+grown shell, and by the verifier on freshly restarted shells
+(`review/phase-i/README.md`, "G-V7 on 4.5.0"). MiB, idle after each 200-cycle
+run against before it:
+
+| Run | Here (batteries) | Verifier, batteries | Verifier, no batteries |
+|---|---|---|---|
+| One page | System: 464.0 → 460.3 | Performance: 344.3 → 359.1; Power: 370.7 → 372.2 | Performance: 321.2 → 331.5 and 372.4 → 376.7; Power: 347.9 → 353.1 |
+| Performance and Power alternating | 466.0 → 492.9 | 358.6 → 366.9 | 337.3 → 342.2; 360.5 → 365.1 |
+
+The two sets agree that the shell grows on 4.5.0 and that, with batteries,
+alternating grows more than one page. They disagree on the rest: the verifier
+saw alternating grow by about 4.5 MiB per 200 cycles where this run grew by
+27, and, without batteries, one page grew about as much as alternating did.
+Over all of the verifier's runs the shell grew by about 0.05–0.07 MiB per open.
+
+The panel host maps a new `omarchy-keyboard-panel` layer surface on each open
+and releases it on close, here and in all 1,650 of the verifier's opens. Its
+files are identical in rc2 and 4.5.0 and show and hide the window the same way
+as 4.0.6's. During the single-page run above, the shell's GPU buffer mappings
+fell from 393 to 189.
+
+What is established: the memory is held in Qt's rendering and text resources
+(render contexts, glyph caches, font faces, GPU buffers, per `phase-g.2.md`),
+not in a WULING object, and it accumulates with Terminal opens. The panel host
+does not keep old surfaces. The exact condition that makes an open leave memory
+behind is not known: it is not only a change of content. No public path keeps
+the panel's window alive across opens; keeping pages built roughly halved the
+rate in G.2 and contradicts building a page only while it is open. G-V7 stays
+open.
 
 ## The bar after a shell restart
 
