@@ -799,7 +799,11 @@ Changes in 4.5.0 that WULING follows:
   surface has the bar's fractional scale (`shell/plugins/bar/Bar.qml`).
 - **Region-capture binds.** The screenshot selection now binds its keys only
   for the selection and leaves them disabled afterwards
-  (`default/hypr/bindings/`).
+  (`default/hypr/bindings/utilities.lua`, `selection_keys`). From the first
+  selection until a configuration reload, `hyprctl binds` lists all eight,
+  enabled or not, as bare `__lua` binds with no description and no field that
+  tells them from a user's own. The Keymap takes their chords from that table,
+  gated by the table's own hash.
 
 Changes with no effect on WULING: the clock widget's `WallClock` timer (the
 members the bar skin reads remain), `omarchy-toggle-nightlight` (same

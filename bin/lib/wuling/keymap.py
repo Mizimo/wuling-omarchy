@@ -1,10 +1,11 @@
 """Read the native key list on demand, without dispatching a listed action."""
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import signal
-from . import Error, SCHEMA, status
+from . import Error, ROOT, SCHEMA, status
 
 GROUPS = ("SHELL", "WINDOWS", "NAVIGATE", "APPS", "SYSTEM", "OTHER")
 MODIFIERS = ((64, "SUPER"), (1, "SHIFT"), (4, "CTRL"), (8, "ALT"), (2, "CAPS"), (16, "MOD2"), (32, "MOD3"), (128, "MOD5"))
@@ -40,14 +41,37 @@ def keycode_names():
     return result
 
 
-def supplement(rows, text, names):
-    def identity(caps):
-        return tuple(sorted(key_name(cap) for cap in caps[:-1])), key_name(caps[-1])
+def identity(caps):
+    return tuple(sorted(key_name(cap) for cap in caps[:-1])), key_name(caps[-1])
+
+
+def momentary():
+    """Chords Omarchy binds only for a moment, from its own reviewed table.
+
+    hyprctl shows a disabled bind like any other, so the 4.5 screenshot
+    selection keys can't be told from a user's own Lua bind without a
+    description. Only the table's text is hashed: the rest of the file may
+    change. A table that differs from the reviewed one leaves the keys listed."""
+    try:
+        contract = json.loads((ROOT / "plugins/keymap/native-selection-keys.json").read_text())
+        source = (Path(os.environ.get("OMARCHY_PATH", "/usr/share/omarchy")) / contract["file"]).read_text()
+    except (OSError, ValueError, KeyError):
+        return set(), "absent"
+    match = re.search(r"^local " + re.escape(contract["table"]) + r" = \{\n.*?^\}\n", source, re.M | re.S)
+    if not match:
+        return set(), "absent"
+    if hashlib.sha256(match.group(0).encode()).hexdigest() not in contract["reviewed"].values():
+        return set(), "changed"
+    return {identity([part.strip() for part in chord.split(" + ")])
+            for chord in re.findall(r'^\s*\["([A-Z0-9_ +]+)"\]\s*=', match.group(0), re.M)}, "reviewed"
+
+
+def supplement(rows, text, names, selection=frozenset()):
     seen = {identity(caps) for row in rows for caps in row["keys"]}
     records = re.split(r"^bind[^\n]*\n", text, flags=re.M)
     if len(records) < 2 or records[0].strip():
         raise Error("The active keybinding format is not supported")
-    additions = []
+    binds = []
     for record in records[1:]:
         fields = dict(re.findall(r"^\t([a-z]+): (.*)$", record, re.M))
         if not {"key", "keycode", "modmask", "dispatcher", "description"} <= fields.keys():
@@ -66,15 +90,27 @@ def supplement(rows, text, names):
         except ValueError:
             raise Error("The active key modifier format is not supported") from None
         caps = [label for bit, label in MODIFIERS if mask & bit]
+        description = fields["description"].strip()
+        bare = fields["dispatcher"] == "__lua" and not description
+        binds.append((caps, key, description, fields["dispatcher"], bare and identity(caps + [key])))
+    # Omarchy binds its whole table at the first selection and keeps it, so one
+    # bare Lua bind per chord is Omarchy's only when every chord is present.
+    # A user's own bind on the same chord is a further entry and stays listed.
+    present = {chord for *_, chord in binds if chord}
+    skip = set(selection) if selection and selection <= present else set()
+    additions = []
+    for caps, key, description, dispatcher, chord in binds:
+        if chord in skip:
+            skip.discard(chord)
+            continue
         # Keep the physical Copilot code even when a keyboard calls it F23.
         named = names.get(key[5:], key) if key.startswith("code:") and key != "code:201" else names.get(key_name(key), key)
-        caps.append(named if named.startswith("code:") else key_name(named))
+        caps = caps + [named if named.startswith("code:") else key_name(named)]
         ident = identity(caps)
         if ident in seen:
             continue
         seen.add(ident)
-        description = fields["description"].strip()
-        label = "" if description else "lua-undescribed" if fields["dispatcher"] == "__lua" else "binding-undescribed"
+        label = "" if description else "lua-undescribed" if dispatcher == "__lua" else "binding-undescribed"
         additions.append({"description": description or ("Lua binding · no description" if label == "lua-undescribed" else "Binding · no description"), "description_key": label, "keys": [caps], "group": "OTHER", "source": "hyprctl binds"})
     return rows + additions
 
@@ -154,7 +190,7 @@ def snapshot():
         raw = status.probe(["hyprctl", "binds"], timeout=3)
         if raw is None:
             raise Error("Cannot read the active keys; use Omarchy's Keybindings menu")
-        rows = supplement(rows, raw, keycode_names())
+        rows = supplement(rows, raw, keycode_names(), momentary()[0])
         return {"schema_version": SCHEMA, "groups": list(GROUPS), "rows": rows, "source": "omarchy-menu-keybindings --print + hyprctl binds"}
     finally:
         for sig, handler in previous.items():

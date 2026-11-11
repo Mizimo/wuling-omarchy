@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "file": "default/hypr/bindings/utilities.lua",
+  "table": "selection_keys",
+  "reviewed": {
+    "4.5.0": "adbf0c09c9fc9b2c4f52a560477f1403909f18d4c7feaa7c3879e63997dcd16a"
+  }
+}

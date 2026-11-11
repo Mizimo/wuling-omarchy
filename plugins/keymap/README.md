@@ -30,3 +30,14 @@ names prevent duplicate code/symbol rows. An undescribed Lua binding receives
 a localized generic label; its action is never inferred or dispatched. Unknown
 codes remain `code:N`, and lid switch events are excluded. A changed raw format
 fails visibly rather than silently omitting keys.
+
+Only keys that do something now are listed. Omarchy 4.5 binds its screenshot
+selection keys for the selection only and leaves them disabled afterwards;
+`hyprctl` shows them like a user's own undescribed Lua bind. Their chords come
+from the `selection_keys` table in the installed
+`default/hypr/bindings/utilities.lua`. Only that table's text is hashed against
+`native-selection-keys.json`. When it matches and every chord in it is present
+as a bare Lua bind, one such bind per chord is Omarchy's and is left out; a
+user's own bind on the same chord is a further entry and stays listed. A
+changed table leaves the keys listed and `wuling doctor` says so, without
+failing.

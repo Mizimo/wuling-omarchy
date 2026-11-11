@@ -66,6 +66,13 @@ def doctor():
     gate = theme_wave.compatibility()
     add("session:theme-compatibility", gate["ok"], gate.get("contract") or gate.get("reason"),
         "The theme wave stays off for unknown native modules; Omarchy still changes themes.")
+    # Information only: an unreviewed table lists its keys rather than failing.
+    _, selection = keymap.momentary()
+    add("keymap:selection-keys", True, {
+        "reviewed": "Omarchy's screenshot selection keys are left out of the Keymap",
+        "changed": "Omarchy's selection_keys table differs from the reviewed one; the Keymap lists its keys under OTHER",
+        "absent": "No screenshot selection table in this Omarchy",
+    }[selection])
     for plugin in plugins:
         try:
             add("plugin:" + plugin.parent.name, True, command(["omarchy", "plugin", "validate", str(plugin.parent)]))
